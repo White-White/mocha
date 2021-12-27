@@ -10,14 +10,15 @@ import Foundation
 
 class BinaryViewHelper: ObservableObject {
     var visiableBinaryLineIndex: Set<Int> = []
-    @Published var selectedTranslation: LazyTranslation?
+    @Published var selectedTranslation: LazyTranslation
+    init(_ t: LazyTranslation) { _selectedTranslation = Published(initialValue: t) }
 }
 
 struct BinaryView: View {
     
-    let store: BinaryTranslationStore
-    let digitsCount: Int
-    @ObservedObject var helper = BinaryViewHelper()
+    @Binding var store: BinaryTranslationStore
+    @Binding var digitsCount: Int
+    @ObservedObject var helper: BinaryViewHelper
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -32,7 +33,7 @@ struct BinaryView: View {
                                         .font(.system(size: 12).monospaced())
                                         .foregroundColor(.secondary)
                                         .fixedSize()
-                                    Text(store.binaryLine(at: index).dataHexString(selectedRange: helper.selectedTranslation?.range))
+                                    Text(store.binaryLine(at: index).dataHexString(selectedRange: helper.selectedTranslation.range))
                                         .background((index % 2 == 0) ? Color(red: 244.0/255, green: 245.0/255, blue: 245.0/255) : .white)
                                         .font(.system(size: 12).monospaced())
                                         .textSelection(.enabled)
@@ -46,7 +47,7 @@ struct BinaryView: View {
                         .padding(4)
                     }
                     .onReceive(helper.$selectedTranslation) { translation in
-                        if let translation = translation, let index = store.binaryLineIndex(for: translation), !helper.visiableBinaryLineIndex.contains(index) {
+                        if let index = store.binaryLineIndex(for: translation), !helper.visiableBinaryLineIndex.contains(index) {
                             withAnimation { scrollProxy.scrollTo(index, anchor: .center) }
                         }
                     }
@@ -60,7 +61,7 @@ struct BinaryView: View {
                 ScrollView(.vertical, showsIndicators: true)  {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(0..<store.numberOfTranslations, id: \.self) { index in
-                            ExplanationView(store.translation(at: index), selectedID: helper.selectedTranslation?.id)
+                            ExplanationView(store.translation(at: index), selectedID: helper.selectedTranslation.id)
                                 .onTapGesture {
                                 self.helper.selectedTranslation = store.translation(at: index)
                             }
@@ -74,9 +75,10 @@ struct BinaryView: View {
         }
     }
     
-    init(_ store: BinaryTranslationStore, digitsCount: Int) {
-        self.store = store
-        self.digitsCount = digitsCount
+    init(_ store: Binding<BinaryTranslationStore>, digitsCount: Binding<Int>) {
+        _store = store
+        _digitsCount = digitsCount
+        self.helper = BinaryViewHelper(store.wrappedValue.translation(at: 0))
     }
 }
 

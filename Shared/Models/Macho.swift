@@ -9,12 +9,18 @@ import Foundation
 
 enum MachoType {
     case object
+    case execute
+    case dylib
     case unknown(UInt32)
     
     init(with value: UInt32) {
         switch value {
-        case 0x01:
+        case 0x1:
             self = .object
+        case 0x2:
+            self = .execute
+        case 0x6:
+            self = .dylib
         default:
             self = .unknown(value)
         }
@@ -23,9 +29,13 @@ enum MachoType {
     var readable: String {
         switch self {
         case .object:
-            return "relocatable object file"
+            return "MH_OBJECT: Relocatable object file"
+        case .execute:
+            return "MH_EXECUTE: Demand paged executable file"
+        case .dylib:
+            return "MH_DYLIB: Dynamically bound shared library"
         case .unknown(let value):
-            return "unknown macho file value: (\(value)"
+            return "unknown macho file: (\(value)"
         }
     }
 }
@@ -37,36 +47,6 @@ class MachoHeader: Identifiable, Equatable, BinaryTranslationStoreGenerator {
     }
     
     let id = UUID()
-    
-    /*
-     * The 32-bit mach header appears at the very beginning of the object file for
-     * 32-bit architectures.
-     */
-//    struct mach_header {
-//        uint32_t    magic;        /* mach magic number identifier */
-//        cpu_type_t    cputype;    /* cpu specifier */
-//        cpu_subtype_t    cpusubtype;    /* machine specifier */
-//        uint32_t    filetype;    /* type of file */
-//        uint32_t    ncmds;        /* number of load commands */
-//        uint32_t    sizeofcmds;    /* the size of all the load commands */
-//        uint32_t    flags;        /* flags */
-//    };
-    
-    /*
-     * The 64-bit mach header appears at the very beginning of object files for
-     * 64-bit architectures.
-     */
-    //struct mach_header_64 {
-    //    uint32_t    magic;        /* mach magic number identifier */
-    //    cpu_type_t    cputype;    /* cpu specifier */
-    //    cpu_subtype_t    cpusubtype;    /* machine specifier */
-    //    uint32_t    filetype;    /* type of file */
-    //    uint32_t    ncmds;        /* number of load commands */
-    //    uint32_t    sizeofcmds;    /* the size of all the load commands */
-    //    uint32_t    flags;        /* flags */
-    //    uint32_t    reserved;    /* reserved */
-    //};
-    
     let is64Bit: Bool
     let data: SmartData
     var dataSize: Int { data.count }
@@ -101,11 +81,42 @@ class MachoHeader: Identifiable, Equatable, BinaryTranslationStoreGenerator {
         translation.translateNextDoubleWord { Readable(description: "Macho Type", explanation: self.machoType.readable) }
         translation.translateNextDoubleWord { Readable(description: "Number of commands", explanation: "\(self.numberOfLoadCommands)") }
         translation.translateNextDoubleWord { Readable(description: "Size of all commands", explanation: "\(self.sizeOfAllLoadCommand.hex)") }
-        translation.translateNextDoubleWord { Readable(description: "Flags", explanation: nil) } //FIXME:
-        if is64Bit {
-            translation.translateNextDoubleWord { Readable(description: "Reversed", explanation: nil) } //FIXME:
+        translation.translateNextDoubleWord { Readable(description: "Valid Flags", explanation: "\(self.flagsDescriptionFrom(self.flags).joined(separator: "\n"))") }
+        if let reserved = reserved {
+            translation.translateNextDoubleWord { Readable(description: "Reversed", explanation: "\(reserved.hex)") }
         }
         return translation
+    }
+    
+    func flagsDescriptionFrom(_ flags: UInt32) -> [String] {
+        // this line of shit I'll never understand.. after today...
+        return [
+            "MH_NOUNDEFS",
+            "MH_INCRLINK",
+            "MH_DYLDLINK",
+            "MH_BINDATLOAD",
+            "MH_PREBOUND",
+            "MH_SPLIT_SEGS",
+            "MH_LAZY_INIT",
+            "MH_TWOLEVEL",
+            "MH_FORCE_FLAT",
+            "MH_NOMULTIDEFS",
+            "MH_NOFIXPREBINDING",
+            "MH_PREBINDABLE",
+            "MH_ALLMODSBOUND",
+            "MH_SUBSECTIONS_VIA_SYMBOLS",
+            "MH_CANONICAL",
+            "MH_WEAK_DEFINES",
+            "MH_BINDS_TO_WEAK",
+            "MH_ALLOW_STACK_EXECUTION",
+            "MH_ROOT_SAFE",
+            "MH_SETUID_SAFE",
+            "MH_NO_REEXPORTED_DYLIBS",
+            "MH_PIE",
+            "MH_DEAD_STRIPPABLE_DYLIB",
+            "MH_HAS_TLV_DESCRIPTORS",
+            "MH_NO_HEAP_EXECUTION",
+        ].enumerated().filter { flags & (0x1 << $0.offset) != 0 }.map { $0.element }
     }
 }
 

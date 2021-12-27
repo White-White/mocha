@@ -9,18 +9,13 @@ import SwiftUI
 
 struct MiniMap: View {
     let size: Int
-    let start: Int?
-    let length: Int?
+    let start: Int
+    let length: Int
     
-    var indicatorPosition: (startPercent: CGFloat, lengthPercent: CGFloat, start: Int, length: Int)? {
-        if let start = start,
-            let length = length {
-            let lengthPercent = CGFloat(length) / CGFloat(size)
-            let startPercent = CGFloat(start) / CGFloat(size)
-            return (startPercent, lengthPercent, start, length)
-        } else {
-            return nil
-        }
+    var indicatorPosition: (startPercent: CGFloat, lengthPercent: CGFloat, start: Int, length: Int) {
+        let lengthPercent = CGFloat(length) / CGFloat(size)
+        let startPercent = CGFloat(start) / CGFloat(size)
+        return (startPercent, lengthPercent, start, length)
     }
     
     var body: some View {
@@ -28,11 +23,9 @@ struct MiniMap: View {
             HStack {
                 GeometryReader { geometry in
                     HStack(alignment: .center) {
-                        if let position = indicatorPosition {
-                            Spacer().frame(width: position.startPercent * geometry.size.width)
-                            Color.red.frame(width: max(position.lengthPercent * geometry.size.width, 1))
-                            Spacer()
-                        }
+                        Spacer().frame(width: indicatorPosition.startPercent * geometry.size.width)
+                        Color.red.frame(width: max(indicatorPosition.lengthPercent * geometry.size.width, 1))
+                        Spacer()
                     }
                 }
             }

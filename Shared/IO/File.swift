@@ -30,21 +30,17 @@ enum MagicType {
         }
     }
     
-    private var name: String {
+    var readable: String {
         switch self {
         case .ar:
-            return "ar"
+            return "Unix Archive's File Magic"
         case .fat:
-            return "fat"
+            return "Fat Binary's File Magic"
         case .macho32:
-            return "macho32"
+            return "Mach-O(32bit)'s File Magic"
         case .macho64:
-            return "macho64"
+            return "Mach-O(64bit)'s File Magic"
         }
-    }
-    
-    var readable: String {
-        return "mach magic number identifier. (\(name))"
     }
 }
 

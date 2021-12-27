@@ -37,7 +37,9 @@ struct BinaryLine  {
         for index in 1..<(BinaryTranslationStore.NumberOfBytesPerLine / 4) {
             if let lowerBound = attriString.characters.index(attriString.startIndex, offsetBy: index * 8 - 1, limitedBy: attriString.endIndex),
                let upperBound = attriString.characters.index(attriString.startIndex, offsetBy: index * 8, limitedBy: attriString.endIndex) {
-                attriString[lowerBound..<upperBound].kern = 4
+                if upperBound != attriString.endIndex {
+                    attriString[lowerBound..<upperBound].kern = 4
+                }
             }
         }
         

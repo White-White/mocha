@@ -71,6 +71,50 @@ extension Relocation : MachoViewCellModel {
     var idForCellModel: UUID { id }
 }
 
+extension Macho {
+    fileprivate var machoViewCellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator] {
+        var cellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator] = [self.header]
+        
+        // append load commands and section headers
+        cellModels.append(contentsOf: self.loadCommands)
+        
+        // append merged linker options
+        if let mergedLinkerOptions = self.mergedLinkerOptions {
+            cellModels.append(mergedLinkerOptions)
+        }
+        
+        // append sections
+        cellModels.append(contentsOf: self.sections)
+        
+        // append relocation entries
+        if let relocation = self.relocation {
+            cellModels.append(relocation)
+        }
+        
+        // append symbol table &
+        if let symbolTable = self.symbolTable {
+            cellModels.append(symbolTable)
+        }
+        
+        // append string table
+        if let stringTable = self.stringTable {
+            cellModels.append(stringTable)
+        }
+        
+        return cellModels
+    }
+    
+    fileprivate var digits: Int {
+        var machoFileSize = self.fileSize
+        var digitCount = 0
+        while machoFileSize != 0 {
+            digitCount += 1
+            machoFileSize /= 16
+        }
+        return digitCount
+    }
+}
+
 
 fileprivate struct MachoCellView: View {
     
@@ -114,19 +158,18 @@ fileprivate struct MachoCellView: View {
 
 struct MachoView: View {
     
-    let digitCount: Int
-    let macho: Macho
-    fileprivate let cellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator]
-    
-    @State fileprivate var selectedModel: MachoViewCellModel?
-    @State var binaryTranslationStore: BinaryTranslationStore?
+    @Binding var macho: Macho
+    @State var digitCount: Int
+    @State fileprivate var cellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator]
+    @State fileprivate var selectedModel: MachoViewCellModel
+    @State var binaryTranslationStore: BinaryTranslationStore
     
     var body: some View {
         HStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(cellModels, id: \.idForCellModel) { cellModel in
-                        MachoCellView(cellModel, digitsCount: digitCount, isSelected: selectedModel?.idForCellModel == cellModel.idForCellModel)
+                        MachoCellView(cellModel, digitsCount: digitCount, isSelected: selectedModel.idForCellModel == cellModel.idForCellModel)
                             .onTapGesture {
                                 self.selectedModel = cellModel
                                 self.binaryTranslationStore = cellModel.binaryTranslationStore()
@@ -140,56 +183,25 @@ struct MachoView: View {
             Divider()
             
             VStack(alignment: .leading) {
-                MiniMap(size: macho.fileSize, start: selectedModel?.startOffsetInMacho, length: selectedModel?.dataSizeInMacho)
+                MiniMap(size: macho.fileSize, start: selectedModel.startOffsetInMacho, length: selectedModel.dataSizeInMacho)
                     .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
-                if let binaryTranslationStore = binaryTranslationStore {
-                    BinaryView(binaryTranslationStore, digitsCount: digitCount)
-                        .padding(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
-                } else {
-                    Spacer()
-                }
+                BinaryView($binaryTranslationStore, digitsCount: $digitCount)
+                    .padding(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
             }
+        }
+        .onChange(of: macho) { newValue in
+            self.selectedModel = newValue.header
+            self.binaryTranslationStore = newValue.header.binaryTranslationStore()
+            self.digitCount = newValue.digits
+            self.cellModels = newValue.machoViewCellModels
         }
     }
     
-    init(_ macho: Macho) {
-        self.macho = macho
-        var machoFileSize = macho.fileSize
-        var digitCount = 0
-        while machoFileSize != 0 {
-            digitCount += 1
-            machoFileSize /= 16
-        }
-        self.digitCount = digitCount
-        
-        var cellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator] = [macho.header]
-        
-        // append load commands and section headers
-        cellModels.append(contentsOf: macho.loadCommands)
-        
-        // append merged linker options
-        if let mergedLinkerOptions = macho.mergedLinkerOptions {
-            cellModels.append(mergedLinkerOptions)
-        }
-        
-        // append sections
-        cellModels.append(contentsOf: macho.sections)
-        
-        // append relocation entries
-        if let relocation = macho.relocation {
-            cellModels.append(relocation)
-        }
-        
-        // append symbol table &
-        if let symbolTable = macho.symbolTable {
-            cellModels.append(symbolTable)
-        }
-        
-        // append string table
-        if let stringTable = macho.stringTable {
-            cellModels.append(stringTable)
-        }
-        
-        self.cellModels = cellModels
+    init(_ macho: Binding<Macho>) {
+        _macho = macho
+        _selectedModel = State(initialValue: macho.wrappedValue.header)
+        _binaryTranslationStore = State(initialValue: macho.wrappedValue.header.binaryTranslationStore())
+        _digitCount = State(initialValue: macho.wrappedValue.digits)
+        _cellModels = State(initialValue: macho.wrappedValue.machoViewCellModels)
     }
 }

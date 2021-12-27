@@ -50,7 +50,7 @@ struct FileViewCell: View {
 struct FileView: View {
     
     let file: File
-    @State var selectedMacho: Macho?
+    @State var selectedMacho: Macho
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -59,32 +59,21 @@ struct FileView: View {
                     ForEach(file.machos) { macho in
                         FileViewCell(macho, isSelected: self.selectedMacho == macho) .onTapGesture {
                             self.selectedMacho = macho
-                            
                         }
                     }
                 }
             }
             .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
             .fixedSize(horizontal: true, vertical: false)
-            
             Divider()
-            
-            if let selectedMacho = selectedMacho {
-                MachoView(selectedMacho)
-            } else {
-                HStack {
-                    Spacer()
-                    VStack {
-                        Spacer()
-                        Text("Select a file")
-                        Spacer()
-                    }
-                    Spacer()
-                }
-            }
+            MachoView($selectedMacho)
         }
     }
     
+    init(file: File) {
+        self.file = file
+        _selectedMacho = State(initialValue: file.machos.first!)
+    }
 }
 
 struct FileView_Previews: PreviewProvider {
