@@ -1,0 +1,8 @@
+#### Mocha is yet another mach-o file viewer.
+
+Requirement:
+Xcode: 13.\*, macOS 13.\*
+
+It's written in SwiftUI, so it requires the latest version of Xcode and macOS.
+
+It'll be an alternative of MachOViewer, but newer, better, simpler, and most importantly, compilable.
