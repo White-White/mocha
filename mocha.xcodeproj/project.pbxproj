@@ -7,31 +7,61 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1F75F8B7275A3151001A4E29 /* mochaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A7275A314F001A4E29 /* mochaApp.swift */; };
+		1F0133FE2775FE1900EB600A /* SmartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0133FD2775FE1900EB600A /* SmartData.swift */; };
+		1F184B282769EBB700CA286A /* SymbolTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F184B272769EBB700CA286A /* SymbolTable.swift */; };
+		1F68325A276C49AB002609C5 /* Relocations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F683259276C49AB002609C5 /* Relocations.swift */; };
+		1F73C6C9275A31F00020E581 /* LoadCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BC275A31F00020E581 /* LoadCommand.swift */; };
+		1F73C6CD275A31F00020E581 /* Section.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BE275A31F00020E581 /* Section.swift */; };
+		1F73C6CF275A31F00020E581 /* Macho.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BF275A31F00020E581 /* Macho.swift */; };
+		1F73C6D1275A31F00020E581 /* CPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6C0275A31F00020E581 /* CPU.swift */; };
+		1F73C6DA275A320D0020E581 /* BinaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D5275A320D0020E581 /* BinaryView.swift */; };
+		1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D7275A320D0020E581 /* MachoView.swift */; };
+		1F73C6E0275A320D0020E581 /* MiniMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D8275A320D0020E581 /* MiniMap.swift */; };
+		1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6E3275A32120020E581 /* UnixArchive.swift */; };
+		1F73C6EA275A32120020E581 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6E4275A32120020E581 /* File.swift */; };
+		1F73C6F6275A322C0020E581 /* MochaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EB275A322B0020E581 /* MochaError.swift */; };
+		1F73C6FC275A322C0020E581 /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EE275A322C0020E581 /* FileView.swift */; };
+		1F73C6FE275A322C0020E581 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EF275A322C0020E581 /* Utils.swift */; };
+		1F73C704275A322C0020E581 /* HorizontalLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6F2275A322C0020E581 /* HorizontalLine.swift */; };
+		1F73C706275A322C0020E581 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6F3275A322C0020E581 /* Theme.swift */; };
+		1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C709275A5C6D0020E581 /* FatBinary.swift */; };
+		1F73C70C275C872D0020E581 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C70B275C872D0020E581 /* ContentView.swift */; };
 		1F75F8B8275A3151001A4E29 /* mochaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A7275A314F001A4E29 /* mochaApp.swift */; };
-		1F75F8B9275A3151001A4E29 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A8275A314F001A4E29 /* ContentView.swift */; };
-		1F75F8BA275A3151001A4E29 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A8275A314F001A4E29 /* ContentView.swift */; };
-		1F75F8BB275A3151001A4E29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F75F8A9275A3151001A4E29 /* Assets.xcassets */; };
 		1F75F8BC275A3151001A4E29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F75F8A9275A3151001A4E29 /* Assets.xcassets */; };
+		1FC258C9275C90DD008C2826 /* FileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258C8275C90DD008C2826 /* FileSize.swift */; };
+		1FC258CF275F6250008C2826 /* BinaryTranslationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258CE275F6250008C2826 /* BinaryTranslationStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1F0133FD2775FE1900EB600A /* SmartData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartData.swift; sourceTree = "<group>"; };
+		1F184B272769EBB700CA286A /* SymbolTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTable.swift; sourceTree = "<group>"; };
+		1F683259276C49AB002609C5 /* Relocations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relocations.swift; sourceTree = "<group>"; };
+		1F73C6BC275A31F00020E581 /* LoadCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadCommand.swift; sourceTree = "<group>"; };
+		1F73C6BE275A31F00020E581 /* Section.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Section.swift; sourceTree = "<group>"; };
+		1F73C6BF275A31F00020E581 /* Macho.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macho.swift; sourceTree = "<group>"; };
+		1F73C6C0275A31F00020E581 /* CPU.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPU.swift; sourceTree = "<group>"; };
+		1F73C6D5275A320D0020E581 /* BinaryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BinaryView.swift; sourceTree = "<group>"; };
+		1F73C6D7275A320D0020E581 /* MachoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachoView.swift; sourceTree = "<group>"; };
+		1F73C6D8275A320D0020E581 /* MiniMap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MiniMap.swift; sourceTree = "<group>"; };
+		1F73C6E3275A32120020E581 /* UnixArchive.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnixArchive.swift; sourceTree = "<group>"; };
+		1F73C6E4275A32120020E581 /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
+		1F73C6EB275A322B0020E581 /* MochaError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MochaError.swift; sourceTree = "<group>"; };
+		1F73C6EE275A322C0020E581 /* FileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileView.swift; sourceTree = "<group>"; };
+		1F73C6EF275A322C0020E581 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		1F73C6F2275A322C0020E581 /* HorizontalLine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalLine.swift; sourceTree = "<group>"; };
+		1F73C6F3275A322C0020E581 /* Theme.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		1F73C709275A5C6D0020E581 /* FatBinary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatBinary.swift; sourceTree = "<group>"; };
+		1F73C70B275C872D0020E581 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1F75F8A7275A314F001A4E29 /* mochaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mochaApp.swift; sourceTree = "<group>"; };
-		1F75F8A8275A314F001A4E29 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1F75F8A9275A3151001A4E29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1F75F8AE275A3151001A4E29 /* mocha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mocha.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F75F8B4275A3151001A4E29 /* mocha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mocha.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F75F8B6275A3151001A4E29 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		1F75F8C5275A3161001A4E29 /* mocha (iOS).entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "mocha (iOS).entitlements"; sourceTree = "<group>"; };
+		1FC258C8275C90DD008C2826 /* FileSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSize.swift; sourceTree = "<group>"; };
+		1FC258CE275F6250008C2826 /* BinaryTranslationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryTranslationStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		1F75F8AB275A3151001A4E29 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1F75F8B1275A3151001A4E29 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -42,9 +72,46 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1F73C6B8275A31F00020E581 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1F73C6BC275A31F00020E581 /* LoadCommand.swift */,
+				1F184B272769EBB700CA286A /* SymbolTable.swift */,
+				1F683259276C49AB002609C5 /* Relocations.swift */,
+				1F73C6BE275A31F00020E581 /* Section.swift */,
+				1F73C6BF275A31F00020E581 /* Macho.swift */,
+				1F73C6C0275A31F00020E581 /* CPU.swift */,
+				1FC258CE275F6250008C2826 /* BinaryTranslationStore.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1F73C6D4275A320D0020E581 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				1F73C6EE275A322C0020E581 /* FileView.swift */,
+				1F73C6D7275A320D0020E581 /* MachoView.swift */,
+				1F73C6D5275A320D0020E581 /* BinaryView.swift */,
+				1F73C6D8275A320D0020E581 /* MiniMap.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		1F73C6E1275A32120020E581 /* IO */ = {
+			isa = PBXGroup;
+			children = (
+				1F0133FD2775FE1900EB600A /* SmartData.swift */,
+				1F73C709275A5C6D0020E581 /* FatBinary.swift */,
+				1F73C6E3275A32120020E581 /* UnixArchive.swift */,
+				1F73C6E4275A32120020E581 /* File.swift */,
+			);
+			path = IO;
+			sourceTree = "<group>";
+		};
 		1F75F8A1275A314F001A4E29 = {
 			isa = PBXGroup;
 			children = (
+				1F75F8C5275A3161001A4E29 /* mocha (iOS).entitlements */,
 				1F75F8A6275A314F001A4E29 /* Shared */,
 				1F75F8B5275A3151001A4E29 /* macOS */,
 				1F75F8AF275A3151001A4E29 /* Products */,
@@ -55,8 +122,14 @@
 			isa = PBXGroup;
 			children = (
 				1F75F8A7275A314F001A4E29 /* mochaApp.swift */,
-				1F75F8A8275A314F001A4E29 /* ContentView.swift */,
+				1F73C70B275C872D0020E581 /* ContentView.swift */,
 				1F75F8A9275A3151001A4E29 /* Assets.xcassets */,
+				1F73C6F2275A322C0020E581 /* HorizontalLine.swift */,
+				1F73C6F3275A322C0020E581 /* Theme.swift */,
+				1FC258C7275C90C4008C2826 /* Helpers */,
+				1F73C6E1275A32120020E581 /* IO */,
+				1F73C6D4275A320D0020E581 /* View */,
+				1F73C6B8275A31F00020E581 /* Models */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -64,7 +137,6 @@
 		1F75F8AF275A3151001A4E29 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1F75F8AE275A3151001A4E29 /* mocha.app */,
 				1F75F8B4275A3151001A4E29 /* mocha.app */,
 			);
 			name = Products;
@@ -78,26 +150,19 @@
 			path = macOS;
 			sourceTree = "<group>";
 		};
+		1FC258C7275C90C4008C2826 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				1F73C6EB275A322B0020E581 /* MochaError.swift */,
+				1F73C6EF275A322C0020E581 /* Utils.swift */,
+				1FC258C8275C90DD008C2826 /* FileSize.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1F75F8AD275A3151001A4E29 /* mocha (iOS) */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 1F75F8BF275A3151001A4E29 /* Build configuration list for PBXNativeTarget "mocha (iOS)" */;
-			buildPhases = (
-				1F75F8AA275A3151001A4E29 /* Sources */,
-				1F75F8AB275A3151001A4E29 /* Frameworks */,
-				1F75F8AC275A3151001A4E29 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "mocha (iOS)";
-			productName = "mocha (iOS)";
-			productReference = 1F75F8AE275A3151001A4E29 /* mocha.app */;
-			productType = "com.apple.product-type.application";
-		};
 		1F75F8B3275A3151001A4E29 /* mocha (macOS) */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1F75F8C2275A3151001A4E29 /* Build configuration list for PBXNativeTarget "mocha (macOS)" */;
@@ -125,9 +190,6 @@
 				LastSwiftUpdateCheck = 1310;
 				LastUpgradeCheck = 1310;
 				TargetAttributes = {
-					1F75F8AD275A3151001A4E29 = {
-						CreatedOnToolsVersion = 13.1;
-					};
 					1F75F8B3275A3151001A4E29 = {
 						CreatedOnToolsVersion = 13.1;
 					};
@@ -146,21 +208,12 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1F75F8AD275A3151001A4E29 /* mocha (iOS) */,
 				1F75F8B3275A3151001A4E29 /* mocha (macOS) */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1F75F8AC275A3151001A4E29 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1F75F8BB275A3151001A4E29 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1F75F8B2275A3151001A4E29 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -172,21 +225,32 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		1F75F8AA275A3151001A4E29 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1F75F8B9275A3151001A4E29 /* ContentView.swift in Sources */,
-				1F75F8B7275A3151001A4E29 /* mochaApp.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		1F75F8B0275A3151001A4E29 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F75F8BA275A3151001A4E29 /* ContentView.swift in Sources */,
+				1F68325A276C49AB002609C5 /* Relocations.swift in Sources */,
+				1F73C706275A322C0020E581 /* Theme.swift in Sources */,
+				1F73C70C275C872D0020E581 /* ContentView.swift in Sources */,
+				1F184B282769EBB700CA286A /* SymbolTable.swift in Sources */,
+				1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */,
+				1F73C704275A322C0020E581 /* HorizontalLine.swift in Sources */,
+				1F73C6D1275A31F00020E581 /* CPU.swift in Sources */,
+				1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */,
+				1F73C6F6275A322C0020E581 /* MochaError.swift in Sources */,
+				1FC258C9275C90DD008C2826 /* FileSize.swift in Sources */,
+				1F73C6CF275A31F00020E581 /* Macho.swift in Sources */,
 				1F75F8B8275A3151001A4E29 /* mochaApp.swift in Sources */,
+				1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */,
+				1F0133FE2775FE1900EB600A /* SmartData.swift in Sources */,
+				1F73C6E0275A320D0020E581 /* MiniMap.swift in Sources */,
+				1FC258CF275F6250008C2826 /* BinaryTranslationStore.swift in Sources */,
+				1F73C6DA275A320D0020E581 /* BinaryView.swift in Sources */,
+				1F73C6EA275A32120020E581 /* File.swift in Sources */,
+				1F73C6FE275A322C0020E581 /* Utils.swift in Sources */,
+				1F73C6CD275A31F00020E581 /* Section.swift in Sources */,
+				1F73C6FC275A322C0020E581 /* FileView.swift in Sources */,
+				1F73C6C9275A31F00020E581 /* LoadCommand.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,67 +368,6 @@
 			};
 			name = Release;
 		};
-		1F75F8C0275A3151001A4E29 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2273RL2A4R;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = white.presonal.mocha;
-				PRODUCT_NAME = mocha;
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		1F75F8C1275A3151001A4E29 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2273RL2A4R;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = white.presonal.mocha;
-				PRODUCT_NAME = mocha;
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
 		1F75F8C3275A3151001A4E29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -429,15 +432,6 @@
 			buildConfigurations = (
 				1F75F8BD275A3151001A4E29 /* Debug */,
 				1F75F8BE275A3151001A4E29 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		1F75F8BF275A3151001A4E29 /* Build configuration list for PBXNativeTarget "mocha (iOS)" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1F75F8C0275A3151001A4E29 /* Debug */,
-				1F75F8C1275A3151001A4E29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
