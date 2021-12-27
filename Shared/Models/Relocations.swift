@@ -47,7 +47,7 @@ struct RelocationEntry: BinaryTranslationStoreGenerator {
     
     func binaryTranslationStore() -> BinaryTranslationStore {
         var store = BinaryTranslationStore(data: self.data, baseDataOffset: self.offsetInMacho)
-        store.translateNextDoubleWord { Readable(description: "address", explanation: self.address.hex) }
+        store.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex, dividerName: "Relocation Entry") }
         store.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
         store.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
         //FIXME: better explanations

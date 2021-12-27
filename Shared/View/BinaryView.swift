@@ -103,8 +103,7 @@ struct ExplanationView: View {
                 if let description = readable.description {
                     Text(description)
                         .font(.system(size: 12))
-                        .foregroundColor(isSelected ? .white : .secondary)
-                        .padding(.top, 4)
+                        .foregroundColor(.secondary)
                         .padding(.leading, 4)
                         .padding(.trailing, 4)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -112,14 +111,12 @@ struct ExplanationView: View {
                 Text(readable.explanation)
                     .foregroundColor(isSelected ? .white : .black)
                     .font(.system(size: 14))
-                    .padding(.leading, 4)
-                    .padding(.trailing, 4)
-                    .padding(.bottom, 4)
+                    .padding(4)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .contentShape(Rectangle())
-            .background {
-                RoundedRectangle(cornerRadius: 4).fill(isSelected ? Theme.selected : .white)
+                    .contentShape(Rectangle())
+                    .background {
+                        RoundedRectangle(cornerRadius: 4).fill(isSelected ? Theme.selected : .white)
+                    }
             }
             .frame(maxWidth: .infinity)
         }

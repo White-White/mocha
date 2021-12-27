@@ -159,7 +159,7 @@ class Section: Identifiable, Equatable, BinaryTranslationStoreGenerator {
             switch header.section {
             case "__text":
                 store.addTranslation(forRange: nil) { Readable(description: "Code", explanation: "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it.") }
-            case "__cstring":
+            case "__cstring", "__objc_methname", "__objc_classname", "__objc_methtype":
                 var lastNullCharIndex: Int? // index of last null char ( "\0" )
                 for (index, byte) in data.realData.enumerated() {
                     guard byte == 0 else { continue } // find null characters

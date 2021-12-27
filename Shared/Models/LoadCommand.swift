@@ -82,6 +82,7 @@ class LoadCommand: Identifiable, Equatable, BinaryTranslationStoreGenerator {
     let data: SmartData
     var loadCommandSize: Int { data.count }
     let offsetInMacho: Int
+    var translationDividerName: String? { nil }
     
     init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, offsetInMacho: Int) {
         self.data = loadCommandData
@@ -109,8 +110,8 @@ class LoadCommand: Identifiable, Equatable, BinaryTranslationStoreGenerator {
     
     func binaryTranslationStore() -> BinaryTranslationStore {
         var store = BinaryTranslationStore(data: data, baseDataOffset: offsetInMacho)
-        store.translateNextDoubleWord { Readable(description: "Load command type: ", explanation: "\(self.loadCommandType.commandName)") }
-        store.translateNextDoubleWord { Readable(description: "Load command size", explanation: self.loadCommandSize.hex) }
+        store.translateNextDoubleWord { Readable(description: "Load Command Type", explanation: "\(self.loadCommandType.commandName)", dividerName: self.translationDividerName) }
+        store.translateNextDoubleWord { Readable(description: "Size", explanation: self.loadCommandSize.hex) }
         return store
     }
 }
@@ -157,6 +158,7 @@ class LCLinkerOption: LoadCommand {
     
     let numberOfOptions: Int
     let options: [String]
+    override var translationDividerName: String? { "Linker Option" }
     
     override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, offsetInMacho: Int) {
         self.numberOfOptions = Int(loadCommandData.select(from: 8, length: 4).realData.UInt32)
@@ -166,8 +168,8 @@ class LCLinkerOption: LoadCommand {
     
     override func binaryTranslationStore() -> BinaryTranslationStore {
         var store = super.binaryTranslationStore()
-        store.translateNextDoubleWord { Readable(description: "Number of options: ", explanation: "\(self.numberOfOptions)") }
-        store.translateNext(self.loadCommandSize - 12) { Readable(description: "Linker Option(s): ", explanation: "\(self.options.joined(separator: " "))") }
+        store.translateNextDoubleWord { Readable(description: "Number of options", explanation: "\(self.numberOfOptions)") }
+        store.translateNext(self.loadCommandSize - 12) { Readable(description: "Content", explanation: "\(self.options.joined(separator: " "))") }
         return store
     }
 }
