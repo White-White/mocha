@@ -71,48 +71,43 @@ enum LoadCommandType: Equatable {
     }
 }
 
-class LoadCommand: Identifiable, Equatable, BinaryTranslationStoreGenerator {
-    static func == (lhs: LoadCommand, rhs: LoadCommand) -> Bool {
-        return lhs.id == rhs.id
-    }
+class LoadCommand: SmartDataContainer, TranslationStore {
     
-    let id = UUID()
     let loadCommandType: LoadCommandType
-    
-    let data: SmartData
-    var loadCommandSize: Int { data.count }
-    let offsetInMacho: Int
+    let smartData: SmartData
     var translationDividerName: String? { nil }
     
-    init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, offsetInMacho: Int) {
-        self.data = loadCommandData
-        self.offsetInMacho = offsetInMacho
+    init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+        self.smartData = loadCommandData
         self.loadCommandType = loadCommandType
     }
     
-    static func loadCommand(with loadCommandData: SmartData, offsetInMacho: Int) -> LoadCommand {
-        let loadCommandType = LoadCommandType(loadCommandData.select(from: 0, length: 4).realData.UInt32)
+    static func loadCommand(with loadCommandData: SmartData) -> LoadCommand {
+        let loadCommandType = LoadCommandType(loadCommandData.truncated(from: 0, length: 4).raw.UInt32)
         switch loadCommandType {
         case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
-            return LCMinOSVersion(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+            return LCMinOSVersion(with: loadCommandData, loadCommandType: loadCommandType)
         case .linkerOption:
-            return LCLinkerOption(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+            return LCLinkerOption(with: loadCommandData, loadCommandType: loadCommandType)
         case .segment, .segment64:
-            return LCSegment(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+            return LCSegment(with: loadCommandData, loadCommandType: loadCommandType)
         case .symbolTable:
-            return LCSymbolTable(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+            return LCSymbolTable(with: loadCommandData, loadCommandType: loadCommandType)
         case .dynamicSymbolTable:
-            return LCDynamicSymbolTable(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+            return LCDynamicSymbolTable(with: loadCommandData, loadCommandType: loadCommandType)
         case .unknown(_):
-            return LoadCommand(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+            return LoadCommand(with: loadCommandData, loadCommandType: loadCommandType)
         }
     }
     
-    func binaryTranslationStore() -> BinaryTranslationStore {
-        var store = BinaryTranslationStore(data: data, baseDataOffset: offsetInMacho)
-        store.translateNextDoubleWord { Readable(description: "Load Command Type", explanation: "\(self.loadCommandType.commandName)", dividerName: self.translationDividerName) }
-        store.translateNextDoubleWord { Readable(description: "Size", explanation: self.loadCommandSize.hex) }
-        return store
+    var numberOfTranslationSections: Int { 1 }
+    
+    func translationSection(at index: Int) -> TranslationSection {
+        guard index == 0 else { fatalError() }
+        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho, title: "Load Command")
+        section.translateNextDoubleWord { Readable(description: "Load Command Type", explanation: "\(self.loadCommandType.commandName)") }
+        section.translateNextDoubleWord { Readable(description: "Size", explanation: self.smartData.count.hex) }
+        return section
     }
 }
 
@@ -123,19 +118,12 @@ class LCMinOSVersion: LoadCommand {
     private let osVersion: String
     private let sdkVersion: String
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, offsetInMacho: Int) {
-        let osVersionConstraint = loadCommandData.select(from: 8, length: 4).realData.UInt32
-        let sdkVersionConstraint = loadCommandData.select(from: 12, length: 4).realData.UInt32
+    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+        let osVersionConstraint = loadCommandData.truncated(from: 8, length: 4).raw.UInt32
+        let sdkVersionConstraint = loadCommandData.truncated(from: 12, length: 4).raw.UInt32
         self.osVersion = String(format: "%d.%d.%d", osVersionConstraint >> 16, (osVersionConstraint >> 8) & 0xff, osVersionConstraint & 0xff)
         self.sdkVersion = String(format: "%d.%d.%d", sdkVersionConstraint >> 16, (sdkVersionConstraint >> 8) & 0xff, sdkVersionConstraint & 0xff)
-        super.init(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
-    }
-    
-    override func binaryTranslationStore() -> BinaryTranslationStore {
-        var translation = super.binaryTranslationStore()
-        translation.translateNextDoubleWord { Readable(description: "\(self.osName), min required version:", explanation: "\(self.osVersion)") }
-        translation.translateNextDoubleWord { Readable(description: "min required sdk version:", explanation: "\(self.sdkVersion)") }
-        return translation
+        super.init(with: loadCommandData, loadCommandType: loadCommandType)
     }
     
     var osName: String {
@@ -152,6 +140,13 @@ class LCMinOSVersion: LoadCommand {
             fatalError()
         }
     }
+    
+    override func translationSection(at index: Int) -> TranslationSection {
+        let section = super.translationSection(at: index)
+        section.translateNextDoubleWord { Readable(description: "\(self.osName), min required version:", explanation: "\(self.osVersion)") }
+        section.translateNextDoubleWord { Readable(description: "min required sdk version:", explanation: "\(self.sdkVersion)") }
+        return section
+    }
 }
 
 class LCLinkerOption: LoadCommand {
@@ -160,17 +155,17 @@ class LCLinkerOption: LoadCommand {
     let options: [String]
     override var translationDividerName: String? { "Linker Option" }
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, offsetInMacho: Int) {
-        self.numberOfOptions = Int(loadCommandData.select(from: 8, length: 4).realData.UInt32)
-        self.options = loadCommandData.select(from: 12).realData.split(separator: 0x00).map { String(data: $0, encoding: .utf8)! }
-        super.init(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+        self.numberOfOptions = Int(loadCommandData.truncated(from: 8, length: 4).raw.UInt32)
+        self.options = loadCommandData.truncated(from: 12).raw.split(separator: 0x00).map { String(data: $0, encoding: .utf8)! }
+        super.init(with: loadCommandData, loadCommandType: loadCommandType)
     }
     
-    override func binaryTranslationStore() -> BinaryTranslationStore {
-        var store = super.binaryTranslationStore()
-        store.translateNextDoubleWord { Readable(description: "Number of options", explanation: "\(self.numberOfOptions)") }
-        store.translateNext(self.loadCommandSize - 12) { Readable(description: "Content", explanation: "\(self.options.joined(separator: " "))") }
-        return store
+    override func translationSection(at index: Int) -> TranslationSection {
+        let section = super.translationSection(at: index)
+        section.translateNextDoubleWord { Readable(description: "Number of options", explanation: "\(self.numberOfOptions)") }
+        section.translateNext(self.smartData.count - 12) { Readable(description: "Content", explanation: "\(self.options.joined(separator: " "))") }
+        return section
     }
 }
 
@@ -187,7 +182,7 @@ class LCSegment: LoadCommand {
     let flags: Data
     let sectionHeaders: [SectionHeader]
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, offsetInMacho: Int) {
+    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
         
         //        struct segment_command { /* for 32-bit architectures */
         //            uint32_t    cmd;        /* LC_SEGMENT */
@@ -235,27 +230,33 @@ class LCSegment: LoadCommand {
         self.sectionHeaders = (0..<numberOfSections).reduce([]) { sectionHeaders, _ in
             // section header data length for 32-bit is 68, and 64-bit 80
             let sectionHeaderLength = is64BitSegment ? 80 : 68
-            let sectionHeaderData = loadCommandData.select(from: dataShifter.shifted, length: sectionHeaderLength)
-            let sectionHeader = SectionHeader(is64Bit: is64BitSegment, data: sectionHeaderData, offsetInMacho: offsetInMacho + dataShifter.shifted)
+            let sectionHeaderData = loadCommandData.truncated(from: dataShifter.shifted, length: sectionHeaderLength)
+            let sectionHeader = SectionHeader(is64Bit: is64BitSegment, data: sectionHeaderData)
             dataShifter.ignore(sectionHeaderLength)
             return sectionHeaders + [sectionHeader]
         }
-        super.init(with: loadCommandData, loadCommandType: loadCommandType, offsetInMacho: offsetInMacho)
+        super.init(with: loadCommandData, loadCommandType: loadCommandType)
     }
     
-    override func binaryTranslationStore() -> BinaryTranslationStore {
-        let is64BitSegment = self.loadCommandType == LoadCommandType.segment64
-        var store = super.binaryTranslationStore()
-        store.translateNext(16) { Readable(description: "Segment Name: ", explanation: "\(self.segmentName)") }
-        store.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "vmaddr: ", explanation: "\(self.vmaddr.hex)") } //FIXME: add explanation
-        store.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "vmsize: ", explanation: "\(self.vmsize.hex)") } //FIXME: add explanation
-        store.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "file offset of this segment: ", explanation: "\(self.fileoff.hex)") } //FIXME: add explanation
-        store.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "amount to map from the file: ", explanation: "\(self.size.hex)") } //FIXME: add explanation
-        store.translateNextDoubleWord { Readable(description: "maxprot: ", explanation: "\(self.maxprot)") } //FIXME: add explanation
-        store.translateNextDoubleWord { Readable(description: "initprot: ", explanation: "\(self.initprot)") } //FIXME: add explanation
-        store.translateNextDoubleWord { Readable(description: "numberOfSections: ", explanation: "\(self.numberOfSections)") } //FIXME: add explanation
-        store.translateNextDoubleWord { Readable(description: "Flags", explanation: nil) } //FIXME: add explanation
-        sectionHeaders.forEach { $0.addTranslations(to: &store) }
-        return store
+    override var numberOfTranslationSections: Int { return super.numberOfTranslationSections + sectionHeaders.count }
+    
+    override func translationSection(at index: Int) -> TranslationSection {
+        if index >= self.numberOfTranslationSections { fatalError() }
+        if index == 0 {
+            let is64BitSegment = self.loadCommandType == LoadCommandType.segment64
+            let section = super.translationSection(at: index)
+            section.translateNext(16) { Readable(description: "Segment Name: ", explanation: "\(self.segmentName)") }
+            section.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "vmaddr: ", explanation: "\(self.vmaddr.hex)") } //FIXME: add explanation
+            section.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "vmsize: ", explanation: "\(self.vmsize.hex)") } //FIXME: add explanation
+            section.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "file offset of this segment: ", explanation: "\(self.fileoff.hex)") } //FIXME: add explanation
+            section.translateNext(is64BitSegment ? 8 : 4) { Readable(description: "amount to map from the file: ", explanation: "\(self.size.hex)") } //FIXME: add explanation
+            section.translateNextDoubleWord { Readable(description: "maxprot: ", explanation: "\(self.maxprot)") } //FIXME: add explanation
+            section.translateNextDoubleWord { Readable(description: "initprot: ", explanation: "\(self.initprot)") } //FIXME: add explanation
+            section.translateNextDoubleWord { Readable(description: "numberOfSections: ", explanation: "\(self.numberOfSections)") } //FIXME: add explanation
+            section.translateNextDoubleWord { Readable(description: "Flags", explanation: "//FIXME:") } //FIXME: add explanation
+            return section
+        } else {
+            return sectionHeaders[index - 1].makeTranslationSection()
+        }
     }
 }

@@ -7,56 +7,88 @@
 
 import Foundation
 
-struct SmartData {
+protocol SmartDataContainer {
+    var smartData: SmartData { get }
+}
+
+extension SmartDataContainer {
+    var dataSize: Int { smartData.count }
+    var startOffsetInMacho: Int { smartData.startOffsetInMacho }
+    var endOffsetInMacho: Int { smartData.startOffsetInMacho + smartData.count }
+}
+
+struct SmartData: Equatable {
+    static func == (lhs: SmartData, rhs: SmartData) -> Bool {
+        return lhs.startOffsetInMacho == rhs.startOffsetInMacho && lhs.length == rhs.length && lhs.sameSource(with: rhs)
+    }
     
-    let id: UUID
-    private let dataInside: Data
-    private let startIndex: Int
-    private var length: Int
+    private let baseMachoData: Data
+    let startOffsetInMacho: Int
+    let bestHexDigits: Int
+    private(set) var length: Int
     
     var count: Int { length }
-    var realData: Data { dataInside[(dataInside.startIndex + startIndex)..<(dataInside.startIndex + startIndex + length)] }
+    var raw: Data { baseMachoData[(baseMachoData.startIndex + startOffsetInMacho)..<(baseMachoData.startIndex + startOffsetInMacho + length)] }
     
-    init(_ data: Data) {
-        self.init(data, startIndex: .zero, length: data.count, id: UUID())
+    init(_ machoData: Data) {
+        self.init(machoData, startOffsetInMacho: .zero, length: machoData.count)
     }
     
-    private init(_ data: Data, startIndex: Int, length: Int, id: UUID) {
-        guard (startIndex + length) <= data.count else { fatalError() }
-        self.dataInside = data
-        self.startIndex = startIndex
+    private init(_ data: Data, startOffsetInMacho: Int, length: Int) {
+        guard (startOffsetInMacho + length) <= data.count else { fatalError() }
+        self.baseMachoData = data
+        self.startOffsetInMacho = startOffsetInMacho
         self.length = length
-        self.id = id
+        
+        var machoDataSize = data.count
+        var digitCount = 0
+        while machoDataSize != 0 {
+            digitCount += 1
+            machoDataSize /= 16
+        }
+        self.bestHexDigits = digitCount
     }
     
-    func select(from: Int, length: Int? = nil) -> SmartData {
-        if let length = length {
-            guard length > 0 else { fatalError() }
-            guard from + length <= self.length else { fatalError() }
-            return SmartData(dataInside, startIndex: startIndex + from, length: length, id: self.id)
+    func truncated(from: Int, maxLength: Int) -> SmartData {
+        if from + maxLength > self.length {
+            return self.truncated(from: from)
         } else {
-            guard from < self.length else { fatalError() }
-            return SmartData(dataInside, startIndex: startIndex + from, length: self.length - from, id: self.id)
+            return self.truncated(from: from, length: maxLength)
         }
     }
     
-    func select(from: Int, maxLength: Int) -> SmartData {
-        if from + maxLength > self.length {
-            return self.select(from: from)
+    func truncated(from: Int, length: Int? = nil) -> SmartData {
+        if let length = length {
+            guard length > 0 else { fatalError() }
+            guard from + length <= self.length else { fatalError() }
+            return SmartData(baseMachoData, startOffsetInMacho: startOffsetInMacho + from, length: length)
         } else {
-            return self.select(from: from, length: maxLength)
+            guard from < self.length else { fatalError() }
+            return SmartData(baseMachoData, startOffsetInMacho: startOffsetInMacho + from, length: self.length - from)
         }
     }
     
     func starts(with bytes: [UInt8]) -> Bool {
-        return dataInside[startIndex...].starts(with: bytes)
+        return raw.starts(with: bytes)
     }
  
     func sameSource(with anotherSmartData: SmartData) -> Bool {
-        return self.id == anotherSmartData.id
+        return self.baseMachoData == anotherSmartData.baseMachoData
     }
     
     mutating func extend(length: Int) {
         self.length += length
+    }
+    
+    mutating func merge(_ another: SmartData) {
+        guard sameSource(with: another) else { fatalError() }
+        
+        // to merge one store with another, the data of nextStore must be consectutive with self's data
+        // that is, self's data count plus self's lineTagStartIndex must be the nextStore's lineTagStartIndex
+        guard startOffsetInMacho + length == another.startOffsetInMacho else { fatalError() }
+        
+        // since they are all SmartData and have the same Data base,
+        // all we need to do is to extend the length property of current store
+        self.extend(length: another.length)
     }
 }

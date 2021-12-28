@@ -80,9 +80,8 @@ struct UnixArchive {
             
             fileHeaders.append(fileHeader)
             
-            let machoFileData = fileData.select(from: dataShifter.shifted,
-                                                length: fileHeader.contentSize - fileHeader.extFileIDLengthInt)
-            machos.append(Macho(with: machoFileData, machoFileName: fileHeader.fileID))
+            let machoRealData = fileData.truncated(from: dataShifter.shifted, length: fileHeader.contentSize - fileHeader.extFileIDLengthInt).raw
+            machos.append(Macho(with: SmartData(machoRealData), machoFileName: fileHeader.fileID))
             dataShifter.ignore(fileHeader.contentSize - fileHeader.extFileIDLengthInt)
         }
         

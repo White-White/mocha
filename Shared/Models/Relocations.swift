@@ -18,13 +18,11 @@ import Foundation
 //        r_type:4;    /* if not 0, machine specific relocation type */
 //};
 
-struct RelocationEntry: BinaryTranslationStoreGenerator {
+struct RelocationEntry {
     
     static let length = 8
     
-    let offsetInMacho: Int
     let data: SmartData
-    var dataSize: Int { data.count }
     
     let address: UInt32
     let symbolNum: UInt32 // 24 bits
@@ -33,47 +31,55 @@ struct RelocationEntry: BinaryTranslationStoreGenerator {
     let isExternal: Bool // 1 bit
     let type: UInt8 // 4
     
-    init(from data: SmartData, offsetInMacho: Int) {
-        self.offsetInMacho = offsetInMacho
+    init(from data: SmartData) {
         self.data = data
-        self.address = data.select(from: 0, length: 4).realData.UInt32
-        self.symbolNum = ([UInt8(0)] + data.select(from: 4, length: 3).realData).UInt32
-        let lastByte = data.select(from: 7, length: 1).realData.first!
+        self.address = data.truncated(from: 0, length: 4).raw.UInt32
+        self.symbolNum = ([UInt8(0)] + data.truncated(from: 4, length: 3).raw).UInt32
+        let lastByte = data.truncated(from: 7, length: 1).raw.first!
         self.pcRelocated = (lastByte & 0b10000000) != 0
         self.length = UInt8((lastByte & 0b01100000) >> 4)
         self.isExternal = (lastByte & 0b00010000) != 0
         self.type = UInt8((lastByte & 0b00001111) >> 4)
     }
     
-    func binaryTranslationStore() -> BinaryTranslationStore {
-        var store = BinaryTranslationStore(data: self.data, baseDataOffset: self.offsetInMacho)
-        store.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex, dividerName: "Relocation Entry") }
-        store.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
-        store.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
+    func makeTranslationSection() -> TranslationSection {
+        let section = TranslationSection(baseIndex: data.startOffsetInMacho, title: "Relocation Entry")
+        section.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex) }
+        section.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
+        section.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
         //FIXME: better explanations
-        return store
+        return section
     }
 }
 
-struct Relocation: Identifiable, BinaryTranslationStoreGenerator {
+class Relocation: SmartDataContainer, TranslationStore {
     
-    let id = UUID()
     var entries: [RelocationEntry] = []
-    var offsetInMacho: Int { entries.first!.offsetInMacho }
-    var dataSize: Int { entries.count * RelocationEntry.length }
+    var smartData: SmartData
+    var numberOfTranslationSections: Int { entries.count }
     
-    mutating func addEntries(from entriesData: SmartData, offsetInMacho: Int) {
-        let realData = entriesData.realData
-        for i in 0..<(realData.count/RelocationEntry.length) {
-            let entryOffset = i * RelocationEntry.length
-            let relocationEntryData = entriesData.select(from: entryOffset, length: RelocationEntry.length)
-            entries.append(RelocationEntry(from: relocationEntryData, offsetInMacho: offsetInMacho + entryOffset))
-        }
+    init(_ entriesData: SmartData) {
+        self.smartData = entriesData
+        self._addEntries(entriesData)
     }
     
-    func binaryTranslationStore() -> BinaryTranslationStore {
-        var store = entries.first!.binaryTranslationStore()
-        entries.dropFirst().forEach { store.merge(with: $0.binaryTranslationStore()) }
-        return store
+    func addEntries(_ entriesData: SmartData) {
+        self.smartData.merge(entriesData)
+        self._addEntries(entriesData)
+    }
+    
+    private func _addEntries(_ entriesData: SmartData) {
+        var entries: [RelocationEntry] = []
+        let raw = entriesData.raw
+        for i in 0..<(raw.count/RelocationEntry.length) {
+            let entryOffset = i * RelocationEntry.length
+            let relocationEntryData = entriesData.truncated(from: entryOffset, length: RelocationEntry.length)
+            entries.append(RelocationEntry(from: relocationEntryData))
+        }
+        self.entries.append(contentsOf: entries)
+    }
+    
+    func translationSection(at index: Int) -> TranslationSection {
+        return entries[index].makeTranslationSection()
     }
 }

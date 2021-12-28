@@ -64,9 +64,7 @@ struct SectionHeader {
     var reserved3: Data? // exists only for 64 bit
     
     let is64Bit: Bool
-    let offsetInMacho: Int
     let data: SmartData
-    var dataSize: Int { data.count }
     
     //    struct section { /* for 32-bit architectures */
     //        char        sectname[16];    /* name of this section */
@@ -97,9 +95,8 @@ struct SectionHeader {
     //        uint32_t    reserved3;    /* reserved */
     //    };
     
-    init(is64Bit: Bool, data: SmartData, offsetInMacho: Int) {
+    init(is64Bit: Bool, data: SmartData) {
         self.is64Bit = is64Bit
-        self.offsetInMacho = offsetInMacho
         self.data = data
         
         var dataShifter = DataShifter(data)
@@ -121,75 +118,110 @@ struct SectionHeader {
         self.reserved3 = is64Bit ? dataShifter.nextDoubleWord() : nil
     }
     
-    func addTranslations(to store: inout BinaryTranslationStore) {
-        store.translateNext(16) { Readable(description: "Section ame", explanation: self.section, dividerName: "Section Header") }
-        store.translateNext(16) { Readable(description: "In segment", explanation: self.segment) }
-        store.translateNext(is64Bit ? 8 : 4) { Readable(description: "Address in memory", explanation: self.addr.hex) } //FIXME: better explanation
-        store.translateNext(is64Bit ? 8 : 4) { Readable(description: "size", explanation: self.size.hex) } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "offset", explanation: self.offset.hex) } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "align", explanation: "\(self.align)") } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "Reloc Entry Offset", explanation: self.fileOffsetOfRelocationEntries.hex) } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "Reloc Entry Num", explanation: "\(self.numberOfRelocatioEntries)") } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "Flags", explanation: nil) } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "reserved1", explanation: nil) } //FIXME: better explanation
-        store.translateNextDoubleWord { Readable(description: "reserved2", explanation: nil) } //FIXME: better explanation
-        if is64Bit { store.translateNextDoubleWord { Readable(description: "reserved3", explanation: nil) } } //FIXME: better explanation }
+    
+    func makeTranslationSection() -> TranslationSection {
+        let section = TranslationSection(baseIndex: data.startOffsetInMacho, title: "Section Header")
+        section.translateNext(16) { Readable(description: "Section ame", explanation: self.section) }
+        section.translateNext(16) { Readable(description: "In segment", explanation: self.segment) }
+        section.translateNext(is64Bit ? 8 : 4) { Readable(description: "Address in memory", explanation: self.addr.hex) } //FIXME: better explanation
+        section.translateNext(is64Bit ? 8 : 4) { Readable(description: "size", explanation: self.size.hex) } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "offset", explanation: self.offset.hex) } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "align", explanation: "\(self.align)") } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "Reloc Entry Offset", explanation: self.fileOffsetOfRelocationEntries.hex) } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "Reloc Entry Num", explanation: "\(self.numberOfRelocatioEntries)") } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "Flags", explanation: "//FIXME:") } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "reserved1", explanation: "//FIXME:") } //FIXME: better explanation
+        section.translateNextDoubleWord { Readable(description: "reserved2", explanation: "//FIXME:") } //FIXME: better explanation
+        if is64Bit { section.translateNextDoubleWord { Readable(description: "reserved3", explanation: "//FIXME:") } } //FIXME: better explanation }
+        return section
     }
 }
 
-class Section: Identifiable, Equatable, BinaryTranslationStoreGenerator {
+
+
+class Section: SmartDataContainer, TranslationStore {
     
-    static func == (lhs: Section, rhs: Section) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    let id = UUID()
     let header: SectionHeader
-    let data: SmartData
+    let smartData: SmartData
     
     init(header: SectionHeader, data: SmartData) {
         self.header = header
-        self.data = data
+        self.smartData = data
     }
     
-    func binaryTranslationStore() -> BinaryTranslationStore {
-        var store = BinaryTranslationStore(data: self.data, baseDataOffset: Int(header.offset))
+    var numberOfTranslationSections: Int { 1 }
+    
+    func translationSection(at index: Int) -> TranslationSection {
+        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho)
+        section.addTranslation(forRange: nil) { Readable(description: "Don's know how to parse this section.", explanation: "\(self.header.segment),\(self.header.section)") }
+        return section
+    }
+    
+    static func section(with header: SectionHeader, data: SmartData) -> Section {
         switch header.segment {
         case "__TEXT":
             switch header.section {
             case "__text":
-                store.addTranslation(forRange: nil) { Readable(description: "Code", explanation: "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it.") }
+                return SectionCode(header: header, data: data)
             case "__cstring", "__objc_methname", "__objc_classname", "__objc_methtype":
-                var lastNullCharIndex: Int? // index of last null char ( "\0" )
-                for (index, byte) in data.realData.enumerated() {
-                    guard byte == 0 else { continue } // find null characters
-                    let currentIndex = index
-                    let lastIndex = lastNullCharIndex ?? -1
-                    if currentIndex - lastIndex == 1 {
-                        // skip continuous \0
-                        lastNullCharIndex = currentIndex
-                        continue
-                    }
-                    let dataStartIndex = lastIndex + 1 // lastIdnex points to last null, ignore
-                    let dataLength = currentIndex - lastIndex - 1 // also ignore the last null
-                    let stringData = data.select(from: dataStartIndex, length: dataLength)
-                    store.addTranslation(forRange: dataStartIndex..<(dataStartIndex + dataLength)) {
-                        if let string = String(data: stringData.realData, encoding: .utf8) {
-                            return Readable(description: "UTF8 encoded string", explanation: string.replacingOccurrences(of: "\n", with: "\\n"))
-                        } else {
-                            return Readable(description: "Invalid utf8 encoded", explanation: "🙅‍♂️ Invalid utf8 string")
-                        }
-                    }
-                    lastNullCharIndex = currentIndex
-                }
+                return SectionCString(header: header, data: data)
             default:
-                store.addTranslation(forRange: nil) { Readable(description: "Don's know how to parse this section.", explanation: "\(self.header.segment),\(self.header.section)") }
+                break
             }
         case "__DATA":
-            fallthrough
+            break
         default:
-            store.addTranslation(forRange: nil) { Readable(description: "Don's know how to parse this section.", explanation: "\(self.header.segment),\(self.header.section)") }
+            break
         }
-        return store
+        return Section(header: header, data: data)
+    }
+}
+
+class SectionCode: Section {
+    override func translationSection(at index: Int) -> TranslationSection {
+        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho)
+        section.addTranslation(forRange: nil) { Readable(description: "Code", explanation: "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it.") }
+        return section
+    }
+}
+
+class SectionCString: Section {
+    
+    override init(header: SectionHeader, data: SmartData) {
+        super.init(header: header, data: data)
+    }
+    
+    lazy var cStringRanges: [Range<Int>] = {
+        var ranges: [Range<Int>] = []
+        var lastNullCharIndex: Int? // index of last null char ( "\0" )
+        for (index, byte) in smartData.raw.enumerated() {
+            guard byte == 0 else { continue } // find null characters
+            let currentIndex = index
+            let lastIndex = lastNullCharIndex ?? -1
+            if currentIndex - lastIndex == 1 {
+                // skip continuous \0
+                lastNullCharIndex = currentIndex
+                continue
+            }
+            let dataStartIndex = lastIndex + 1 // lastIdnex points to last null, ignore
+            let dataEndIndex = currentIndex - 1 // also ignore the last null
+            lastNullCharIndex = currentIndex
+            ranges.append(dataStartIndex..<dataEndIndex)
+        }
+        return ranges
+    }()
+    
+    override var numberOfTranslationSections: Int { return cStringRanges.count }
+    
+    override func translationSection(at index: Int) -> TranslationSection {
+        if index >= cStringRanges.count { fatalError() }
+        let range = cStringRanges[index]
+        let section = TranslationSection(baseIndex: range.lowerBound)
+        if let string = String(data: smartData.raw.select(from: range.lowerBound, length: range.upperBound - range.lowerBound), encoding: .utf8) {
+            section.addTranslation(forRange: range) { Readable(description: "UTF8 encoded string", explanation: string.replacingOccurrences(of: "\n", with: "\\n")) }
+        } else {
+            section.addTranslation(forRange: range) { Readable(description: "Invalid utf8 encoded", explanation: "🙅‍♂️ Invalid utf8 string") }
+        }
+        return section
     }
 }

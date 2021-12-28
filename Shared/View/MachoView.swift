@@ -7,73 +7,49 @@
 
 import SwiftUI
 
-fileprivate protocol MachoViewCellModel {
-    var startOffsetInMacho: Int { get }
-    var dataSizeInMacho: Int { get }
+protocol MachoViewCellModel: SmartDataContainer {
     var primaryName: String { get }
     var secondaryName: String? { get }
-    var idForCellModel: UUID { get }
 }
 
 extension MachoHeader : MachoViewCellModel {
-    var startOffsetInMacho: Int { .zero }
-    var dataSizeInMacho: Int { dataSize }
     var primaryName: String { "Macho Header" }
     var secondaryName: String? { "Macho Header" }
-    var idForCellModel: UUID { id }
 }
 
 extension LoadCommand : MachoViewCellModel {
-    var startOffsetInMacho: Int { offsetInMacho }
-    var dataSizeInMacho: Int { loadCommandSize }
     var primaryName: String { loadCommandType.commandName }
     var secondaryName: String? { "Load Command" }
-    var idForCellModel: UUID { id }
 }
 
 extension MergedLinkOptionsCommand : MachoViewCellModel {
-    var startOffsetInMacho: Int { offsetInMacho }
-    var dataSizeInMacho: Int { dataSize }
     var primaryName: String { LoadCommandType.linkerOption.commandName + "(s)" }
     var secondaryName: String? { "\(linkerOptions.count) linker options" }
-    var idForCellModel: UUID { id }
 }
 
 extension Section : MachoViewCellModel {
-    var startOffsetInMacho: Int { Int(header.offset) }
-    var dataSizeInMacho: Int { Int(header.size) }
     var primaryName: String { header.segment + "," + header.section }
     var secondaryName: String? { "Section" }
-    var idForCellModel: UUID { id }
 }
 
 extension SymbolTable : MachoViewCellModel {
-    var startOffsetInMacho: Int { offsetInMacho }
-    var dataSizeInMacho: Int { dataSize }
     var primaryName: String { "Symbol Table" }
     var secondaryName: String? { "Symbol Table" }
-    var idForCellModel: UUID { id }
 }
 
 extension StringTable : MachoViewCellModel {
-    var startOffsetInMacho: Int { offsetInMacho }
-    var dataSizeInMacho: Int { dataSize }
     var primaryName: String { "String Table" }
     var secondaryName: String? { "String Table" }
-    var idForCellModel: UUID { id }
 }
 
 extension Relocation : MachoViewCellModel {
-    var startOffsetInMacho: Int { offsetInMacho }
-    var dataSizeInMacho: Int { dataSize }
     var primaryName: String { "Relocation Entries" }
     var secondaryName: String? { "\(entries.count) entries" }
-    var idForCellModel: UUID { id }
 }
 
 extension Macho {
-    fileprivate var machoViewCellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator] {
-        var cellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator] = [self.header]
+    fileprivate var machoViewCellModels: [MachoViewCellModel & TranslationStore] {
+        var cellModels: [MachoViewCellModel & TranslationStore] = [self.header]
         
         // append load commands and section headers
         cellModels.append(contentsOf: self.loadCommands)
@@ -103,23 +79,13 @@ extension Macho {
         
         return cellModels
     }
-    
-    fileprivate var digits: Int {
-        var machoFileSize = self.fileSize
-        var digitCount = 0
-        while machoFileSize != 0 {
-            digitCount += 1
-            machoFileSize /= 16
-        }
-        return digitCount
-    }
 }
 
 
 fileprivate struct MachoCellView: View {
     
     let cellModel: MachoViewCellModel
-    let digitsCount: Int
+    let hexDigits: Int
     let isSelected: Bool
     
     var body: some View {
@@ -134,7 +100,7 @@ fileprivate struct MachoCellView: View {
                         .font(.system(size: 12))
                         .foregroundColor(isSelected ? .white : .secondary)
                 }
-                Text(String(format: "Range: 0x%0\(digitsCount)X ~ 0x%0\(digitsCount)X", cellModel.startOffsetInMacho, cellModel.startOffsetInMacho + cellModel.dataSizeInMacho))
+                Text(String(format: "Range: 0x%0\(hexDigits)X ~ 0x%0\(hexDigits)X", cellModel.startOffsetInMacho, cellModel.startOffsetInMacho + cellModel.dataSize))
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .secondary)
                     .padding(.top, 2)
@@ -148,60 +114,69 @@ fileprivate struct MachoCellView: View {
         .contentShape(Rectangle())
     }
     
-    init(_ cellModel: MachoViewCellModel, digitsCount: Int, isSelected: Bool) {
+    init(_ cellModel: MachoViewCellModel, isSelected: Bool) {
         self.cellModel = cellModel
-        self.digitsCount = digitsCount
+        self.hexDigits = cellModel.smartData.bestHexDigits
         self.isSelected = isSelected
     }
 }
 
-
 struct MachoView: View {
     
     @Binding var macho: Macho
-    @State var digitCount: Int
-    @State fileprivate var cellModels: [MachoViewCellModel & BinaryTranslationStoreGenerator]
-    @State fileprivate var selectedModel: MachoViewCellModel
-    @State var binaryTranslationStore: BinaryTranslationStore
+    @State fileprivate var selectedCellIndex: Int
+    @State fileprivate var cellModels: [MachoViewCellModel & TranslationStore]
+    
+    @State var binaryStore: BinaryStore
+    @State var selectedBinaryRange: Range<Int>?
+    @State var translationStore: TranslationStore
     
     var body: some View {
         HStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(cellModels, id: \.idForCellModel) { cellModel in
-                        MachoCellView(cellModel, digitsCount: digitCount, isSelected: selectedModel.idForCellModel == cellModel.idForCellModel)
+                LazyVStack(alignment: .leading, spacing: 4) {
+                    ForEach(0..<cellModels.count, id: \.self) { index in
+                        MachoCellView(cellModels[index], isSelected: selectedCellIndex == index)
                             .onTapGesture {
-                                self.selectedModel = cellModel
-                                self.binaryTranslationStore = cellModel.binaryTranslationStore()
+                                self.selectedCellIndex = index
+                                self.binaryStore = cellModels[index].binaryStore
+                                self.translationStore = cellModels[index]
                             }
                     }
                 }
+                .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
             }
-            .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
             .fixedSize(horizontal: true, vertical: false)
             
             Divider()
             
             VStack(alignment: .leading) {
-                MiniMap(size: macho.fileSize, start: selectedModel.startOffsetInMacho, length: selectedModel.dataSizeInMacho)
+                MiniMap(size: macho.fileSize, start: cellModels[selectedCellIndex].startOffsetInMacho, length: cellModels[selectedCellIndex].dataSize)
                     .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
-                BinaryView($binaryTranslationStore, digitsCount: $digitCount)
-                    .padding(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+                HStack(alignment: .top, spacing: 0) {
+                    HexView(store: $binaryStore, selectedBinaryRange: $selectedBinaryRange)
+                    TranslationView(store: $translationStore, selectedBinaryRange: $selectedBinaryRange)
+                }
+                .padding(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
             }
         }
         .onChange(of: macho) { newValue in
-            self.selectedModel = newValue.header
-            self.binaryTranslationStore = newValue.header.binaryTranslationStore()
-            self.digitCount = newValue.digits
             self.cellModels = newValue.machoViewCellModels
+            self.selectedCellIndex = .zero
+            
+            self.binaryStore = newValue.header.binaryStore
+            self.selectedBinaryRange = newValue.header.translationSection(at: 0).terms.first?.range
+            self.translationStore = newValue.header
         }
     }
     
     init(_ macho: Binding<Macho>) {
         _macho = macho
-        _selectedModel = State(initialValue: macho.wrappedValue.header)
-        _binaryTranslationStore = State(initialValue: macho.wrappedValue.header.binaryTranslationStore())
-        _digitCount = State(initialValue: macho.wrappedValue.digits)
         _cellModels = State(initialValue: macho.wrappedValue.machoViewCellModels)
+        _selectedCellIndex = State(initialValue: .zero)
+        
+        _binaryStore = State(initialValue: macho.wrappedValue.header.binaryStore)
+        _selectedBinaryRange = State(initialValue: macho.wrappedValue.header.translationSection(at: 0).terms.first?.range)
+        _translationStore = State(initialValue: macho.wrappedValue.header)
     }
 }

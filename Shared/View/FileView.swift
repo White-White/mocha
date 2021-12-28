@@ -50,15 +50,17 @@ struct FileViewCell: View {
 struct FileView: View {
     
     let file: File
+    @State var selectedIndex: Int
     @State var selectedMacho: Macho
     
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             ScrollView {
-                VStack(alignment:.leading, spacing: 4) {
-                    ForEach(file.machos) { macho in
-                        FileViewCell(macho, isSelected: self.selectedMacho == macho) .onTapGesture {
-                            self.selectedMacho = macho
+                LazyVStack {
+                    ForEach(0..<file.machos.count) { index in
+                        FileViewCell(file.machos[index], isSelected: index == self.selectedIndex) .onTapGesture {
+                            self.selectedIndex = index
+                            self.selectedMacho = file.machos[index]
                         }
                     }
                 }
@@ -72,12 +74,7 @@ struct FileView: View {
     
     init(file: File) {
         self.file = file
+        _selectedIndex = State(initialValue: 0)
         _selectedMacho = State(initialValue: file.machos.first!)
-    }
-}
-
-struct FileView_Previews: PreviewProvider {
-    static var previews: some View {
-        FileView(file: try! File(with: "/Users/white/Desktop/VideoToolBox"))
     }
 }
