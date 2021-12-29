@@ -119,8 +119,8 @@ struct SectionHeader {
     }
     
     
-    func makeTranslationSection() -> TranslationSection {
-        let section = TranslationSection(baseIndex: data.startOffsetInMacho, title: "Section Header")
+    func makeTranslationSection() -> TransSection {
+        let section = TransSection(baseIndex: data.startOffsetInMacho, title: "Section Header")
         section.translateNext(16) { Readable(description: "Section ame", explanation: self.section) }
         section.translateNext(16) { Readable(description: "In segment", explanation: self.segment) }
         section.translateNext(is64Bit ? 8 : 4) { Readable(description: "Address in memory", explanation: self.addr.hex) } //FIXME: better explanation
@@ -139,10 +139,13 @@ struct SectionHeader {
 
 
 
-class Section: SmartDataContainer, TranslationStore {
+class Section: SmartDataContainer, TranslationStoreDataSource {
     
     let header: SectionHeader
     let smartData: SmartData
+    
+    var primaryName: String { header.segment + "," + header.section }
+    var secondaryName: String { "Section" }
     
     init(header: SectionHeader, data: SmartData) {
         self.header = header
@@ -151,8 +154,8 @@ class Section: SmartDataContainer, TranslationStore {
     
     var numberOfTranslationSections: Int { 1 }
     
-    func translationSection(at index: Int) -> TranslationSection {
-        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho)
+    func translationSection(at index: Int) -> TransSection {
+        let section = TransSection(baseIndex: smartData.startOffsetInMacho)
         section.addTranslation(forRange: nil) { Readable(description: "Don's know how to parse this section.", explanation: "\(self.header.segment),\(self.header.section)") }
         return section
     }
@@ -178,8 +181,8 @@ class Section: SmartDataContainer, TranslationStore {
 }
 
 class SectionCode: Section {
-    override func translationSection(at index: Int) -> TranslationSection {
-        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho)
+    override func translationSection(at index: Int) -> TransSection {
+        let section = TransSection(baseIndex: smartData.startOffsetInMacho)
         section.addTranslation(forRange: nil) { Readable(description: "Code", explanation: "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it.") }
         return section
     }
@@ -213,10 +216,10 @@ class SectionCString: Section {
     
     override var numberOfTranslationSections: Int { return cStringRanges.count }
     
-    override func translationSection(at index: Int) -> TranslationSection {
+    override func translationSection(at index: Int) -> TransSection {
         if index >= cStringRanges.count { fatalError() }
         let range = cStringRanges[index]
-        let section = TranslationSection(baseIndex: range.lowerBound)
+        let section = TransSection(baseIndex: range.lowerBound)
         if let string = String(data: smartData.raw.select(from: range.lowerBound, length: range.upperBound - range.lowerBound), encoding: .utf8) {
             section.addTranslation(forRange: range) { Readable(description: "UTF8 encoded string", explanation: string.replacingOccurrences(of: "\n", with: "\\n")) }
         } else {

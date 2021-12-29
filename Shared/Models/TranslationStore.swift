@@ -8,9 +8,17 @@
 import Foundation
 import SwiftUI
 
-protocol TranslationStore {
+protocol TranslationStoreDataSource {
     var numberOfTranslationSections: Int { get }
-    func translationSection(at index: Int) -> TranslationSection
+    func translationSection(at index: Int) -> TransSection
+}
+
+struct TranslationStore: Equatable {
+    static func == (lhs: TranslationStore, rhs: TranslationStore) -> Bool {
+        return lhs.id == rhs.id
+    }
+    let id = UUID()
+    let dataSource: TranslationStoreDataSource
 }
 
 struct Readable {
@@ -18,27 +26,18 @@ struct Readable {
     let explanation: String
 }
 
-struct TranslationTerm: Equatable {
-    static func == (lhs: TranslationTerm, rhs: TranslationTerm) -> Bool {
-        return lhs.range == rhs.range
-    }
-    
+struct TransTerm {
     var range: Range<Int>?
     let readable: Readable
-    
-    init(range: Range<Int>?, readable: Readable) {
-        self.range = range
-        self.readable = readable
-    }
 }
 
-class TranslationSection {
+class TransSection {
     
     let title: String?
     let baseIndex: Int
     
     private var translated: Int = 0
-    private(set) var terms: [TranslationTerm] = []
+    private(set) var terms: [TransTerm] = []
     
     init(baseIndex: Int, title: String? = nil) {
         self.baseIndex = baseIndex
@@ -59,9 +58,9 @@ class TranslationSection {
     func addTranslation(forRange range: Range<Int>?, readableGenerator: @escaping () -> Readable) {
         if let range = range {
             let rangeConsideringBaseOffset = (range.lowerBound + baseIndex)..<(range.upperBound + baseIndex)
-            self.terms.append(TranslationTerm(range: rangeConsideringBaseOffset, readable: readableGenerator()))
+            self.terms.append(TransTerm(range: rangeConsideringBaseOffset, readable: readableGenerator()))
         } else {
-            self.terms.append(TranslationTerm(range: nil, readable: readableGenerator()))
+            self.terms.append(TransTerm(range: nil, readable: readableGenerator()))
         }
     }
 }

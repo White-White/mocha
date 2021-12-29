@@ -7,49 +7,9 @@
 
 import SwiftUI
 
-protocol MachoViewCellModel: SmartDataContainer {
-    var primaryName: String { get }
-    var secondaryName: String? { get }
-}
-
-extension MachoHeader : MachoViewCellModel {
-    var primaryName: String { "Macho Header" }
-    var secondaryName: String? { "Macho Header" }
-}
-
-extension LoadCommand : MachoViewCellModel {
-    var primaryName: String { loadCommandType.commandName }
-    var secondaryName: String? { "Load Command" }
-}
-
-extension MergedLinkOptionsCommand : MachoViewCellModel {
-    var primaryName: String { LoadCommandType.linkerOption.commandName + "(s)" }
-    var secondaryName: String? { "\(linkerOptions.count) linker options" }
-}
-
-extension Section : MachoViewCellModel {
-    var primaryName: String { header.segment + "," + header.section }
-    var secondaryName: String? { "Section" }
-}
-
-extension SymbolTable : MachoViewCellModel {
-    var primaryName: String { "Symbol Table" }
-    var secondaryName: String? { "Symbol Table" }
-}
-
-extension StringTable : MachoViewCellModel {
-    var primaryName: String { "String Table" }
-    var secondaryName: String? { "String Table" }
-}
-
-extension Relocation : MachoViewCellModel {
-    var primaryName: String { "Relocation Entries" }
-    var secondaryName: String? { "\(entries.count) entries" }
-}
-
 extension Macho {
-    fileprivate var machoViewCellModels: [MachoViewCellModel & TranslationStore] {
-        var cellModels: [MachoViewCellModel & TranslationStore] = [self.header]
+    fileprivate var machoViewCellModels: [SmartDataContainer & TranslationStoreDataSource] {
+        var cellModels: [SmartDataContainer & TranslationStoreDataSource] = [self.header]
         
         // append load commands and section headers
         cellModels.append(contentsOf: self.loadCommands)
@@ -84,7 +44,7 @@ extension Macho {
 
 fileprivate struct MachoCellView: View {
     
-    let cellModel: MachoViewCellModel
+    let cellModel: SmartDataContainer
     let hexDigits: Int
     let isSelected: Bool
     
@@ -114,9 +74,9 @@ fileprivate struct MachoCellView: View {
         .contentShape(Rectangle())
     }
     
-    init(_ cellModel: MachoViewCellModel, isSelected: Bool) {
+    init(_ cellModel: SmartDataContainer, isSelected: Bool) {
         self.cellModel = cellModel
-        self.hexDigits = cellModel.smartData.bestHexDigits
+        self.hexDigits = cellModel.smartData.preferredNumberOfHexDigits
         self.isSelected = isSelected
     }
 }
@@ -125,9 +85,9 @@ struct MachoView: View {
     
     @Binding var macho: Macho
     @State fileprivate var selectedCellIndex: Int
-    @State fileprivate var cellModels: [MachoViewCellModel & TranslationStore]
+    @State fileprivate var cellModels: [SmartDataContainer & TranslationStoreDataSource]
     
-    @State var binaryStore: BinaryStore
+    @State var binaryStore: HexLineStore
     @State var selectedBinaryRange: Range<Int>?
     @State var translationStore: TranslationStore
     
@@ -140,7 +100,7 @@ struct MachoView: View {
                             .onTapGesture {
                                 self.selectedCellIndex = index
                                 self.binaryStore = cellModels[index].binaryStore
-                                self.translationStore = cellModels[index]
+                                self.translationStore = TranslationStore(dataSource: cellModels[index])
                             }
                     }
                 }
@@ -166,7 +126,7 @@ struct MachoView: View {
             
             self.binaryStore = newValue.header.binaryStore
             self.selectedBinaryRange = newValue.header.translationSection(at: 0).terms.first?.range
-            self.translationStore = newValue.header
+            self.translationStore = TranslationStore(dataSource: newValue.header)
         }
     }
     
@@ -177,6 +137,6 @@ struct MachoView: View {
         
         _binaryStore = State(initialValue: macho.wrappedValue.header.binaryStore)
         _selectedBinaryRange = State(initialValue: macho.wrappedValue.header.translationSection(at: 0).terms.first?.range)
-        _translationStore = State(initialValue: macho.wrappedValue.header)
+        _translationStore = State(initialValue: TranslationStore(dataSource: macho.wrappedValue.header))
     }
 }

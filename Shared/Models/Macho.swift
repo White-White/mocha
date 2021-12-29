@@ -40,7 +40,7 @@ enum MachoType {
     }
 }
 
-class MachoHeader: SmartDataContainer, TranslationStore {
+class MachoHeader: SmartDataContainer, TranslationStoreDataSource {
 
     let is64Bit: Bool
     let smartData: SmartData
@@ -52,6 +52,9 @@ class MachoHeader: SmartDataContainer, TranslationStore {
     let sizeOfAllLoadCommand: UInt32
     let flags: UInt32
     let reserved: UInt32?
+    
+    var primaryName: String { "Macho Header" }
+    var secondaryName: String { "Macho Header" }
     
     init(from data: SmartData, is64Bit: Bool) {
         self.is64Bit = is64Bit
@@ -71,8 +74,8 @@ class MachoHeader: SmartDataContainer, TranslationStore {
         return 1
     }
     
-    func translationSection(at index: Int) -> TranslationSection {
-        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho)
+    func translationSection(at index: Int) -> TransSection {
+        let section = TransSection(baseIndex: smartData.startOffsetInMacho)
         section.translateNextDoubleWord { Readable(description: "File Magic", explanation: (self.is64Bit ? MagicType.macho64 : MagicType.macho32).readable) }
         section.translateNextDoubleWord { Readable(description: "CPU Type", explanation: self.cpuType.name) }
         section.translateNextDoubleWord { Readable(description: "CPU Sub Type", explanation: self.cpuSubtype.name) }
@@ -118,10 +121,13 @@ class MachoHeader: SmartDataContainer, TranslationStore {
     }
 }
 
-struct MergedLinkOptionsCommand: SmartDataContainer, TranslationStore {
+struct MergedLinkOptionsCommand: SmartDataContainer, TranslationStoreDataSource {
     
     let linkerOptions: [LCLinkerOption]
     var smartData: SmartData
+    
+    var primaryName: String { LoadCommandType.linkerOption.commandName + "(s)" }
+    var secondaryName: String { "\(linkerOptions.count) linker options" }
     
     init?(_ linkerOptions: [LCLinkerOption]) {
         guard !linkerOptions.isEmpty else { return nil }
@@ -136,7 +142,7 @@ struct MergedLinkOptionsCommand: SmartDataContainer, TranslationStore {
         linkerOptions.count
     }
     
-    func translationSection(at index: Int) -> TranslationSection {
+    func translationSection(at index: Int) -> TransSection {
         return linkerOptions[index].translationSection(at: 0)
     }
 }

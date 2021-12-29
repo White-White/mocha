@@ -33,11 +33,14 @@ import Foundation
 //    uint64_t n_value;      /* value of this symbol (or stab offset) */
 //};
 
-struct SymbolTable: SmartDataContainer, TranslationStore {
+struct SymbolTable: SmartDataContainer, TranslationStoreDataSource {
     
     let smartData: SmartData
     let is64Bit: Bool
     let numberOfEntries: Int
+    
+    var primaryName: String { "Symbol Table" }
+    var secondaryName: String { "Symbol Table" }
     
     init(_ data: SmartData, numberOfEntries: Int, is64Bit: Bool) {
         self.smartData = data
@@ -47,12 +50,11 @@ struct SymbolTable: SmartDataContainer, TranslationStore {
     
     var numberOfTranslationSections: Int { numberOfEntries }
     
-    func translationSection(at index: Int) -> TranslationSection {
+    func translationSection(at index: Int) -> TransSection {
         if index >= numberOfEntries { fatalError() }
         let entrySize = is64Bit ? 16 : 12
-        let dataStartIndex = index * entrySize
-//        let data = data.truncated(from: dataStartIndex, length: entrySize).raw
-        let section = TranslationSection(baseIndex: dataStartIndex, title: "Symbol Table Entry")
+        let dataStartIndex = smartData.startOffsetInMacho + index * entrySize
+        let section = TransSection(baseIndex: dataStartIndex, title: "Symbol Table Entry")
         section.translateNext(entrySize) { Readable(description: "Symbol", explanation: "//FIXME:") } //FIXME:
         return section
     }
@@ -84,7 +86,7 @@ class LCSymbolTable: LoadCommand {
         super.init(with: loadCommandData, loadCommandType: loadCommandType)
     }
     
-    override func translationSection(at index: Int) -> TranslationSection {
+    override func translationSection(at index: Int) -> TransSection {
         let section = super.translationSection(at: index)
         section.translateNextDoubleWord { Readable(description: "Symbol table offset", explanation: "\(self.symbolTableOffset.hex)") }
         section.translateNextDoubleWord { Readable(description: "Number of entries", explanation: "\(self.numberOfSymbolTableEntries)") }
@@ -150,7 +152,7 @@ class LCDynamicSymbolTable: LoadCommand {
         super.init(with: loadCommandData, loadCommandType: loadCommandType)
     }
     
-    override func translationSection(at index: Int) -> TranslationSection {
+    override func translationSection(at index: Int) -> TransSection {
         let section = super.translationSection(at: index)
         section.translateNextDoubleWord { Readable(description: "index to local symbols ", explanation: "\(self.ilocalsym)") }
         section.translateNextDoubleWord { Readable(description: "number of local symbols ", explanation: "\(self.nlocalsym)") }

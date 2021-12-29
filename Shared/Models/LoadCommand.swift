@@ -71,11 +71,14 @@ enum LoadCommandType: Equatable {
     }
 }
 
-class LoadCommand: SmartDataContainer, TranslationStore {
+class LoadCommand: SmartDataContainer, TranslationStoreDataSource {
     
     let loadCommandType: LoadCommandType
     let smartData: SmartData
     var translationDividerName: String? { nil }
+    
+    var primaryName: String { loadCommandType.commandName }
+    var secondaryName: String { "Load Command" }
     
     init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
         self.smartData = loadCommandData
@@ -102,9 +105,9 @@ class LoadCommand: SmartDataContainer, TranslationStore {
     
     var numberOfTranslationSections: Int { 1 }
     
-    func translationSection(at index: Int) -> TranslationSection {
+    func translationSection(at index: Int) -> TransSection {
         guard index == 0 else { fatalError() }
-        let section = TranslationSection(baseIndex: smartData.startOffsetInMacho, title: "Load Command")
+        let section = TransSection(baseIndex: smartData.startOffsetInMacho, title: "Load Command")
         section.translateNextDoubleWord { Readable(description: "Load Command Type", explanation: "\(self.loadCommandType.commandName)") }
         section.translateNextDoubleWord { Readable(description: "Size", explanation: self.smartData.count.hex) }
         return section
@@ -141,7 +144,7 @@ class LCMinOSVersion: LoadCommand {
         }
     }
     
-    override func translationSection(at index: Int) -> TranslationSection {
+    override func translationSection(at index: Int) -> TransSection {
         let section = super.translationSection(at: index)
         section.translateNextDoubleWord { Readable(description: "\(self.osName), min required version:", explanation: "\(self.osVersion)") }
         section.translateNextDoubleWord { Readable(description: "min required sdk version:", explanation: "\(self.sdkVersion)") }
@@ -161,7 +164,7 @@ class LCLinkerOption: LoadCommand {
         super.init(with: loadCommandData, loadCommandType: loadCommandType)
     }
     
-    override func translationSection(at index: Int) -> TranslationSection {
+    override func translationSection(at index: Int) -> TransSection {
         let section = super.translationSection(at: index)
         section.translateNextDoubleWord { Readable(description: "Number of options", explanation: "\(self.numberOfOptions)") }
         section.translateNext(self.smartData.count - 12) { Readable(description: "Content", explanation: "\(self.options.joined(separator: " "))") }
@@ -240,7 +243,7 @@ class LCSegment: LoadCommand {
     
     override var numberOfTranslationSections: Int { return super.numberOfTranslationSections + sectionHeaders.count }
     
-    override func translationSection(at index: Int) -> TranslationSection {
+    override func translationSection(at index: Int) -> TransSection {
         if index >= self.numberOfTranslationSections { fatalError() }
         if index == 0 {
             let is64BitSegment = self.loadCommandType == LoadCommandType.segment64

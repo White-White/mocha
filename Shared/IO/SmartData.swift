@@ -9,6 +9,8 @@ import Foundation
 
 protocol SmartDataContainer {
     var smartData: SmartData { get }
+    var primaryName: String { get }
+    var secondaryName: String { get }
 }
 
 extension SmartDataContainer {
@@ -18,17 +20,18 @@ extension SmartDataContainer {
 }
 
 struct SmartData: Equatable {
+    
     static func == (lhs: SmartData, rhs: SmartData) -> Bool {
         return lhs.startOffsetInMacho == rhs.startOffsetInMacho && lhs.length == rhs.length && lhs.sameSource(with: rhs)
     }
     
-    private let baseMachoData: Data
+    private let machoData: Data
     let startOffsetInMacho: Int
-    let bestHexDigits: Int
+    let preferredNumberOfHexDigits: Int
     private(set) var length: Int
     
     var count: Int { length }
-    var raw: Data { baseMachoData[(baseMachoData.startIndex + startOffsetInMacho)..<(baseMachoData.startIndex + startOffsetInMacho + length)] }
+    var raw: Data { machoData[(machoData.startIndex + startOffsetInMacho)..<(machoData.startIndex + startOffsetInMacho + length)] }
     
     init(_ machoData: Data) {
         self.init(machoData, startOffsetInMacho: .zero, length: machoData.count)
@@ -36,7 +39,8 @@ struct SmartData: Equatable {
     
     private init(_ data: Data, startOffsetInMacho: Int, length: Int) {
         guard (startOffsetInMacho + length) <= data.count else { fatalError() }
-        self.baseMachoData = data
+        
+        self.machoData = data
         self.startOffsetInMacho = startOffsetInMacho
         self.length = length
         
@@ -46,7 +50,7 @@ struct SmartData: Equatable {
             digitCount += 1
             machoDataSize /= 16
         }
-        self.bestHexDigits = digitCount
+        self.preferredNumberOfHexDigits = digitCount
     }
     
     func truncated(from: Int, maxLength: Int) -> SmartData {
@@ -61,10 +65,10 @@ struct SmartData: Equatable {
         if let length = length {
             guard length > 0 else { fatalError() }
             guard from + length <= self.length else { fatalError() }
-            return SmartData(baseMachoData, startOffsetInMacho: startOffsetInMacho + from, length: length)
+            return SmartData(machoData, startOffsetInMacho: startOffsetInMacho + from, length: length)
         } else {
             guard from < self.length else { fatalError() }
-            return SmartData(baseMachoData, startOffsetInMacho: startOffsetInMacho + from, length: self.length - from)
+            return SmartData(machoData, startOffsetInMacho: startOffsetInMacho + from, length: self.length - from)
         }
     }
     
@@ -73,7 +77,7 @@ struct SmartData: Equatable {
     }
  
     func sameSource(with anotherSmartData: SmartData) -> Bool {
-        return self.baseMachoData == anotherSmartData.baseMachoData
+        return self.machoData == anotherSmartData.machoData
     }
     
     mutating func extend(length: Int) {

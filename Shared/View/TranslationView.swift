@@ -17,24 +17,25 @@ struct TranslationView: View {
         ScrollViewReader { scrollProxy in
             ScrollView(.vertical, showsIndicators: true)  {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(0..<store.numberOfTranslationSections, id: \.self) { index in
-                        TranslationSectionView(translationSection: store.translationSection(at: index), selectedBinaryRange: $selectedBinaryRange)
+                    ForEach(0..<store.dataSource.numberOfTranslationSections, id: \.self) { index in
+                        TranslationSectionView(translationSection: store.dataSource.translationSection(at: index),
+                                               selectedBinaryRange: $selectedBinaryRange)
                     }
                 }
                 .padding(4)
             }
             .background(.white)
             .border(.separator, width: 1)
-//            .onChange(of: store, perform: { newValue in
-//                scrollProxy.scrollTo(0, anchor: .top)
-//            })
+            .onChange(of: store, perform: { newValue in
+                scrollProxy.scrollTo(0, anchor: .top)
+            })
         }
     }
 }
 
 struct TranslationSectionView: View {
     
-    let translationSection: TranslationSection
+    let translationSection: TransSection
     @Binding var selectedBinaryRange: Range<Int>?
     
     var body: some View {

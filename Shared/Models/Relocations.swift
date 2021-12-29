@@ -42,8 +42,8 @@ struct RelocationEntry {
         self.type = UInt8((lastByte & 0b00001111) >> 4)
     }
     
-    func makeTranslationSection() -> TranslationSection {
-        let section = TranslationSection(baseIndex: data.startOffsetInMacho, title: "Relocation Entry")
+    func makeTranslationSection() -> TransSection {
+        let section = TransSection(baseIndex: data.startOffsetInMacho, title: "Relocation Entry")
         section.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex) }
         section.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
         section.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
@@ -52,11 +52,14 @@ struct RelocationEntry {
     }
 }
 
-class Relocation: SmartDataContainer, TranslationStore {
+class Relocation: SmartDataContainer, TranslationStoreDataSource {
     
     var entries: [RelocationEntry] = []
-    var smartData: SmartData
+    private(set) var smartData: SmartData
     var numberOfTranslationSections: Int { entries.count }
+    
+    var primaryName: String { "Relocation Entries" }
+    var secondaryName: String { "\(entries.count) entries" }
     
     init(_ entriesData: SmartData) {
         self.smartData = entriesData
@@ -79,7 +82,7 @@ class Relocation: SmartDataContainer, TranslationStore {
         self.entries.append(contentsOf: entries)
     }
     
-    func translationSection(at index: Int) -> TranslationSection {
+    func translationSection(at index: Int) -> TransSection {
         return entries[index].makeTranslationSection()
     }
 }

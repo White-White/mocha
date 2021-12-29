@@ -7,18 +7,21 @@
 
 import Foundation
 
-class StringTable: SmartDataContainer, TranslationStore {
+class StringTable: SmartDataContainer, TranslationStoreDataSource {
     
     let smartData: SmartData
+    var primaryName: String { "String Table" }
+    var secondaryName: String { "String Table" }
     
     init(_ stringTableData: SmartData) {
         self.smartData = stringTableData
     }
     
     lazy var cStringRanges: [Range<Int>] = {
+        let rawData = smartData.raw
         var ranges: [Range<Int>] = []
         var lastNullCharIndex: Int? // index of last null char ( "\0" )
-        for (index, byte) in smartData.raw.enumerated() {
+        for (index, byte) in rawData.enumerated() {
             guard byte == 0 else { continue } // find null characters
             let currentIndex = index
             let lastIndex = lastNullCharIndex ?? -1
@@ -28,24 +31,26 @@ class StringTable: SmartDataContainer, TranslationStore {
                 continue
             }
             let dataStartIndex = lastIndex + 1 // lastIdnex points to last null, ignore
-            let dataEndIndex = currentIndex - 1 // also ignore the last null
             lastNullCharIndex = currentIndex
-            ranges.append(dataStartIndex..<dataEndIndex)
+            ranges.append(dataStartIndex..<currentIndex)
         }
         return ranges
     }()
     
     var numberOfTranslationSections: Int { cStringRanges.count }
     
-    func translationSection(at index: Int) -> TranslationSection {
+    func translationSection(at index: Int) -> TransSection {
         if index >= cStringRanges.count { fatalError() }
         let range = cStringRanges[index]
-        let section = TranslationSection(baseIndex: range.lowerBound)
-        if let string = String(data: smartData.raw.select(from: range.lowerBound, length: range.upperBound - range.lowerBound), encoding: .utf8) {
-            section.addTranslation(forRange: range) { Readable(description: "UTF8 encoded string", explanation: string.replacingOccurrences(of: "\n", with: "\\n")) }
+        let section = TransSection(baseIndex: range.lowerBound + smartData.startOffsetInMacho)
+        let rawStringData = smartData.truncated(from: range.lowerBound, length: range.upperBound - range.lowerBound).raw
+        let readable: Readable
+        if let string = String(data: rawStringData, encoding: .utf8) {
+            readable = Readable(description: "UTF8 encoded string", explanation: string.replacingOccurrences(of: "\n", with: "\\n"))
         } else {
-            section.addTranslation(forRange: range) { Readable(description: "Invalid utf8 encoded", explanation: "🙅‍♂️ Invalid utf8 string") }
+            readable = Readable(description: "Invalid utf8 encoded", explanation: "🙅‍♂️ Invalid utf8 string")
         }
+        section.translateNext(rawStringData.count) { readable }
         return section
     }
 }
