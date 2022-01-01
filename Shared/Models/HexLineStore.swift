@@ -18,6 +18,8 @@ class LazyHexLine: Identifiable, Equatable, ObservableObject {
         return lhs.id == rhs.id
     }
     
+    static let lineHeight: CGFloat = 14
+    
     let id = UUID()
     let bytes: [UInt8]
     let startIndex: Int
@@ -38,9 +40,15 @@ class LazyHexLine: Identifiable, Equatable, ObservableObject {
     
     var dataHexString: AttributedString {
         
-        var attriString = AttributedString((bytes.map { String(format: "%02X", $0) }).joined(separator: ""))
+        var string = (bytes.map { String(format: "%02X", $0) }).joined(separator: "")
+        if bytes.count < HexLineStore.NumberOfBytesPerLine {
+            let paddingLength = (HexLineStore.NumberOfBytesPerLine - bytes.count) * 2
+            string.append(contentsOf: [Character](repeating: " ", count: paddingLength))
+        }
+        
+        var attriString = AttributedString(string)
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 14
+        paragraphStyle.lineSpacing = LazyHexLine.lineHeight
         var container = AttributeContainer()
         container.paragraphStyle = paragraphStyle
         container.backgroundColor = (isEvenLine ? Color(red: 244.0/255, green: 245.0/255, blue: 245.0/255) : .white)
@@ -97,7 +105,7 @@ class HexLineStore: Equatable {
             let line = LazyHexLine(bytes: [UInt8](lineData.raw),
                                    startIndex: data.startOffsetInMacho + index * HexLineStore.NumberOfBytesPerLine,
                                    indexNumOfDigits: hexDigits,
-                                   isEvenLine: index & 0x1 != 0)
+                                   isEvenLine: index & 0x1 == 0)
             
             binaryLines.append(line)
         }

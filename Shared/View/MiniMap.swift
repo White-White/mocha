@@ -9,8 +9,8 @@ import SwiftUI
 
 struct MiniMap: View {
     let size: Int
-    let start: Int
-    let length: Int
+    @Binding var start: Int
+    @Binding var length: Int
     
     var indicatorPosition: (startPercent: CGFloat, lengthPercent: CGFloat, start: Int, length: Int) {
         let lengthPercent = CGFloat(length) / CGFloat(size)

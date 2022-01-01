@@ -46,33 +46,29 @@ enum MagicType {
 
 struct File {
     
-    let fileURL: URL
-    var fileSize: Int { fileData.count }
+    let fileName: String
     let fileData: SmartData
+    var fileSize: Int { fileData.count }
     let machos: [Macho]
     
-    init(with filePath: String) throws {
-        try self.init(with: URL(fileURLWithPath: filePath))
+    init(with fileURL: URL) throws {
+        let fileName = fileURL.lastPathComponent
+        let fileData = SmartData(try Data(contentsOf: fileURL))
+        try self.init(with: fileName, fileData: fileData)
     }
     
-    init(with fileURL: URL) throws {
-        
-        self.fileURL = fileURL
-        let fileData = SmartData(try Data(contentsOf: fileURL))
+    init(with fileName: String, fileData: SmartData) throws {
+        self.fileName = fileName
         self.fileData = fileData
-        
-        guard let magicType = MagicType(fileData) else { throw MochaError(.unknownMagicType) }
+        guard let magicType = MagicType(fileData) else { fatalError() /* Unknown Magic */ }
         switch magicType {
         case .ar:
             let ar = try UnixArchive(with: fileData)
             self.machos = ar.machos
         case .fat:
-            let machoName = fileURL.lastPathComponent
-            self.machos = (try FatBinary(with: fileData, machoFileName: machoName)).machos
+            self.machos = (try FatBinary(with: fileData, machoFileName: fileName)).machos
         case .macho32, .macho64:
-            let machoName = fileURL.lastPathComponent
-            self.machos = [Macho(with: fileData, machoFileName: machoName)]
+            self.machos = [Macho(with: fileData, machoFileName: fileName)]
         }
-        
     }
 }

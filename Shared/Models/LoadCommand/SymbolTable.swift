@@ -2,74 +2,12 @@
 //  SymbolTable.swift
 //  mocha (macOS)
 //
-//  Created by white on 2021/12/15.
+//  Created by white on 2022/1/1.
 //
 
 import Foundation
 
-//struct nlist {
-//    union {
-//#ifndef __LP64__
-//        char *n_name;    /* for use when in-core */
-//#endif
-//        uint32_t n_strx;    /* index into the string table */
-//    } n_un;
-//    uint8_t n_type;        /* type flag, see below */
-//    uint8_t n_sect;        /* section number or NO_SECT */
-//    int16_t n_desc;        /* see <mach-o/stab.h> */
-//    uint32_t n_value;    /* value of this symbol (or stab offset) */
-//};
-//
-///*
-// * This is the symbol table entry structure for 64-bit architectures.
-// */
-//struct nlist_64 {
-//    union {
-//        uint32_t  n_strx; /* index into the string table */
-//    } n_un;
-//    uint8_t n_type;        /* type flag, see below */
-//    uint8_t n_sect;        /* section number or NO_SECT */
-//    uint16_t n_desc;       /* see <mach-o/stab.h> */
-//    uint64_t n_value;      /* value of this symbol (or stab offset) */
-//};
-
-struct SymbolTable: SmartDataContainer, TranslationStoreDataSource {
-    
-    let smartData: SmartData
-    let is64Bit: Bool
-    let numberOfEntries: Int
-    
-    var primaryName: String { "Symbol Table" }
-    var secondaryName: String { "Symbol Table" }
-    
-    init(_ data: SmartData, numberOfEntries: Int, is64Bit: Bool) {
-        self.smartData = data
-        self.is64Bit = is64Bit
-        self.numberOfEntries = numberOfEntries
-    }
-    
-    var numberOfTranslationSections: Int { numberOfEntries }
-    
-    func translationSection(at index: Int) -> TransSection {
-        if index >= numberOfEntries { fatalError() }
-        let entrySize = is64Bit ? 16 : 12
-        let dataStartIndex = smartData.startOffsetInMacho + index * entrySize
-        let section = TransSection(baseIndex: dataStartIndex, title: "Symbol Table Entry")
-        section.translateNext(entrySize) { Readable(description: "Symbol", explanation: "//FIXME:") } //FIXME:
-        return section
-    }
-}
-
-class LCSymbolTable: LoadCommand {
-    
-//    struct symtab_command {
-//        uint32_t    cmd;        /* LC_SYMTAB */
-//        uint32_t    cmdsize;    /* sizeof(struct symtab_command) */
-//        uint32_t    symoff;        /* symbol table offset */
-//        uint32_t    nsyms;        /* number of symbol table entries */
-//        uint32_t    stroff;        /* string table offset */
-//        uint32_t    strsize;    /* string table size in bytes */
-//    };
+class LCSymbolTable: LoadCommand, TranslatorContainerGenerator {
     
     let symbolTableOffset: UInt32
     let numberOfSymbolTableEntries: UInt32
@@ -94,10 +32,32 @@ class LCSymbolTable: LoadCommand {
         section.translateNextDoubleWord { Readable(description: "Size of string table", explanation: self.sizeOfStringTable.hex) }
         return section
     }
-}
-
-struct DynamicSymbolTable {
     
+    func makeTranslatorContainers(from machoData: SmartData, is64Bit: Bool) -> [TranslatorContainer] {
+        
+        let symbolTableStartOffset = Int(self.symbolTableOffset)
+        let numberOfEntries = Int(self.numberOfSymbolTableEntries)
+        let entrySize = is64Bit ? 16 : 12
+        let symbolTableData = machoData.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
+        
+        let stringTableStartOffset = Int(self.stringTableOffset)
+        let stringTableSize = Int(self.sizeOfStringTable)
+        let stringTableData = machoData.truncated(from: stringTableStartOffset, length: stringTableSize)
+        
+        let symbolTableTranslatorContainer = TranslatorContainer(symbolTableData,
+                                                                 is64Bit: is64Bit,
+                                                                 translatorType: ModelTranslator<SymbolTableEntryModel>.self,
+                                                                 primaryName: "Symbol Table",
+                                                                 secondaryName: "__LINKEDIT")
+        
+        let stringTableTranslatorContainer = TranslatorContainer(stringTableData,
+                                                                 is64Bit: is64Bit,
+                                                                 translatorType: CStringTranslator.self,
+                                                                 primaryName: "String Table",
+                                                                 secondaryName: "__LINKEDIT")
+        
+        return [symbolTableTranslatorContainer, stringTableTranslatorContainer]
+    }
 }
 
 class LCDynamicSymbolTable: LoadCommand {

@@ -29,6 +29,7 @@ struct TranslationView: View {
             .onChange(of: store, perform: { newValue in
                 scrollProxy.scrollTo(0, anchor: .top)
             })
+            .frame(minWidth: 400)
         }
     }
 }

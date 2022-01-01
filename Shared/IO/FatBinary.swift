@@ -60,9 +60,9 @@ struct FatBinary {
             let farArch = FatArch(with: fatArchData)
             fatArchs.append(farArch)
             
-            let machoRealData = fileData.truncated(from: Data.Index(farArch.objectFileOffset), length: Data.Index(farArch.objectFileSize)).raw
-            let macho = Macho(with: SmartData(machoRealData), machoFileName: machoFileName)
-            machos.append(macho)
+            let subFileData = fileData.truncated(from: Int(farArch.objectFileOffset), length: Int(farArch.objectFileSize))
+            let subMachos = (try File(with: machoFileName, fileData: subFileData)).machos
+            machos.append(contentsOf: subMachos)
         }
         self.fatArchs = fatArchs
         self.machos = machos

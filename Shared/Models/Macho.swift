@@ -121,32 +121,6 @@ class MachoHeader: SmartDataContainer, TranslationStoreDataSource {
     }
 }
 
-struct MergedLinkOptionsCommand: SmartDataContainer, TranslationStoreDataSource {
-    
-    let linkerOptions: [LCLinkerOption]
-    var smartData: SmartData
-    
-    var primaryName: String { LoadCommandType.linkerOption.commandName + "(s)" }
-    var secondaryName: String { "\(linkerOptions.count) linker options" }
-    
-    init?(_ linkerOptions: [LCLinkerOption]) {
-        guard !linkerOptions.isEmpty else { return nil }
-        self.linkerOptions = linkerOptions
-        
-        var firstData = linkerOptions.first!.smartData
-        linkerOptions.dropFirst().forEach { firstData.merge($0.smartData) }
-        smartData = firstData
-    }
-    
-    var numberOfTranslationSections: Int {
-        linkerOptions.count
-    }
-    
-    func translationSection(at index: Int) -> TransSection {
-        return linkerOptions[index].translationSection(at: 0)
-    }
-}
-
 class Macho: Equatable {
     static func == (lhs: Macho, rhs: Macho) -> Bool {
         return lhs.data == rhs.data
@@ -157,14 +131,10 @@ class Macho: Equatable {
     /// name of the macho file
     let machoFileName: String
     let header: MachoHeader
-    private(set) var loadCommands: [LoadCommand] = []
-    private var linkerOptionCommands: [LCLinkerOption] = []
-    lazy var mergedLinkerOptions: MergedLinkOptionsCommand? = MergedLinkOptionsCommand(linkerOptionCommands)
-    private(set) var sections: [Section] = []
-    private(set) var symbolTable: SymbolTable?
-    private(set) var dynamicSymbolTable: DynamicSymbolTable?
-    private(set) var stringTable: StringTable?
-    private(set) var relocation: Relocation?
+    let loadCommands: [LoadCommand]
+    let translatorContainers: [TranslatorContainer]
+    let dynamicSymbolTable: DynamicSymbolTable? = nil //FIXME:
+    let relocation: Relocation? = nil
     
     init(with machoData: SmartData, machoFileName: String) {
         self.data = machoData
@@ -173,64 +143,50 @@ class Macho: Equatable {
         guard let magicType = MagicType(machoData.truncated(from: .zero, length: 4)) else { fatalError() }
         let is64bit = magicType == .macho64
         
+        // macho header
         let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
         self.header = header
         
-        self.loadCommands = (0..<header.numberOfLoadCommands).reduce([]) { loadCommands, _ in
-            
+        // load commands
+        var loadCommands: [LoadCommand] = []
+        for _ in 0..<header.numberOfLoadCommands {
             let nextLCOffset: Int
             if let lastLoadCommand = loadCommands.last {
-                nextLCOffset = lastLoadCommand.startOffsetInMacho + lastLoadCommand.dataSize
+                nextLCOffset = Int(lastLoadCommand.startOffsetInMacho + lastLoadCommand.dataSize)
             } else {
                 nextLCOffset = header.dataSize
             }
             
             let loadCommandSize = machoData.truncated(from: nextLCOffset + 4, length: 4).raw.UInt32
             let loadCommandData = machoData.truncated(from: nextLCOffset, length: Int(loadCommandSize))
-            let loadCommand = LoadCommand.loadCommand(with: loadCommandData)
-            
-            switch loadCommand.loadCommandType {
-            case .segment, .segment64:
-                let sectionHeaders = (loadCommand as! LCSegment).sectionHeaders
-                let sectionWithNonZeroData = sectionHeaders.filter { $0.size > 0 }
-                self.sections += sectionWithNonZeroData.map {Section(header: $0, data: machoData.truncated(from: Int($0.offset), length: Int($0.size))) }
-            case .symbolTable:
-                let symtableCommand = loadCommand as! LCSymbolTable
-                let symbolTableStartOffset = Int(symtableCommand.symbolTableOffset)
-                let numberOfEntries = Int(symtableCommand.numberOfSymbolTableEntries)
-                let entrySize = header.is64Bit ? 16 : 12
-                let symbolTableData = machoData.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
-                self.symbolTable = SymbolTable(symbolTableData, numberOfEntries: numberOfEntries, is64Bit: header.is64Bit)
-                
-                let stringTableStartOffset = Int(symtableCommand.stringTableOffset)
-                let stringTableSize = Int(symtableCommand.sizeOfStringTable)
-                let stringTableData = machoData.truncated(from: stringTableStartOffset, length: stringTableSize)
-                self.stringTable = StringTable(stringTableData)
-            default:
-                break
-            }
-            
-            return loadCommands + [loadCommand]
+            loadCommands.append(LoadCommand.loadCommand(with: loadCommandData))
         }
+        self.loadCommands = loadCommands
         
         
-        while self.loadCommands.last is LCLinkerOption {
-            let linkerOptionCommand = self.loadCommands.removeLast() as! LCLinkerOption
-            self.linkerOptionCommands.append(linkerOptionCommand)
-        }
-        self.linkerOptionCommands.reverse()
+        // translator containers
+        self.translatorContainers = ((loadCommands.compactMap { $0 as? TranslatorContainerGenerator }).map {
+            return $0.makeTranslatorContainers(from: machoData, is64Bit: header.is64Bit)
+        }).flatMap({ $0 })
         
-        self.sections.forEach({ section in
-            let relocationOffset = Int(section.header.fileOffsetOfRelocationEntries)
-            let numberOfRelocEntries = Int(section.header.numberOfRelocatioEntries)
-            if relocationOffset != 0 && numberOfRelocEntries != 0 {
-                let entriesData = machoData.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.length)
-                if let relocation = self.relocation {
-                    relocation.addEntries(entriesData)
-                } else {
-                    self.relocation = Relocation(entriesData)
-                }
-            }
-        })
+        // relocation entries
+//        var relocation: Relocation?
+//        sections.forEach({ section in
+//            let relocationOffset = Int(section.header.fileOffsetOfRelocationEntries)
+//            let numberOfRelocEntries = Int(section.header.numberOfRelocatioEntries)
+//            if relocationOffset != 0 && numberOfRelocEntries != 0 {
+//                let entriesData = machoData.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.length)
+//                if let relocation = relocation {
+//                    relocation.addEntries(entriesData)
+//                } else {
+//                    relocation = Relocation(entriesData)
+//                }
+//            }
+//        })
+//        self.relocation = relocation
+    }
+    
+    func preLoadData() {
+        self.translatorContainers.forEach { $0.preload() }
     }
 }

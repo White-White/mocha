@@ -9,10 +9,35 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
+class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
+    func panel(_ sender: Any, shouldEnable url: URL) -> Bool {
+        
+        if let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey]) {
+            if let isDirectory = resourceValues.isDirectory,
+                isDirectory {
+                return true
+            }
+            
+            if let isRegularFile = resourceValues.isRegularFile,
+                !isRegularFile {
+                return false
+            }
+        }
+        
+        let fileHandle = FileHandle(forReadingAtPath: url.path)
+        if let magicData = try? fileHandle?.read(upToCount: 8),
+            let _ = MagicType(SmartData(magicData)) {
+            return true
+        }
+        
+        return false
+    }
+}
+
 struct ContentView: View {
     
     @State private var fileURL: URL?
-    @State private var isImporting: Bool = false
+    let openPanelDelegate = OpenPanelDelegate()
     
     var body: some View {
         if let fileURL = fileURL, let file = try? File(with: fileURL) {
@@ -22,24 +47,23 @@ struct ContentView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button("Select File") { self.isImporting = true }
+                    Button("Select File") {
+                        let openPanel = NSOpenPanel()
+                        openPanel.treatsFilePackagesAsDirectories = true
+                        openPanel.allowsMultipleSelection = false
+                        openPanel.canChooseDirectories = false
+                        openPanel.canCreateDirectories = false
+                        openPanel.canChooseFiles = true
+                        openPanel.delegate = self.openPanelDelegate
+                        openPanel.begin {
+                            if $0 == .OK {
+                                self.fileURL = openPanel.url
+                            }
+                        }
+                    }
                     Spacer()
                 }
                 Spacer()
-            }
-            .fileImporter(
-                isPresented: $isImporting,
-                allowedContentTypes: [.framework, .archive, .unixExecutable, UTType(filenameExtension: "a")!],
-                allowsMultipleSelection: false
-            ) { result in
-                do {
-                    guard let selectedFile: URL = try result.get().first else { return }
-                    self.fileURL = selectedFile
-                } catch {
-                    // Handle failure.
-                    print("Unable to read file contents")
-                    print(error.localizedDescription)
-                }
             }
         }
     }

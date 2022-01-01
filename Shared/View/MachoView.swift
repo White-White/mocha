@@ -10,33 +10,9 @@ import SwiftUI
 extension Macho {
     fileprivate var machoViewCellModels: [SmartDataContainer & TranslationStoreDataSource] {
         var cellModels: [SmartDataContainer & TranslationStoreDataSource] = [self.header]
-        
-        // append load commands and section headers
         cellModels.append(contentsOf: self.loadCommands)
-        
-        // append merged linker options
-        if let mergedLinkerOptions = self.mergedLinkerOptions {
-            cellModels.append(mergedLinkerOptions)
-        }
-        
-        // append sections
-        cellModels.append(contentsOf: self.sections)
-        
-        // append relocation entries
-        if let relocation = self.relocation {
-            cellModels.append(relocation)
-        }
-        
-        // append symbol table &
-        if let symbolTable = self.symbolTable {
-            cellModels.append(symbolTable)
-        }
-        
-        // append string table
-        if let stringTable = self.stringTable {
-            cellModels.append(stringTable)
-        }
-        
+        cellModels.append(contentsOf: self.translatorContainers)
+        if let relocation = self.relocation { cellModels.append(relocation) }
         return cellModels
     }
 }
@@ -52,6 +28,7 @@ fileprivate struct MachoCellView: View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
                 Text(cellModel.primaryName)
+                    .lineLimit(1)
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .black)
                     .padding(.bottom, 2)
@@ -59,11 +36,13 @@ fileprivate struct MachoCellView: View {
                     Text(secondaryDescription)
                         .font(.system(size: 12))
                         .foregroundColor(isSelected ? .white : .secondary)
+                        .lineLimit(1)
                 }
                 Text(String(format: "Range: 0x%0\(hexDigits)X ~ 0x%0\(hexDigits)X", cellModel.startOffsetInMacho, cellModel.startOffsetInMacho + cellModel.dataSize))
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .secondary)
                     .padding(.top, 2)
+                    .lineLimit(1)
             }
             Spacer()
         }
@@ -91,6 +70,9 @@ struct MachoView: View {
     @State var selectedBinaryRange: Range<Int>?
     @State var translationStore: TranslationStore
     
+    @State var miniMapStart: Int
+    @State var miniMapLength: Int
+    
     var body: some View {
         HStack(spacing: 0) {
             ScrollView {
@@ -99,8 +81,7 @@ struct MachoView: View {
                         MachoCellView(cellModels[index], isSelected: selectedCellIndex == index)
                             .onTapGesture {
                                 self.selectedCellIndex = index
-                                self.binaryStore = cellModels[index].binaryStore
-                                self.translationStore = TranslationStore(dataSource: cellModels[index])
+                                self.updateUI(with: cellModels[index])
                             }
                     }
                 }
@@ -111,7 +92,7 @@ struct MachoView: View {
             Divider()
             
             VStack(alignment: .leading) {
-                MiniMap(size: macho.fileSize, start: cellModels[selectedCellIndex].startOffsetInMacho, length: cellModels[selectedCellIndex].dataSize)
+                MiniMap(size: macho.fileSize, start: $miniMapStart, length: $miniMapLength)
                     .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
                 HStack(alignment: .top, spacing: 0) {
                     HexView(store: $binaryStore, selectedBinaryRange: $selectedBinaryRange)
@@ -123,20 +104,40 @@ struct MachoView: View {
         .onChange(of: macho) { newValue in
             self.cellModels = newValue.machoViewCellModels
             self.selectedCellIndex = .zero
-            
-            self.binaryStore = newValue.header.binaryStore
-            self.selectedBinaryRange = newValue.header.translationSection(at: 0).terms.first?.range
-            self.translationStore = TranslationStore(dataSource: newValue.header)
+            self.updateUI(with: newValue.header)
         }
     }
     
     init(_ macho: Binding<Macho>) {
         _macho = macho
+        
+        // cells
         _cellModels = State(initialValue: macho.wrappedValue.machoViewCellModels)
         _selectedCellIndex = State(initialValue: .zero)
         
-        _binaryStore = State(initialValue: macho.wrappedValue.header.binaryStore)
-        _selectedBinaryRange = State(initialValue: macho.wrappedValue.header.translationSection(at: 0).terms.first?.range)
-        _translationStore = State(initialValue: TranslationStore(dataSource: macho.wrappedValue.header))
+        // binary store
+        let header = macho.wrappedValue.header
+        let binaryStore = header.binaryStore
+        let selectedRange = header.translationSection(at: 0).terms.first?.range
+        binaryStore.updateLinesWith(selectedBytesRange: selectedRange)
+        _binaryStore = State(initialValue: binaryStore)
+        _selectedBinaryRange = State(initialValue: selectedRange)
+        _translationStore = State(initialValue: TranslationStore(dataSource: header))
+        
+        // mini map
+        _miniMapStart = State(initialValue: header.startOffsetInMacho)
+        _miniMapLength = State(initialValue: header.dataSize)
+    }
+    
+    func updateUI(with model: SmartDataContainer & TranslationStoreDataSource) {
+        self.binaryStore = model.binaryStore
+        let selectedRange = model.translationSection(at: 0).terms.first?.range
+        self.binaryStore.updateLinesWith(selectedBytesRange: selectedRange)
+        self.translationStore = TranslationStore(dataSource:model)
+        self.selectedBinaryRange = selectedRange
+        
+        // mini map
+        self.miniMapStart = model.startOffsetInMacho
+        self.miniMapLength = model.dataSize
     }
 }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import Introspect
 
 struct HexLineView: View {
     
@@ -28,10 +29,15 @@ struct HexLineView: View {
     }
 }
 
+class HexViewHelper {
+    var rawScrollView: NSScrollView?
+}
+
 struct HexView: View {
     
     @Binding var store: HexLineStore
     @Binding var selectedBinaryRange: Range<Int>?
+    let helper = HexViewHelper()
     
     var body: some View {
         HStack(alignment: .top, spacing: 4) {
@@ -42,8 +48,8 @@ struct HexView: View {
                             HexLineView(binaryLine: store.binaryLines[index])
                         }
                     }
-                    .frame(width: 446)
                 }
+                .fixedSize(horizontal: true, vertical: false)
                 .onChange(of: store, perform: { newValue in
                     scrollProxy.scrollTo(0, anchor: .top)
                 })
@@ -52,10 +58,20 @@ struct HexView: View {
                     if let selectedBinaryRange = selectedBinaryRange {
                         let targetElementIndexRange = store.targetIndexRange(for: selectedBinaryRange)
                         let targetElementIndex = (targetElementIndexRange.lowerBound + targetElementIndexRange.upperBound) / 2
-                        withAnimation {
-                            scrollProxy.scrollTo(targetElementIndex, anchor: .center)
+                        if let visibleRect = helper.rawScrollView?.documentView?.visibleRect {
+                            let beginIndex = Int(visibleRect.origin.y / (LazyHexLine.lineHeight))
+                            // line height is 14, but + 1 here to make 'visible' range smaller
+                            let endIndex = Int(visibleRect.maxY / (LazyHexLine.lineHeight + 1))
+                            if targetElementIndex < beginIndex || targetElementIndex > endIndex {
+                                withAnimation {
+                                    scrollProxy.scrollTo(targetElementIndex, anchor: .center)
+                                }
+                            }
                         }
                     }
+                }
+                .introspectScrollView { scrollView in
+                    helper.rawScrollView = scrollView
                 }
             }
         }
