@@ -7,14 +7,14 @@
 
 import Foundation
 
-class LCSymbolTable: LoadCommand, TranslatorContainerGenerator {
+class LCSymbolTable: LoadCommand {
     
     let symbolTableOffset: UInt32
     let numberOfSymbolTableEntries: UInt32
     let stringTableOffset: UInt32
     let sizeOfStringTable: UInt32
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         var shifter = DataShifter(loadCommandData)
         _ = shifter.nextQuadWord() // skip basic data
         self.symbolTableOffset = shifter.nextDoubleWord().UInt32
@@ -31,32 +31,6 @@ class LCSymbolTable: LoadCommand, TranslatorContainerGenerator {
         section.translateNextDoubleWord { Readable(description: "String table offset", explanation: "\(self.stringTableOffset.hex)") }
         section.translateNextDoubleWord { Readable(description: "Size of string table", explanation: self.sizeOfStringTable.hex) }
         return section
-    }
-    
-    func makeTranslatorContainers(from machoData: SmartData, is64Bit: Bool) -> [TranslatorContainer] {
-        
-        let symbolTableStartOffset = Int(self.symbolTableOffset)
-        let numberOfEntries = Int(self.numberOfSymbolTableEntries)
-        let entrySize = is64Bit ? 16 : 12
-        let symbolTableData = machoData.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
-        
-        let stringTableStartOffset = Int(self.stringTableOffset)
-        let stringTableSize = Int(self.sizeOfStringTable)
-        let stringTableData = machoData.truncated(from: stringTableStartOffset, length: stringTableSize)
-        
-        let symbolTableTranslatorContainer = TranslatorContainer(symbolTableData,
-                                                                 is64Bit: is64Bit,
-                                                                 translatorType: ModelTranslator<SymbolTableEntryModel>.self,
-                                                                 primaryName: "Symbol Table",
-                                                                 secondaryName: "__LINKEDIT")
-        
-        let stringTableTranslatorContainer = TranslatorContainer(stringTableData,
-                                                                 is64Bit: is64Bit,
-                                                                 translatorType: CStringTranslator.self,
-                                                                 primaryName: "String Table",
-                                                                 secondaryName: "__LINKEDIT")
-        
-        return [symbolTableTranslatorContainer, stringTableTranslatorContainer]
     }
 }
 
@@ -88,7 +62,7 @@ class LCDynamicSymbolTable: LoadCommand {
     let locreloff: UInt32       /* offset to local relocation entries */
     let nlocrel: UInt32         /* number of local relocation entries */
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         var shifter = DataShifter(loadCommandData)
         _ = shifter.nextQuadWord() // skip basic data
         self.ilocalsym = shifter.nextDoubleWord().UInt32

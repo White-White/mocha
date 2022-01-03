@@ -61,7 +61,6 @@ struct FileView: View {
                         FileViewCell(file.machos[index], isSelected: index == self.selectedIndex) .onTapGesture {
                             self.selectedIndex = index
                             self.selectedMacho = file.machos[index]
-                            file.machos[index].preLoadData()
                         }
                     }
                 }
@@ -78,6 +77,5 @@ struct FileView: View {
         _selectedIndex = State(initialValue: 0)
         let firstMacho = file.machos.first!
         _selectedMacho = State(initialValue: firstMacho)
-        firstMacho.preLoadData()
     }
 }

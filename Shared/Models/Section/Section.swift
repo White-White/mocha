@@ -33,7 +33,7 @@ enum SectionType: UInt32 {
     case S_INIT_FUNC_OFFSETS
 }
 
-struct SectionHeader: TranslatorContainerGenerator {
+struct SectionHeader {
     
     let segment: String
     let section: String
@@ -50,7 +50,7 @@ struct SectionHeader: TranslatorContainerGenerator {
     var reserved3: Data? // exists only for 64 bit
     
     let is64Bit: Bool
-    let data: SmartData
+    let data: DataSlice
     
     var isZerofilled: Bool {
         // ref: https://lists.llvm.org/pipermail/llvm-commits/Week-of-Mon-20151207/319108.html
@@ -66,7 +66,7 @@ struct SectionHeader: TranslatorContainerGenerator {
         return sectionType == .S_ZEROFILL || sectionType == .S_THREAD_LOCAL_ZEROFILL
     }
     
-    init(is64Bit: Bool, data: SmartData) {
+    init(is64Bit: Bool, data: DataSlice) {
         self.is64Bit = is64Bit
         self.data = data
         
@@ -98,7 +98,7 @@ struct SectionHeader: TranslatorContainerGenerator {
     }
     
     func makeTranslationSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startOffsetInMacho, title: "Section Header")
+        let section = TransSection(baseIndex: data.startIndex, title: "Section Header")
         section.translateNext(16) { Readable(description: "Section ame", explanation: self.section) }
         section.translateNext(16) { Readable(description: "In segment", explanation: self.segment) }
         section.translateNext(is64Bit ? 8 : 4) { Readable(description: "Address in memory", explanation: self.addr.hex) } //FIXME: better explanation
@@ -113,42 +113,4 @@ struct SectionHeader: TranslatorContainerGenerator {
         if is64Bit { section.translateNextDoubleWord { Readable(description: "reserved3", explanation: "//FIXME:") } } //FIXME: better explanation }
         return section
     }
-    
-    func makeTranslatorContainers(from machoData: SmartData, is64Bit: Bool) -> [TranslatorContainer] {
-        
-        guard !self.isZerofilled else { return [] }
-        
-        let translatorContainerPrimaryName = section
-        let translatorContainerSecondaryName = "Segment: \(segment)"
-        let sectionData = machoData.truncated(from: Int(offset), length: Int(size))
-        
-        var translatorType: Translator.Type = AnonymousTranslator.self
-        if sectionType == .S_CSTRING_LITERALS {
-            translatorType = CStringTranslator.self
-        } else {
-            switch segment {
-            case "__TEXT":
-                switch section {
-                case "__text":
-                    translatorType = CodeTranslator.self
-                default:
-                    break
-                }
-            case "__DATA":
-                break
-            default:
-                break
-            }
-        }
-        return [TranslatorContainer(sectionData,
-                                    is64Bit: is64Bit,
-                                    translatorType: translatorType,
-                                    primaryName: translatorContainerPrimaryName,
-                                    secondaryName: translatorContainerSecondaryName)]
-    }
-}
-
-class CodeTranslator: AnonymousTranslator {
-    override var description: String { "Code" }
-    override var explanation: String { "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it." }
 }

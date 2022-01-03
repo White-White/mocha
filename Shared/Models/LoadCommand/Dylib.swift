@@ -16,7 +16,7 @@ class Dylib: LoadCommand {
     let currentVersion: String /* library's current version number */
     let compatibilityVersion: String /* library's compatibility vers number*/
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         var shifter = DataShifter(loadCommandData)
         _ = shifter.nextQuadWord() // skip basic data
         let libPathOffset = shifter.nextDoubleWord().UInt32

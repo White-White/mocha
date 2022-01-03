@@ -15,7 +15,7 @@ private struct FatArch {
     let objectFileSize: UInt32
     let align: UInt32
     
-    init(with data: SmartData) {
+    init(with data: DataSlice) {
         self.cpu = CPUType(data.truncated(from: 0, length: 4).raw.UInt32.bigEndian)
         self.cpuSub = CPUSubtype(data.truncated(from: 4, length: 4).raw.UInt32.bigEndian, cpuType: self.cpu)
         self.objectFileOffset = data.truncated(from: 8, length: 4).raw.UInt32.bigEndian
@@ -46,7 +46,7 @@ struct FatBinary {
     private let fatArchs: [FatArch]
     let machos: [Macho]
     
-    init(with fileData: SmartData, machoFileName: String) throws {
+    init(with fileData: DataSlice, machoFileName: String) throws {
         // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
         // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
         self.numberOfArchs = fileData.truncated(from: 4, length: 4).raw.UInt32.bigEndian

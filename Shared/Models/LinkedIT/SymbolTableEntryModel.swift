@@ -33,19 +33,19 @@ import Foundation
 //    uint64_t n_value;      /* value of this symbol (or stab offset) */
 //};
 
-struct SymbolTableEntryModel: TranslatableModel {
+struct SymbolTableEntryModel: InterpretableModel {
     
-    let data: SmartData
+    let data: DataSlice
     let is64Bit: Bool
     
-    init(with data: SmartData, is64Bit: Bool) {
+    init(with data: DataSlice, is64Bit: Bool) {
         self.data = data
         self.is64Bit = is64Bit
     }
     
     func makeTransSection() -> TransSection {
         let entrySize = is64Bit ? 16 : 12
-        let section = TransSection(baseIndex: data.startOffsetInMacho, title: "Symbol Table Entry")
+        let section = TransSection(baseIndex: data.startIndex, title: "Symbol Table Entry")
         section.translateNext(entrySize) { Readable(description: "Symbol", explanation: "//FIXME:") } //FIXME:
         return section
     }

@@ -10,15 +10,15 @@ import SwiftUI
 
 struct TranslationView: View {
     
-    @Binding var store: TranslationStore
+    @Binding var machoComponent: MachoComponent
     @Binding var selectedBinaryRange: Range<Int>?
     
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView(.vertical, showsIndicators: true)  {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(0..<store.dataSource.numberOfTranslationSections, id: \.self) { index in
-                        TranslationSectionView(translationSection: store.dataSource.translationSection(at: index),
+                    ForEach(0..<machoComponent.numberOfTranslationSections, id: \.self) { index in
+                        TranslationSectionView(translationSection: machoComponent.translationSection(at: index),
                                                selectedBinaryRange: $selectedBinaryRange)
                     }
                 }
@@ -26,7 +26,7 @@ struct TranslationView: View {
             }
             .background(.white)
             .border(.separator, width: 1)
-            .onChange(of: store, perform: { newValue in
+            .onChange(of: machoComponent, perform: { newValue in
                 scrollProxy.scrollTo(0, anchor: .top)
             })
             .frame(minWidth: 400)

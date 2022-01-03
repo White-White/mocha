@@ -13,7 +13,7 @@ class LCLinkerOption: LoadCommand {
     let options: [String]
     override var translationDividerName: String? { "Linker Option" }
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         self.numberOfOptions = Int(loadCommandData.truncated(from: 8, length: 4).raw.UInt32)
         self.options = loadCommandData.truncated(from: 12).raw.split(separator: 0x00).map {
             if let optionString = String(data: $0, encoding: .utf8) {
@@ -28,7 +28,7 @@ class LCLinkerOption: LoadCommand {
     override func translationSection(at index: Int) -> TransSection {
         let section = super.translationSection(at: index)
         section.translateNextDoubleWord { Readable(description: "Number of options", explanation: "\(self.numberOfOptions)") }
-        section.translateNext(self.smartData.count - 12) { Readable(description: "Content", explanation: "\(self.options.joined(separator: " "))") }
+        section.translateNext(self.machoDataSlice.count - 12) { Readable(description: "Content", explanation: "\(self.options.joined(separator: " "))") }
         return section
     }
 }

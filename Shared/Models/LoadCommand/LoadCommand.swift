@@ -184,21 +184,20 @@ enum LoadCommandType: UInt32 {
     }
 }
 
-class LoadCommand: SmartDataContainer, TranslationStoreDataSource {
+class LoadCommand: MachoComponent {
     
     let loadCommandType: LoadCommandType
-    let smartData: SmartData
     var translationDividerName: String? { nil }
     
-    var primaryName: String { loadCommandType.commandName }
-    var secondaryName: String { "Load Command" }
+    override var primaryName: String { loadCommandType.commandName }
+    override var secondaryName: String { "Load Command" }
     
-    init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
-        self.smartData = loadCommandData
+    init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         self.loadCommandType = loadCommandType
+        super.init(loadCommandData)
     }
     
-    static func loadCommand(with data: SmartData) -> LoadCommand {
+    static func loadCommand(with data: DataSlice) -> LoadCommand {
         
         let loadCommandTypeValue = data.truncated(from: 0, length: 4).raw.UInt32
         guard let type = LoadCommandType(rawValue: loadCommandTypeValue) else {
@@ -232,33 +231,31 @@ class LoadCommand: SmartDataContainer, TranslationStoreDataSource {
         case .sourceVersion:
             return LCSourceVersion(with: data, loadCommandType: type)
         case .dataInCode:
-            return LinkedITData(with: data, loadCommandType: type, dataName: "Data in Code", translatorType: ModelTranslator<DataInCodeModel>.self)
+            return LinkedITData(with: data, loadCommandType: type,
+                                dataName: "Data in Code",
+                                interpreterType: ModelBasedInterpreter<DataInCodeModel>.self)
         case .codeSignature:
-            return LinkedITData(with: data, loadCommandType: type, dataName: "Code Signature", translatorType: CodeTranslator.self)
+            return LinkedITData(with: data, loadCommandType: type,
+                                dataName: "Code Signature",
+                                interpreterType: CodeInterpreter.self)
+        case .functionStarts:
+            return LinkedITData(with: data, loadCommandType: type,
+                                dataName: "Function Starts",
+                                interpreterType: ULEB128Interpreter.self)
         default:
             Log.warning("Unknown load command \(type.commandName). Debug me.")
             return LoadCommand(with: data, loadCommandType: type)
         }
     }
     
-    var numberOfTranslationSections: Int { 1 }
-    
-    func translationSection(at index: Int) -> TransSection {
+    override func translationSection(at index: Int) -> TransSection {
         guard index == 0 else { fatalError() }
-        let section = TransSection(baseIndex: smartData.startOffsetInMacho, title: "Load Command")
+        let section = TransSection(baseIndex: machoDataSlice.startIndex, title: "Load Command")
         section.translateNextDoubleWord { Readable(description: "Load Command Type", explanation: "\(self.loadCommandType.commandName)") }
-        section.translateNextDoubleWord { Readable(description: "Size", explanation: self.smartData.count.hex) }
+        section.translateNextDoubleWord { Readable(description: "Size", explanation: self.machoDataSlice.count.hex) }
         return section
     }
 }
-
-
-
-
-
-
-
-
 
 class LCOneString: LoadCommand {
     
@@ -266,7 +263,7 @@ class LCOneString: LoadCommand {
     let string: String
     let description: String
     
-    init(with loadCommandData: SmartData, loadCommandType: LoadCommandType, description: String) {
+    init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType, description: String) {
         var shifter = DataShifter(loadCommandData)
         _ = shifter.nextQuadWord() // skip basic data
         let stringOffset = shifter.nextDoubleWord().UInt32
@@ -292,7 +289,7 @@ class LCUUID: LoadCommand {
     
     let uuid: UUID
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         let uuidData = loadCommandData.truncated(from: 8).raw.map { UInt8($0) }
         self.uuid = UUID(uuid: (uuidData[0], uuidData[1], uuidData[2], uuidData[3], uuidData[4], uuidData[5], uuidData[6], uuidData[7],
                                   uuidData[8], uuidData[9], uuidData[10], uuidData[11], uuidData[12], uuidData[13], uuidData[14], uuidData[15]))
@@ -310,7 +307,7 @@ class LCSourceVersion: LoadCommand {
     
     let version: String
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         let versionValue = loadCommandData.truncated(from: 8).raw.UInt64
         /* A.B.C.D.E packed as a24.b10.c10.d10.e10 */
         let mask: Swift.UInt64 = 0x3ff

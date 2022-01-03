@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct MiniMap: View {
-    let size: Int
-    @Binding var start: Int
-    @Binding var length: Int
+    
+    let machoFileSize: Int
+    @Binding var selectedMachoComponent: MachoComponent
     
     var indicatorPosition: (startPercent: CGFloat, lengthPercent: CGFloat, start: Int, length: Int) {
-        let lengthPercent = CGFloat(length) / CGFloat(size)
-        let startPercent = CGFloat(start) / CGFloat(size)
-        return (startPercent, lengthPercent, start, length)
+        let lengthPercent = CGFloat(selectedMachoComponent.size) / CGFloat(machoFileSize)
+        let startPercent = CGFloat(selectedMachoComponent.fileOffsetInMacho) / CGFloat(machoFileSize)
+        return (startPercent, lengthPercent, selectedMachoComponent.fileOffsetInMacho, selectedMachoComponent.size)
     }
     
     var body: some View {
@@ -34,7 +34,7 @@ struct MiniMap: View {
             .background(.white)
             
             HStack(alignment: .center) {
-                Text(String(format: "File Size: 0x%0X", size))
+                Text(String(format: "File Size: 0x%0X", machoFileSize))
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
                 if let position = indicatorPosition {

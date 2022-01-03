@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct DataInCodeModel: TranslatableModel {
+struct DataInCodeModel: InterpretableModel {
     
     enum DataInCodeKind: UInt16 {
         case data = 0x1
@@ -32,12 +32,12 @@ struct DataInCodeModel: TranslatableModel {
         }
     }
     
-    let data: SmartData
+    let data: DataSlice
     let offset: UInt32
     let length: UInt16
     let kind: DataInCodeKind
     
-    init(with data: SmartData, is64Bit: Bool) {
+    init(with data: DataSlice, is64Bit: Bool) {
         self.data = data
         self.offset = data.truncated(from: 0, length: 4).raw.UInt32
         self.length = data.truncated(from: 4, length: 2).raw.UInt16
@@ -51,7 +51,7 @@ struct DataInCodeModel: TranslatableModel {
     }
     
     func makeTransSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startOffsetInMacho, title: DataInCodeModel.modelName())
+        let section = TransSection(baseIndex: data.startIndex, title: DataInCodeModel.modelName())
         section.translateNextDoubleWord { Readable(description: "File Offset", explanation: "\(self.offset.hex)") }
         section.translateNext(2) { Readable(description: "Size", explanation: "\(self.length)") }
         section.translateNext(2) {

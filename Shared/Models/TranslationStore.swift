@@ -8,19 +8,6 @@
 import Foundation
 import SwiftUI
 
-protocol TranslationStoreDataSource {
-    var numberOfTranslationSections: Int { get }
-    func translationSection(at index: Int) -> TransSection
-}
-
-struct TranslationStore: Equatable {
-    static func == (lhs: TranslationStore, rhs: TranslationStore) -> Bool {
-        return lhs.id == rhs.id
-    }
-    let id = UUID()
-    let dataSource: TranslationStoreDataSource
-}
-
 struct Readable {
     let description: String?
     let explanation: String

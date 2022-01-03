@@ -13,7 +13,7 @@ enum MagicType {
     case macho32
     case macho64
 
-    init?(_ fileData: SmartData) {
+    init?(_ fileData: DataSlice) {
         if fileData.starts(with: [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]) {
             // "!<arch>\n"
             self = .ar
@@ -47,17 +47,17 @@ enum MagicType {
 struct File {
     
     let fileName: String
-    let fileData: SmartData
+    let fileData: DataSlice
     var fileSize: Int { fileData.count }
     let machos: [Macho]
     
     init(with fileURL: URL) throws {
         let fileName = fileURL.lastPathComponent
-        let fileData = SmartData(try Data(contentsOf: fileURL))
+        let fileData = DataSlice(try Data(contentsOf: fileURL))
         try self.init(with: fileName, fileData: fileData)
     }
     
-    init(with fileName: String, fileData: SmartData) throws {
+    init(with fileName: String, fileData: DataSlice) throws {
         self.fileName = fileName
         self.fileData = fileData
         guard let magicType = MagicType(fileData) else { fatalError() /* Unknown Magic */ }

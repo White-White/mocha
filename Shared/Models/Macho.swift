@@ -40,11 +40,9 @@ enum MachoType {
     }
 }
 
-class MachoHeader: SmartDataContainer, TranslationStoreDataSource {
+class MachoHeader: MachoComponent {
 
     let is64Bit: Bool
-    let smartData: SmartData
-    
     let cpuType: CPUType
     let cpuSubtype: CPUSubtype
     let machoType: MachoType
@@ -53,13 +51,12 @@ class MachoHeader: SmartDataContainer, TranslationStoreDataSource {
     let flags: UInt32
     let reserved: UInt32?
     
-    var primaryName: String { "Macho Header" }
-    var secondaryName: String { "Macho Header" }
+    override var primaryName: String { "Macho Header" }
+    override var secondaryName: String { "Macho Header" }
     
-    init(from data: SmartData, is64Bit: Bool) {
+    init(from machoDataSlice: DataSlice, is64Bit: Bool) {
         self.is64Bit = is64Bit
-        self.smartData = data
-        var machoHeaderDataShifter = DataShifter(data)
+        var machoHeaderDataShifter = DataShifter(machoDataSlice)
         _ = machoHeaderDataShifter.nextDoubleWord() // first 4-byte is magic data
         self.cpuType = CPUType(machoHeaderDataShifter.nextDoubleWord().UInt32)
         self.cpuSubtype = CPUSubtype(machoHeaderDataShifter.nextDoubleWord().UInt32, cpuType: cpuType)
@@ -68,14 +65,11 @@ class MachoHeader: SmartDataContainer, TranslationStoreDataSource {
         self.sizeOfAllLoadCommand = machoHeaderDataShifter.nextDoubleWord().UInt32
         self.flags = machoHeaderDataShifter.nextDoubleWord().UInt32
         self.reserved = is64Bit ? machoHeaderDataShifter.nextDoubleWord().UInt32 : nil
+        super.init(machoDataSlice)
     }
     
-    var numberOfTranslationSections: Int {
-        return 1
-    }
-    
-    func translationSection(at index: Int) -> TransSection {
-        let section = TransSection(baseIndex: smartData.startOffsetInMacho)
+    override func translationSection(at index: Int) -> TransSection {
+        let section = TransSection(baseIndex: machoDataSlice.startIndex)
         section.translateNextDoubleWord { Readable(description: "File Magic", explanation: (self.is64Bit ? MagicType.macho64 : MagicType.macho32).readable) }
         section.translateNextDoubleWord { Readable(description: "CPU Type", explanation: self.cpuType.name) }
         section.translateNextDoubleWord { Readable(description: "CPU Sub Type", explanation: self.cpuSubtype.name) }
@@ -125,18 +119,18 @@ class Macho: Equatable {
     static func == (lhs: Macho, rhs: Macho) -> Bool {
         return lhs.data == rhs.data
     }
-    let data: SmartData
+    let data: DataSlice
     var fileSize: Int { data.count }
     
     /// name of the macho file
     let machoFileName: String
     let header: MachoHeader
     let loadCommands: [LoadCommand]
-    let translatorContainers: [TranslatorContainer]
+    
     let dynamicSymbolTable: DynamicSymbolTable? = nil //FIXME:
     let relocation: Relocation? = nil
     
-    init(with machoData: SmartData, machoFileName: String) {
+    init(with machoData: DataSlice, machoFileName: String) {
         self.data = machoData
         self.machoFileName = machoFileName
         
@@ -152,11 +146,10 @@ class Macho: Equatable {
         for _ in 0..<header.numberOfLoadCommands {
             let nextLCOffset: Int
             if let lastLoadCommand = loadCommands.last {
-                nextLCOffset = Int(lastLoadCommand.startOffsetInMacho + lastLoadCommand.dataSize)
+                nextLCOffset = Int(lastLoadCommand.fileOffsetInMacho + lastLoadCommand.size)
             } else {
-                nextLCOffset = header.dataSize
+                nextLCOffset = header.size
             }
-            
             let loadCommandSize = machoData.truncated(from: nextLCOffset + 4, length: 4).raw.UInt32
             let loadCommandData = machoData.truncated(from: nextLCOffset, length: Int(loadCommandSize))
             loadCommands.append(LoadCommand.loadCommand(with: loadCommandData))
@@ -164,10 +157,6 @@ class Macho: Equatable {
         self.loadCommands = loadCommands
         
         
-        // translator containers
-        self.translatorContainers = ((loadCommands.compactMap { $0 as? TranslatorContainerGenerator }).map {
-            return $0.makeTranslatorContainers(from: machoData, is64Bit: header.is64Bit)
-        }).flatMap({ $0 })
         
         // relocation entries
 //        var relocation: Relocation?
@@ -186,7 +175,89 @@ class Macho: Equatable {
 //        self.relocation = relocation
     }
     
-    func preLoadData() {
-        self.translatorContainers.forEach { $0.preload() }
+    var machoComponents: [MachoComponent] {
+        var components: [MachoComponent] = [header]
+        components.append(contentsOf: loadCommands)
+        
+        loadCommands.forEach { loadCommand in
+            if let segment = loadCommand as? Segment {
+                let componentsSection = segment.sectionHeaders.compactMap({ machoComponent(from: $0) })
+                components.append(contentsOf: componentsSection)
+            }
+            if let linkedITData = (loadCommand as? LinkedITData) {
+                components.append(machoComponent(from: linkedITData))
+            }
+            if let symbolTableCommand = (loadCommand as? LCSymbolTable) {
+                components.append(contentsOf: machoComponents(from: symbolTableCommand))
+            }
+        }
+        
+        return components.sorted { $0.fileOffsetInMacho < $1.fileOffsetInMacho }
+    }
+
+    func machoComponent(from sectionHeader: SectionHeader) -> MachoComponent? {
+        // zero filled section has no data from mach-o file
+        guard !sectionHeader.isZerofilled else { return nil }
+        
+        // some section may contain zero bytes. (eg: cocoapods generated section)
+        guard sectionHeader.size > 0 else { return nil }
+        
+        var interpreterType: Interpreter.Type = AnonymousInterpreter.self
+        if sectionHeader.sectionType == .S_CSTRING_LITERALS {
+            interpreterType = CStringInterpreter.self
+        } else {
+            switch sectionHeader.segment {
+            case "__TEXT":
+                switch sectionHeader.section {
+                case "__text":
+                    interpreterType = CodeInterpreter.self
+                default:
+                    break
+                }
+            case "__DATA":
+                break
+            default:
+                break
+            }
+        }
+        
+        return MachoInterpreterBasedComponent(self.data.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size)),
+                                              is64Bit: self.header.is64Bit,
+                                              interpreterType: interpreterType,
+                                              primaryName: sectionHeader.section,
+                                              secondaryName: "Segment: \(sectionHeader.segment)")
+    }
+    
+    func machoComponent(from linkedITData: LinkedITData) -> MachoComponent {
+        return MachoInterpreterBasedComponent(self.data.truncated(from: Int(linkedITData.fileOffset), length: Int(linkedITData.dataSize)),
+                                              is64Bit: self.header.is64Bit,
+                                              interpreterType: linkedITData.interpreterType,
+                                              primaryName: linkedITData.dataName,
+                                              secondaryName: "__LINKEDIT")
+    }
+    
+    func machoComponents(from symbolTableCommand: LCSymbolTable) -> [MachoComponent] {
+        let symbolTableStartOffset = Int(symbolTableCommand.symbolTableOffset)
+        let numberOfEntries = Int(symbolTableCommand.numberOfSymbolTableEntries)
+        let entrySize = self.header.is64Bit ? 16 : 12
+        let symbolTableData = data.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
+        
+        let stringTableStartOffset = Int(symbolTableCommand.stringTableOffset)
+        let stringTableSize = Int(symbolTableCommand.sizeOfStringTable)
+        let stringTableData = data.truncated(from: stringTableStartOffset, length: stringTableSize)
+        
+        let symbolTableComponent = MachoInterpreterBasedComponent(symbolTableData,
+                                                                  is64Bit: self.header.is64Bit,
+                                                                  interpreterType: ModelBasedInterpreter<SymbolTableEntryModel>.self,
+                                                                  primaryName: "Symbol Table",
+                                                                  secondaryName: "__LINKEDIT")
+        
+        let stringTableComponent = MachoInterpreterBasedComponent(stringTableData,
+                                                                  is64Bit: self.header.is64Bit,
+                                                                  interpreterType: CStringInterpreter.self,
+                                                                  primaryName: "String Table",
+                                                                  secondaryName: "__LINKEDIT")
+        
+        return [symbolTableComponent, stringTableComponent]
     }
 }

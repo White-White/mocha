@@ -56,12 +56,12 @@ func localized(_ string: String, _ content: String) -> String {
 
 struct DataShifter {
     
-    private let data: SmartData
+    private let data: DataSlice
     private(set) var shifted: Int = .zero
     
     var shiftable: Bool { data.count > shifted }
     
-    init(_ data: SmartData) {
+    init(_ data: DataSlice) {
         self.data = data
     }
     

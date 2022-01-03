@@ -13,14 +13,14 @@ class Segment: LoadCommand {
     let vmaddr: UInt64
     let vmsize: UInt64
     let fileoff: UInt64
-    let size: UInt64
+    let segmentSize: UInt64
     let maxprot: UInt32
     let initprot: UInt32
     let numberOfSections: UInt32
     let flags: Data
     let sectionHeaders: [SectionHeader]
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         
         let is64BitSegment = loadCommandType == LoadCommandType.segment64
         var dataShifter = DataShifter(loadCommandData)
@@ -31,7 +31,7 @@ class Segment: LoadCommand {
         self.vmaddr = (is64BitSegment ? dataShifter.nextQuadWord() : dataShifter.nextDoubleWord()).UInt64
         self.vmsize = (is64BitSegment ? dataShifter.nextQuadWord() : dataShifter.nextDoubleWord()).UInt64
         self.fileoff = (is64BitSegment ? dataShifter.nextQuadWord() : dataShifter.nextDoubleWord()).UInt64
-        self.size = (is64BitSegment ? dataShifter.nextQuadWord() : dataShifter.nextDoubleWord()).UInt64
+        self.segmentSize = (is64BitSegment ? dataShifter.nextQuadWord() : dataShifter.nextDoubleWord()).UInt64
         self.maxprot = dataShifter.nextDoubleWord().UInt32
         self.initprot = dataShifter.nextDoubleWord().UInt32
         self.numberOfSections = dataShifter.nextDoubleWord().UInt32

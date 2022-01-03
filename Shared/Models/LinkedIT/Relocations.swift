@@ -22,7 +22,7 @@ struct RelocationEntry {
     
     static let length = 8
     
-    let data: SmartData
+    let data: DataSlice
     
     let address: UInt32
     let symbolNum: UInt32 // 24 bits
@@ -31,7 +31,7 @@ struct RelocationEntry {
     let isExternal: Bool // 1 bit
     let type: UInt8 // 4
     
-    init(from data: SmartData) {
+    init(from data: DataSlice) {
         self.data = data
         self.address = data.truncated(from: 0, length: 4).raw.UInt32
         self.symbolNum = ([UInt8(0)] + data.truncated(from: 4, length: 3).raw).UInt32
@@ -43,7 +43,7 @@ struct RelocationEntry {
     }
     
     func makeTranslationSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startOffsetInMacho, title: "Relocation Entry")
+        let section = TransSection(baseIndex: data.startIndex, title: "Relocation Entry")
         section.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex) }
         section.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
         section.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
@@ -52,37 +52,36 @@ struct RelocationEntry {
     }
 }
 
-class Relocation: SmartDataContainer, TranslationStoreDataSource {
+class Relocation: MachoComponent {
     
-    var entries: [RelocationEntry] = []
-    private(set) var smartData: SmartData
-    var numberOfTranslationSections: Int { entries.count }
-    
-    var primaryName: String { "Relocation Entries" }
-    var secondaryName: String { "\(entries.count) entries" }
-    
-    init(_ entriesData: SmartData) {
-        self.smartData = entriesData
-        self._addEntries(entriesData)
-    }
-    
-    func addEntries(_ entriesData: SmartData) {
-        self.smartData.merge(entriesData)
-        self._addEntries(entriesData)
-    }
-    
-    private func _addEntries(_ entriesData: SmartData) {
-        var entries: [RelocationEntry] = []
-        let raw = entriesData.raw
-        for i in 0..<(raw.count/RelocationEntry.length) {
-            let entryOffset = i * RelocationEntry.length
-            let relocationEntryData = entriesData.truncated(from: entryOffset, length: RelocationEntry.length)
-            entries.append(RelocationEntry(from: relocationEntryData))
-        }
-        self.entries.append(contentsOf: entries)
-    }
-    
-    func translationSection(at index: Int) -> TransSection {
-        return entries[index].makeTranslationSection()
-    }
+//    var entries: [RelocationEntry] = []
+//    var numberOfTranslationSections: Int { entries.count }
+//    
+//    override var primaryName: String { "Relocation Entries" }
+//    override var secondaryName: String { "\(entries.count) entries" }
+//    
+//    init(_ entriesData: DataSlice) {
+//        self.machoDataSlice = entriesData
+//        self._addEntries(entriesData)
+//    }
+//    
+//    func addEntries(_ entriesData: DataSlice) {
+//        self.machoDataSlice.merge(entriesData)
+//        self._addEntries(entriesData)
+//    }
+//    
+//    private func _addEntries(_ entriesData: DataSlice) {
+//        var entries: [RelocationEntry] = []
+//        let raw = entriesData.raw
+//        for i in 0..<(raw.count/RelocationEntry.length) {
+//            let entryOffset = i * RelocationEntry.length
+//            let relocationEntryData = entriesData.truncated(from: entryOffset, length: RelocationEntry.length)
+//            entries.append(RelocationEntry(from: relocationEntryData))
+//        }
+//        self.entries.append(contentsOf: entries)
+//    }
+//    
+//    func translationSection(at index: Int) -> TransSection {
+//        return entries[index].makeTranslationSection()
+//    }
 }

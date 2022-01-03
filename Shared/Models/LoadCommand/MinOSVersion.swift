@@ -12,7 +12,7 @@ class MinOSVersion: LoadCommand {
     private let osVersion: String
     private let sdkVersion: String
     
-    override init(with loadCommandData: SmartData, loadCommandType: LoadCommandType) {
+    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         let osVersionConstraint = loadCommandData.truncated(from: 8, length: 4).raw.UInt32
         let sdkVersionConstraint = loadCommandData.truncated(from: 12, length: 4).raw.UInt32
         self.osVersion = String(format: "%d.%d.%d", osVersionConstraint >> 16, (osVersionConstraint >> 8) & 0xff, osVersionConstraint & 0xff)
@@ -37,8 +37,8 @@ class MinOSVersion: LoadCommand {
     
     override func translationSection(at index: Int) -> TransSection {
         let section = super.translationSection(at: index)
-        section.translateNextDoubleWord { Readable(description: "\(self.osName), min required version:", explanation: "\(self.osVersion)") }
-        section.translateNextDoubleWord { Readable(description: "min required sdk version:", explanation: "\(self.sdkVersion)") }
+        section.translateNextDoubleWord { Readable(description: "Required \(self.osName) version", explanation: "\(self.osVersion)") }
+        section.translateNextDoubleWord { Readable(description: "Required min \(self.osName) SDK version", explanation: "\(self.sdkVersion)") }
         return section
     }
 }

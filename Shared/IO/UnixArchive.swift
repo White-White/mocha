@@ -59,7 +59,7 @@ struct UnixArchive {
     let fileHeaders: [UnixArchiveFileHeader]
     let machos: [Macho]
     
-    init(with fileData: SmartData) throws {
+    init(with fileData: DataSlice) throws {
         var fileHeaders: [UnixArchiveFileHeader] = []
         var machos: [Macho] = []
         
@@ -81,7 +81,7 @@ struct UnixArchive {
             fileHeaders.append(fileHeader)
             
             let machoRealData = fileData.truncated(from: dataShifter.shifted, length: fileHeader.contentSize - fileHeader.extFileIDLengthInt).raw
-            machos.append(Macho(with: SmartData(machoRealData), machoFileName: fileHeader.fileID))
+            machos.append(Macho(with: DataSlice(machoRealData), machoFileName: fileHeader.fileID))
             dataShifter.ignore(fileHeader.contentSize - fileHeader.extFileIDLengthInt)
         }
         

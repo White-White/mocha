@@ -7,38 +7,32 @@
 
 import SwiftUI
 
-extension Macho {
-    fileprivate var machoViewCellModels: [SmartDataContainer & TranslationStoreDataSource] {
-        var cellModels: [SmartDataContainer & TranslationStoreDataSource] = [self.header]
-        cellModels.append(contentsOf: self.loadCommands)
-        cellModels.append(contentsOf: self.translatorContainers)
-        if let relocation = self.relocation { cellModels.append(relocation) }
-        return cellModels
-    }
-}
-
-
-fileprivate struct MachoCellView: View {
+struct MachoCellView: View {
     
-    let cellModel: SmartDataContainer
+    let machoComponent: MachoComponent
     let hexDigits: Int
     let isSelected: Bool
     
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
-                Text(cellModel.primaryName)
+                Text(machoComponent.primaryName)
                     .lineLimit(1)
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .black)
                     .padding(.bottom, 2)
-                if let secondaryDescription = cellModel.secondaryName {
+                if let secondaryDescription = machoComponent.secondaryName {
                     Text(secondaryDescription)
                         .font(.system(size: 12))
                         .foregroundColor(isSelected ? .white : .secondary)
                         .lineLimit(1)
                 }
-                Text(String(format: "Range: 0x%0\(hexDigits)X ~ 0x%0\(hexDigits)X", cellModel.startOffsetInMacho, cellModel.startOffsetInMacho + cellModel.dataSize))
+                Text(String(format: "Rnage: 0x%0\(hexDigits)X - 0x%0\(hexDigits)X", machoComponent.fileOffsetInMacho, machoComponent.fileOffsetInMacho + machoComponent.size))
+                    .font(.system(size: 12))
+                    .foregroundColor(isSelected ? .white : .secondary)
+                    .padding(.top, 2)
+                    .lineLimit(1)
+                Text(String(format: "Size: 0x%0\(hexDigits)X", machoComponent.size))
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .secondary)
                     .padding(.top, 2)
@@ -53,9 +47,9 @@ fileprivate struct MachoCellView: View {
         .contentShape(Rectangle())
     }
     
-    init(_ cellModel: SmartDataContainer, isSelected: Bool) {
-        self.cellModel = cellModel
-        self.hexDigits = cellModel.smartData.preferredNumberOfHexDigits
+    init(_ machoComponent: MachoComponent, isSelected: Bool) {
+        self.machoComponent = machoComponent
+        self.hexDigits = machoComponent.machoDataSlice.preferredNumberOfHexDigits
         self.isSelected = isSelected
     }
 }
@@ -63,25 +57,24 @@ fileprivate struct MachoCellView: View {
 struct MachoView: View {
     
     @Binding var macho: Macho
-    @State fileprivate var selectedCellIndex: Int
-    @State fileprivate var cellModels: [SmartDataContainer & TranslationStoreDataSource]
+    @State fileprivate var machoComponents: [MachoComponent]
     
-    @State var binaryStore: HexLineStore
+    @State fileprivate var selectedMachoComponent: MachoComponent
+    @State fileprivate var hexStore: HexLineStore
+    
     @State var selectedBinaryRange: Range<Int>?
-    @State var translationStore: TranslationStore
-    
-    @State var miniMapStart: Int
-    @State var miniMapLength: Int
     
     var body: some View {
         HStack(spacing: 0) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(0..<cellModels.count, id: \.self) { index in
-                        MachoCellView(cellModels[index], isSelected: selectedCellIndex == index)
+                    ForEach(machoComponents, id: \.fileOffsetInMacho) { component in
+                        MachoCellView(component, isSelected: selectedMachoComponent == component)
                             .onTapGesture {
-                                self.selectedCellIndex = index
-                                self.updateUI(with: cellModels[index])
+                                self.selectedMachoComponent = component
+                                self.selectedBinaryRange = component.translationSection(at: 0).terms.first?.range
+                                self.hexStore = HexLineStore(component.machoDataSlice)
+                                self.hexStore.updateLinesWith(selectedBytesRange: self.selectedBinaryRange)
                             }
                     }
                 }
@@ -92,19 +85,21 @@ struct MachoView: View {
             Divider()
             
             VStack(alignment: .leading) {
-                MiniMap(size: macho.fileSize, start: $miniMapStart, length: $miniMapLength)
+                MiniMap(machoFileSize: macho.fileSize, selectedMachoComponent: $selectedMachoComponent)
                     .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
                 HStack(alignment: .top, spacing: 0) {
-                    HexView(store: $binaryStore, selectedBinaryRange: $selectedBinaryRange)
-                    TranslationView(store: $translationStore, selectedBinaryRange: $selectedBinaryRange)
+                    HexView(store: $hexStore, selectedBinaryRange: $selectedBinaryRange)
+                    TranslationView(machoComponent: $selectedMachoComponent, selectedBinaryRange: $selectedBinaryRange)
                 }
                 .padding(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
             }
         }
         .onChange(of: macho) { newValue in
-            self.cellModels = newValue.machoViewCellModels
-            self.selectedCellIndex = .zero
-            self.updateUI(with: newValue.header)
+            self.machoComponents = newValue.machoComponents
+            self.selectedMachoComponent = newValue.header
+            self.hexStore = HexLineStore(newValue.header.machoDataSlice)
+            self.selectedBinaryRange = newValue.header.translationSection(at: 0).terms.first?.range
+            self.hexStore.updateLinesWith(selectedBytesRange: self.selectedBinaryRange)
         }
     }
     
@@ -112,32 +107,13 @@ struct MachoView: View {
         _macho = macho
         
         // cells
-        _cellModels = State(initialValue: macho.wrappedValue.machoViewCellModels)
-        _selectedCellIndex = State(initialValue: .zero)
-        
-        // binary store
-        let header = macho.wrappedValue.header
-        let binaryStore = header.binaryStore
-        let selectedRange = header.translationSection(at: 0).terms.first?.range
-        binaryStore.updateLinesWith(selectedBytesRange: selectedRange)
-        _binaryStore = State(initialValue: binaryStore)
+        _machoComponents = State(initialValue: macho.wrappedValue.machoComponents)
+        _selectedMachoComponent = State(initialValue: macho.wrappedValue.header)
+        let selectedRange = macho.wrappedValue.header.translationSection(at: 0).terms.first?.range
         _selectedBinaryRange = State(initialValue: selectedRange)
-        _translationStore = State(initialValue: TranslationStore(dataSource: header))
+        let hexStore = HexLineStore(macho.wrappedValue.header.machoDataSlice)
+        hexStore.updateLinesWith(selectedBytesRange: selectedRange)
+        _hexStore = State(initialValue: hexStore)
         
-        // mini map
-        _miniMapStart = State(initialValue: header.startOffsetInMacho)
-        _miniMapLength = State(initialValue: header.dataSize)
-    }
-    
-    func updateUI(with model: SmartDataContainer & TranslationStoreDataSource) {
-        self.binaryStore = model.binaryStore
-        let selectedRange = model.translationSection(at: 0).terms.first?.range
-        self.binaryStore.updateLinesWith(selectedBytesRange: selectedRange)
-        self.translationStore = TranslationStore(dataSource:model)
-        self.selectedBinaryRange = selectedRange
-        
-        // mini map
-        self.miniMapStart = model.startOffsetInMacho
-        self.miniMapLength = model.dataSize
     }
 }
