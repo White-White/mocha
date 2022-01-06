@@ -17,7 +17,8 @@ class MachoComponent: Equatable {
     var size: Int { machoDataSlice.count }
     var fileOffsetInMacho: Int { machoDataSlice.startIndex }
     
-    var primaryName: String { fatalError() /* to be overriden */ }
+    var title: String { fatalError() /* to be overriden */ }
+    var primaryName: String? { nil }
     var secondaryName: String? { nil }
     
     init(_ machoDataSlice: DataSlice) {
@@ -37,13 +38,22 @@ class MachoInterpreterBasedComponent: MachoComponent {
     
     let interpreter: Interpreter
     
-    override var primaryName: String { primaryNameInside }
+    override var title: String { titleInside }
+    override var primaryName: String? { primaryNameInside }
     override var secondaryName: String? { secondaryNameInside }
-    let primaryNameInside: String
+    let titleInside: String
+    let primaryNameInside: String?
     let secondaryNameInside: String?
     
-    init(_ machoDataSlice: DataSlice, is64Bit: Bool, interpreterType: Interpreter.Type, primaryName: String, secondaryName: String? = nil) {
-        self.interpreter = interpreterType.init(machoDataSlice, is64Bit: is64Bit)
+    init(_ machoDataSlice: DataSlice,
+         is64Bit: Bool,
+         interpreterType: Interpreter.Type,
+         title: String,
+         interpreterSettings: [InterpreterSettingsKey: Any]? = nil,
+         primaryName: String? = nil,
+         secondaryName: String? = nil) {
+        self.interpreter = interpreterType.init(machoDataSlice, is64Bit: is64Bit, settings: interpreterSettings)
+        self.titleInside = title
         self.primaryNameInside = primaryName
         self.secondaryNameInside = secondaryName
         super.init(machoDataSlice)

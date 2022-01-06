@@ -7,8 +7,13 @@
 
 import Foundation
 
+enum InterpreterSettingsKey {
+    case shouldDemangleCString
+    case stringTableSearchingDelegate
+}
+
 protocol Interpreter {
-    init(_ data: DataSlice, is64Bit: Bool)
+    init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey: Any]?)
     func numberOfTransSections() -> Int
     func transSection(at index: Int) -> TransSection
 }
@@ -17,6 +22,7 @@ class BaseInterpreter<Payload>: Interpreter {
     
     let data: DataSlice
     let is64Bit: Bool
+    let settings: [InterpreterSettingsKey: Any]?
     var shouldPreload: Bool { false }
     
     private let preloadingLock = NSRecursiveLock()
@@ -38,9 +44,10 @@ class BaseInterpreter<Payload>: Interpreter {
         return ret
     }
     
-    required init(_ data: DataSlice, is64Bit: Bool) {
+    required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         self.data = data
         self.is64Bit = is64Bit
+        self.settings = settings
         self.preloadIfNeeded()
     }
     

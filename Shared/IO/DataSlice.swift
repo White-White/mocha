@@ -15,7 +15,7 @@ struct DataSlice: Equatable {
     
     private let basedData: Data
     let startIndex: Int
-    private(set) var length: Int
+    private let length: Int
     
     let preferredNumberOfHexDigits: Int
     
@@ -69,19 +69,13 @@ struct DataSlice: Equatable {
         return self.basedData == anotherSmartData.basedData
     }
     
-    mutating func extend(length: Int) {
-        self.length += length
-    }
-    
-    mutating func merge(_ another: DataSlice) {
-        guard sameSource(with: another) else { fatalError() }
+    static func merged(_ one: DataSlice, another: DataSlice) -> DataSlice {
+        guard one.sameSource(with: another) else { fatalError() }
         
         // to merge one store with another, the data of nextStore must be consectutive with self's data
         // that is, self's data count plus self's lineTagStartIndex must be the nextStore's lineTagStartIndex
-        guard startIndex + length == another.startIndex else { fatalError() }
+        guard one.startIndex + one.length == another.startIndex else { fatalError() }
         
-        // since they are all SmartData and have the same Data base,
-        // all we need to do is to extend the length property of current store
-        self.extend(length: another.length)
+        return DataSlice(one.basedData, startOffsetInMacho: one.startIndex, length: one.length + another.length)
     }
 }

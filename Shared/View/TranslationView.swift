@@ -63,7 +63,7 @@ struct TranslationSectionView: View {
                     }
                     Text(term.readable.explanation)
                         .foregroundColor(selectedBinaryRange == term.range ? .white : .black)
-                        .font(.system(size: 14))
+                        .font(term.readable.monoSpaced ? .system(size: 12).monospaced() : .system(size: 14))
                         .padding(4)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
@@ -73,6 +73,20 @@ struct TranslationSectionView: View {
                         .onTapGesture {
                             selectedBinaryRange = term.range
                         }
+                    if let extraExplanation = term.readable.extraExplanation {
+                        Text(extraExplanation)
+                            .foregroundColor(selectedBinaryRange == term.range ? .white : .gray)
+                            .font(term.readable.monoSpaced ? .system(size: 12).monospaced() : .system(size: 14))
+                            .padding(4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                            .background {
+                                RoundedRectangle(cornerRadius: 4).fill(selectedBinaryRange == term.range ? Theme.selected : .white)
+                            }
+                            .onTapGesture {
+                                selectedBinaryRange = term.range
+                            }
+                    }
                 }
             }
             .frame(maxWidth: .infinity)

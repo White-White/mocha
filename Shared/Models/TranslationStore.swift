@@ -11,6 +11,15 @@ import SwiftUI
 struct Readable {
     let description: String?
     let explanation: String
+    let extraExplanation: String?
+    let monoSpaced: Bool
+    
+    init(description: String?, explanation: String, monoSpaced: Bool = false, extraExplanation: String? = nil) {
+        self.description = description
+        self.explanation = explanation
+        self.extraExplanation = extraExplanation
+        self.monoSpaced = monoSpaced
+    }
 }
 
 struct TransTerm {

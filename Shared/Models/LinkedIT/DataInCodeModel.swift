@@ -37,7 +37,7 @@ struct DataInCodeModel: InterpretableModel {
     let length: UInt16
     let kind: DataInCodeKind
     
-    init(with data: DataSlice, is64Bit: Bool) {
+    init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]?) {
         self.data = data
         self.offset = data.truncated(from: 0, length: 4).raw.UInt32
         self.length = data.truncated(from: 4, length: 2).raw.UInt16
@@ -51,17 +51,13 @@ struct DataInCodeModel: InterpretableModel {
     }
     
     func makeTransSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startIndex, title: DataInCodeModel.modelName())
+        let section = TransSection(baseIndex: data.startIndex, title: "Data In Code")
         section.translateNextDoubleWord { Readable(description: "File Offset", explanation: "\(self.offset.hex)") }
         section.translateNext(2) { Readable(description: "Size", explanation: "\(self.length)") }
         section.translateNext(2) {
             Readable(description: "Kind", explanation: self.kind.name)
         }
         return section
-    }
-    
-    static func modelName() -> String? {
-        return "Data In Code"
     }
     
     static func modelSize(is64Bit: Bool) -> Int {

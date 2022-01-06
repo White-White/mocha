@@ -189,8 +189,8 @@ class LoadCommand: MachoComponent {
     let loadCommandType: LoadCommandType
     var translationDividerName: String? { nil }
     
+    override var title: String { "Load Command" }
     override var primaryName: String { loadCommandType.commandName }
-    override var secondaryName: String { "Load Command" }
     
     init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         self.loadCommandType = loadCommandType

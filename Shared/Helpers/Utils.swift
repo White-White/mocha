@@ -82,6 +82,7 @@ struct DataShifter {
     }
     
     mutating func shift(_ num: Int, updateIndex: Bool = true) -> Data {
+        guard num > 0 else { fatalError() }
         guard shifted + num <= data.count else { fatalError() }
         defer { if (updateIndex) { shifted += num } }
         return data.truncated(from: shifted, length: num).raw

@@ -20,6 +20,8 @@ class Segment: LoadCommand {
     let flags: Data
     let sectionHeaders: [SectionHeader]
     
+    override var secondaryName: String? { segmentName }
+    
     override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
         
         let is64BitSegment = loadCommandType == LoadCommandType.segment64

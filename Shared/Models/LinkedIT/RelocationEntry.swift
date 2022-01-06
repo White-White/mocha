@@ -18,9 +18,7 @@ import Foundation
 //        r_type:4;    /* if not 0, machine specific relocation type */
 //};
 
-struct RelocationEntry {
-    
-    static let length = 8
+struct RelocationEntry: InterpretableModel {
     
     let data: DataSlice
     
@@ -31,7 +29,7 @@ struct RelocationEntry {
     let isExternal: Bool // 1 bit
     let type: UInt8 // 4
     
-    init(from data: DataSlice) {
+    init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         self.data = data
         self.address = data.truncated(from: 0, length: 4).raw.UInt32
         self.symbolNum = ([UInt8(0)] + data.truncated(from: 4, length: 3).raw).UInt32
@@ -42,46 +40,17 @@ struct RelocationEntry {
         self.type = UInt8((lastByte & 0b00001111) >> 4)
     }
     
-    func makeTranslationSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startIndex, title: "Relocation Entry")
+    func makeTransSection() -> TransSection {
+        let section = TransSection(baseIndex: data.startIndex, title: nil)
         section.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex) }
         section.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
         section.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
         //FIXME: better explanations
         return section
     }
-}
 
-class Relocation: MachoComponent {
+    static func modelSize(is64Bit: Bool) -> Int {
+        return 8
+    }
     
-//    var entries: [RelocationEntry] = []
-//    var numberOfTranslationSections: Int { entries.count }
-//    
-//    override var primaryName: String { "Relocation Entries" }
-//    override var secondaryName: String { "\(entries.count) entries" }
-//    
-//    init(_ entriesData: DataSlice) {
-//        self.machoDataSlice = entriesData
-//        self._addEntries(entriesData)
-//    }
-//    
-//    func addEntries(_ entriesData: DataSlice) {
-//        self.machoDataSlice.merge(entriesData)
-//        self._addEntries(entriesData)
-//    }
-//    
-//    private func _addEntries(_ entriesData: DataSlice) {
-//        var entries: [RelocationEntry] = []
-//        let raw = entriesData.raw
-//        for i in 0..<(raw.count/RelocationEntry.length) {
-//            let entryOffset = i * RelocationEntry.length
-//            let relocationEntryData = entriesData.truncated(from: entryOffset, length: RelocationEntry.length)
-//            entries.append(RelocationEntry(from: relocationEntryData))
-//        }
-//        self.entries.append(contentsOf: entries)
-//    }
-//    
-//    func translationSection(at index: Int) -> TransSection {
-//        return entries[index].makeTranslationSection()
-//    }
 }

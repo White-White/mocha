@@ -8,19 +8,29 @@
 import Foundation
 import SwiftUI
 
+protocol LazyHexLineBytesProvider: AnyObject {
+    func bytes(at offset: Int, length: Int) -> [UInt8]
+}
+
 class LazyHexLine: ObservableObject {
     
     static let lineHeight: CGFloat = 14
     
-    let bytes: [UInt8]
+    lazy var bytes: [UInt8] = {
+        self.bytesProvider.bytes(at: self.offset, length: HexLineStore.NumberOfBytesPerLine)
+    }()
+    
+    let bytesProvider: LazyHexLineBytesProvider
+    let offset: Int
     let fileOffset: Int
     let indexNumOfDigits: Int
     let isEvenLine: Bool
     @Published var selectedByteRange: Range<Int>?
     
-    init(bytes: [UInt8], fileOffset: Int, indexNumOfDigits: Int, isEvenLine: Bool) {
-        self.bytes = bytes
-        self.fileOffset = fileOffset
+    init(offset: Int, baseOffset: Int, indexNumOfDigits: Int, isEvenLine: Bool, bytesProvider: LazyHexLineBytesProvider) {
+        self.bytesProvider = bytesProvider
+        self.offset = offset
+        self.fileOffset = offset + baseOffset
         self.indexNumOfDigits = indexNumOfDigits
         self.isEvenLine = isEvenLine
     }
@@ -31,10 +41,21 @@ class LazyHexLine: ObservableObject {
     
     var dataHexString: AttributedString {
         
-        var string = (bytes.map { String(format: "%02X", $0) }).joined(separator: "")
+        let string: String
         if bytes.count < HexLineStore.NumberOfBytesPerLine {
+            var tmpString = (bytes.map { String(format: "%02X", $0) }).joined(separator: "")
             let paddingLength = (HexLineStore.NumberOfBytesPerLine - bytes.count) * 2
-            string.append(contentsOf: [Character](repeating: " ", count: paddingLength))
+            tmpString.append(contentsOf: [Character](repeating: " ", count: paddingLength))
+            string = tmpString
+        } else {
+            string = String(format:
+                                    "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+                                bytes[0], bytes[1], bytes[2], bytes[3],
+                                bytes[4], bytes[5], bytes[6], bytes[7],
+                                bytes[8], bytes[9], bytes[10], bytes[11],
+                                bytes[12], bytes[13], bytes[14], bytes[15],
+                                bytes[16], bytes[17], bytes[18], bytes[19],
+                                bytes[20], bytes[21], bytes[22], bytes[23])
         }
         
         var attriString = AttributedString(string)
@@ -67,7 +88,7 @@ class LazyHexLine: ObservableObject {
     }
 }
 
-class HexLineStore: Equatable {
+class HexLineStore: Equatable, LazyHexLineBytesProvider {
     
     static func == (lhs: HexLineStore, rhs: HexLineStore) -> Bool {
         return lhs.data == rhs.data
@@ -78,7 +99,7 @@ class HexLineStore: Equatable {
     private let data: DataSlice
     private let hexDigits: Int
     
-    let binaryLines: [LazyHexLine]
+    var binaryLines: [LazyHexLine] = []
     private var selectedBytesRange: Range<Int>?
     
     init(_ data: DataSlice) {
@@ -90,18 +111,18 @@ class HexLineStore: Equatable {
         
         var binaryLines: [LazyHexLine] = []
         for index in 0..<numberOfBinaryLines {
-            let lineData = data.truncated(from: index * HexLineStore.NumberOfBytesPerLine,
-                                          maxLength: HexLineStore.NumberOfBytesPerLine)
-            
-            let line = LazyHexLine(bytes: [UInt8](lineData.raw),
-                                   fileOffset: data.startIndex + index * HexLineStore.NumberOfBytesPerLine,
-                                   indexNumOfDigits: hexDigits,
-                                   isEvenLine: index & 0x1 == 0)
-            
-            binaryLines.append(line)
+            binaryLines.append(LazyHexLine(offset: index * HexLineStore.NumberOfBytesPerLine,
+                                           baseOffset: data.startIndex,
+                                           indexNumOfDigits: hexDigits,
+                                           isEvenLine: index & 0x1 == 0,
+                                           bytesProvider: self))
         }
         
         self.binaryLines = binaryLines
+    }
+    
+    func bytes(at offset: Int, length: Int) -> [UInt8] {
+        return [UInt8](data.truncated(from: offset, maxLength: length).raw)
     }
     
     func targetIndexRange(for selectedBytesRange: Range<Int>) -> ClosedRange<Int> {

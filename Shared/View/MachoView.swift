@@ -7,74 +7,85 @@
 
 import SwiftUI
 
-struct MachoCellView: View {
+struct MachoComponentView: View {
     
-    let machoComponent: MachoComponent
-    let hexDigits: Int
-    let isSelected: Bool
+    @ObservedObject var cellModel: MachoViewCellModel
+    
+    var hexDigits: Int {
+        cellModel.machoComponent.machoDataSlice.preferredNumberOfHexDigits
+    }
     
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
-                Text(machoComponent.primaryName)
-                    .lineLimit(1)
-                    .font(.system(size: 12))
-                    .foregroundColor(isSelected ? .white : .black)
+                Text(cellModel.machoComponent.title)
+                    .font(.system(size: 13).bold())
+                    .foregroundColor(cellModel.isSelected ? .white : .black)
                     .padding(.bottom, 2)
-                if let secondaryDescription = machoComponent.secondaryName {
+                if let primaryName = cellModel.machoComponent.primaryName {
+                    Text(primaryName)
+                        .font(.system(size: 12))
+                        .foregroundColor(cellModel.isSelected ? .white : .black)
+                        .padding(.bottom, 2)
+                }
+                if let secondaryDescription = cellModel.machoComponent.secondaryName {
                     Text(secondaryDescription)
                         .font(.system(size: 12))
-                        .foregroundColor(isSelected ? .white : .secondary)
+                        .foregroundColor(cellModel.isSelected ? .white : .secondary)
                         .lineLimit(1)
+                        .padding(.bottom, 2)
                 }
-                Text(String(format: "Rnage: 0x%0\(hexDigits)X - 0x%0\(hexDigits)X", machoComponent.fileOffsetInMacho, machoComponent.fileOffsetInMacho + machoComponent.size))
+                Text(String(format: "Rnage: 0x%0\(hexDigits)X - 0x%0\(hexDigits)X", cellModel.machoComponent.fileOffsetInMacho, cellModel.machoComponent.fileOffsetInMacho + cellModel.machoComponent.size))
                     .font(.system(size: 12))
-                    .foregroundColor(isSelected ? .white : .secondary)
-                    .padding(.top, 2)
-                    .lineLimit(1)
-                Text(String(format: "Size: 0x%0\(hexDigits)X", machoComponent.size))
+                    .foregroundColor(cellModel.isSelected ? .white : .secondary)
+                    .padding(.trailing, 8) // extra space for complete range info
+                Text(String(format: "Size: 0x%0\(hexDigits)X", cellModel.machoComponent.size))
                     .font(.system(size: 12))
-                    .foregroundColor(isSelected ? .white : .secondary)
+                    .foregroundColor(cellModel.isSelected ? .white : .secondary)
                     .padding(.top, 2)
-                    .lineLimit(1)
             }
             Spacer()
         }
         .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
         .background {
-            RoundedRectangle(cornerRadius: 4, style: .continuous).fill(isSelected ? Theme.selected : .white)
+            RoundedRectangle(cornerRadius: 4, style: .continuous).fill(cellModel.isSelected ? Theme.selected : .white)
         }
         .contentShape(Rectangle())
     }
-    
-    init(_ machoComponent: MachoComponent, isSelected: Bool) {
-        self.machoComponent = machoComponent
-        self.hexDigits = machoComponent.machoDataSlice.preferredNumberOfHexDigits
-        self.isSelected = isSelected
-    }
+}
+
+class MachoViewCellModel: ObservableObject {
+    let machoComponent: MachoComponent
+    @Published var isSelected: Bool = false
+    init(_ c: MachoComponent) { self.machoComponent = c }
 }
 
 struct MachoView: View {
     
     @Binding var macho: Macho
-    @State fileprivate var machoComponents: [MachoComponent]
     
+    @State fileprivate var cellModels: [MachoViewCellModel]
+    @State fileprivate var selectedCellModel: MachoViewCellModel?
     @State fileprivate var selectedMachoComponent: MachoComponent
     @State fileprivate var hexStore: HexLineStore
-    
     @State var selectedBinaryRange: Range<Int>?
     
     var body: some View {
         HStack(spacing: 0) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(machoComponents, id: \.fileOffsetInMacho) { component in
-                        MachoCellView(component, isSelected: selectedMachoComponent == component)
+                    ForEach(cellModels, id: \.machoComponent.fileOffsetInMacho) { cellModel in
+                        MachoComponentView(cellModel: cellModel)
                             .onTapGesture {
-                                self.selectedMachoComponent = component
-                                self.selectedBinaryRange = component.translationSection(at: 0).terms.first?.range
-                                self.hexStore = HexLineStore(component.machoDataSlice)
+                                if self.selectedCellModel?.machoComponent == cellModel.machoComponent { return }
+                                self.selectedMachoComponent = cellModel.machoComponent
+                                self.selectedBinaryRange = cellModel.machoComponent.translationSection(at: 0).terms.first?.range
+                                self.hexStore = HexLineStore(cellModel.machoComponent.machoDataSlice)
                                 self.hexStore.updateLinesWith(selectedBytesRange: self.selectedBinaryRange)
+                                
+                                cellModel.isSelected.toggle()
+                                self.selectedCellModel?.isSelected.toggle()
+                                self.selectedCellModel = cellModel
                             }
                     }
                 }
@@ -95,7 +106,9 @@ struct MachoView: View {
             }
         }
         .onChange(of: macho) { newValue in
-            self.machoComponents = newValue.machoComponents
+            self.cellModels = newValue.machoComponents.map { MachoViewCellModel($0) }
+            self.cellModels.first?.isSelected = true
+            self.selectedCellModel = self.cellModels.first
             self.selectedMachoComponent = newValue.header
             self.hexStore = HexLineStore(newValue.header.machoDataSlice)
             self.selectedBinaryRange = newValue.header.translationSection(at: 0).terms.first?.range
@@ -105,15 +118,18 @@ struct MachoView: View {
     
     init(_ macho: Binding<Macho>) {
         _macho = macho
+        let machoUnwrapp = macho.wrappedValue
         
-        // cells
-        _machoComponents = State(initialValue: macho.wrappedValue.machoComponents)
-        _selectedMachoComponent = State(initialValue: macho.wrappedValue.header)
+        let cellModels = machoUnwrapp.machoComponents.map { MachoViewCellModel.init($0) }
+        cellModels.first?.isSelected = true
+        _cellModels = State(initialValue: cellModels)
+        _selectedCellModel = State(initialValue: cellModels.first)
+        
+        _selectedMachoComponent = State(initialValue: machoUnwrapp.header)
         let selectedRange = macho.wrappedValue.header.translationSection(at: 0).terms.first?.range
         _selectedBinaryRange = State(initialValue: selectedRange)
         let hexStore = HexLineStore(macho.wrappedValue.header.machoDataSlice)
         hexStore.updateLinesWith(selectedBytesRange: selectedRange)
         _hexStore = State(initialValue: hexStore)
-        
     }
 }

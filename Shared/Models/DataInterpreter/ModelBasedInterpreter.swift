@@ -8,9 +8,8 @@
 import Foundation
 
 protocol InterpretableModel {
-    init(with data: DataSlice, is64Bit: Bool)
+    init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey: Any]?)
     func makeTransSection() -> TransSection
-    static func modelName() -> String?
     static func modelSize(is64Bit: Bool) -> Int
 }
 
@@ -21,7 +20,7 @@ class ModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]>
         var models: [Model] = []
         for index in 0..<numberOfModels {
             let data = self.data.truncated(from: index * modelSize, length: modelSize)
-            models.append(Model(with: data, is64Bit: self.is64Bit))
+            models.append(Model(with: data, is64Bit: self.is64Bit, settings: self.settings))
         }
         return models
     }
