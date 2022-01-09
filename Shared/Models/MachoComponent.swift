@@ -17,20 +17,28 @@ class MachoComponent: Equatable {
     var size: Int { machoDataSlice.count }
     var fileOffsetInMacho: Int { machoDataSlice.startIndex }
     
-    var title: String { fatalError() /* to be overriden */ }
-    var primaryName: String? { nil }
-    var secondaryName: String? { nil }
+    var componentTitle: String { fatalError() /* to be overriden */ }
+    var componentSubTitle: String? { nil }
+    var componentDescription: String? { nil }
     
     init(_ machoDataSlice: DataSlice) {
         self.machoDataSlice = machoDataSlice
     }
     
-    var numberOfTranslationSections: Int {
+    func numberOfTranslationSections() -> Int {
         return 1 /* default 1 */
     }
     
-    func translationSection(at index: Int) -> TransSection {
-        fatalError() /* to be overriden */
+    func translationItems(at section: Int) -> [TranslationItem] {
+        fatalError()
+    }
+    
+    func sectionTile(of section: Int) -> String? {
+        return nil
+    }
+    
+    var firstTransItem: TranslationItem? {
+        self.translationItems(at: .zero).first
     }
 }
 
@@ -38,32 +46,36 @@ class MachoInterpreterBasedComponent: MachoComponent {
     
     let interpreter: Interpreter
     
-    override var title: String { titleInside }
-    override var primaryName: String? { primaryNameInside }
-    override var secondaryName: String? { secondaryNameInside }
-    let titleInside: String
-    let primaryNameInside: String?
-    let secondaryNameInside: String?
+    override var componentTitle: String { title }
+    override var componentSubTitle: String? { subTitle }
+    override var componentDescription: String? { description }
+    let title: String
+    let subTitle: String?
+    let description: String?
     
     init(_ machoDataSlice: DataSlice,
          is64Bit: Bool,
          interpreterType: Interpreter.Type,
          title: String,
          interpreterSettings: [InterpreterSettingsKey: Any]? = nil,
-         primaryName: String? = nil,
-         secondaryName: String? = nil) {
+         subTitle: String? = nil,
+         description: String? = nil) {
         self.interpreter = interpreterType.init(machoDataSlice, is64Bit: is64Bit, settings: interpreterSettings)
-        self.titleInside = title
-        self.primaryNameInside = primaryName
-        self.secondaryNameInside = secondaryName
+        self.title = title
+        self.subTitle = subTitle
+        self.description = description
         super.init(machoDataSlice)
     }
     
-    override var numberOfTranslationSections: Int {
-        return interpreter.numberOfTransSections()
+    override func numberOfTranslationSections() -> Int {
+        return interpreter.numberOfTranslationSections()
     }
     
-    override func translationSection(at index: Int) -> TransSection {
-        return interpreter.transSection(at: index)
+    override func translationItems(at section: Int) -> [TranslationItem] {
+        return interpreter.translationItems(at: section)
+    }
+    
+    override func sectionTile(of section: Int) -> String? {
+        return interpreter.sectionTitle(of: section)
     }
 }

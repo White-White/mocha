@@ -25,7 +25,7 @@ struct FileViewCell: View {
                     .lineLimit(1)
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .secondary)
-                Text(FileSize(fileSize).string)
+                Text(fileSize.hex)
                     .lineLimit(1)
                     .font(.system(size: 12))
                     .foregroundColor(isSelected ? .white : .secondary)

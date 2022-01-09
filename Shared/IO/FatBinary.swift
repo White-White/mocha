@@ -46,7 +46,7 @@ struct FatBinary {
     private let fatArchs: [FatArch]
     let machos: [Macho]
     
-    init(with fileData: DataSlice, machoFileName: String) throws {
+    init(with fileData: DataSlice, machoFileName: String) {
         // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
         // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
         self.numberOfArchs = fileData.truncated(from: 4, length: 4).raw.UInt32.bigEndian
@@ -61,7 +61,7 @@ struct FatBinary {
             fatArchs.append(farArch)
             
             let subFileData = fileData.truncated(from: Int(farArch.objectFileOffset), length: Int(farArch.objectFileSize))
-            let subMachos = (try File(with: machoFileName, fileData: subFileData)).machos
+            let subMachos = File(with: machoFileName, fileData: subFileData).machos
             machos.append(contentsOf: subMachos)
         }
         self.fatArchs = fatArchs

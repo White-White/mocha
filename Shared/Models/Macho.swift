@@ -50,39 +50,74 @@ class MachoHeader: MachoComponent {
     let sizeOfAllLoadCommand: UInt32
     let flags: UInt32
     let reserved: UInt32?
+    let itemsContainer: TranslationItemContainer
     
-    override var title: String { "Macho Header" }
+    override var componentTitle: String { "Macho Header" }
     
     init(from machoDataSlice: DataSlice, is64Bit: Bool) {
         self.is64Bit = is64Bit
-        var machoHeaderDataShifter = DataShifter(machoDataSlice)
-        _ = machoHeaderDataShifter.nextDoubleWord() // first 4-byte is magic data
-        self.cpuType = CPUType(machoHeaderDataShifter.nextDoubleWord().UInt32)
-        self.cpuSubtype = CPUSubtype(machoHeaderDataShifter.nextDoubleWord().UInt32, cpuType: cpuType)
-        self.machoType = MachoType(with: machoHeaderDataShifter.nextDoubleWord().UInt32)
-        self.numberOfLoadCommands = machoHeaderDataShifter.nextDoubleWord().UInt32
-        self.sizeOfAllLoadCommand = machoHeaderDataShifter.nextDoubleWord().UInt32
-        self.flags = machoHeaderDataShifter.nextDoubleWord().UInt32
-        self.reserved = is64Bit ? machoHeaderDataShifter.nextDoubleWord().UInt32 : nil
+       
+        let smartTransSection = TranslationItemContainer(machoDataSlice: machoDataSlice, sectionTitle: nil)
+        
+        _ =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: { $0 },
+                                    itemContentGenerator: { _  in TranslationItemContent(description: "File Magic", explanation: (is64Bit ? MagicType.macho64 : MagicType.macho32).readable) })
+        
+        let cpuType =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: { CPUType($0.UInt32) },
+                                    itemContentGenerator: { cpuType  in TranslationItemContent(description: "CPU Type", explanation: cpuType.name) })
+        self.cpuType = cpuType
+        
+        self.cpuSubtype =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: { CPUSubtype($0.UInt32, cpuType: cpuType) },
+                                    itemContentGenerator: { cpuSubtype  in TranslationItemContent(description: "CPU Sub Type", explanation: cpuSubtype.name) })
+        
+        self.machoType =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: { MachoType(with: $0.UInt32) },
+                                    itemContentGenerator: { machoType  in TranslationItemContent(description: "Macho Type", explanation: machoType.readable) })
+        
+        self.numberOfLoadCommands =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: DataInterpreterPreset.UInt32,
+                                    itemContentGenerator: { numberOfLoadCommands  in TranslationItemContent(description: "Number of commands", explanation: "\(numberOfLoadCommands)") })
+        
+        self.sizeOfAllLoadCommand =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: DataInterpreterPreset.UInt32,
+                                    itemContentGenerator: { sizeOfAllLoadCommand  in TranslationItemContent(description: "Size of all commands", explanation: "\(sizeOfAllLoadCommand)") })
+        
+        self.flags =
+        smartTransSection.translate(next: .doubleWords,
+                                    dataInterpreter: DataInterpreterPreset.UInt32,
+                                    itemContentGenerator: { flags  in TranslationItemContent(description: "Valid Flags", explanation: MachoHeader.flagsDescriptionFrom(flags)) })
+        
+        if is64Bit {
+            self.reserved =
+            smartTransSection.translate(next: .doubleWords,
+                                        dataInterpreter: DataInterpreterPreset.UInt32,
+                                        itemContentGenerator: { reserved  in TranslationItemContent(description: "Reversed", explanation: reserved.hex) })
+        } else {
+            self.reserved = nil
+        }
+        
+        self.itemsContainer = smartTransSection
+        
         super.init(machoDataSlice)
     }
     
-    override func translationSection(at index: Int) -> TransSection {
-        let section = TransSection(baseIndex: machoDataSlice.startIndex)
-        section.translateNextDoubleWord { Readable(description: "File Magic", explanation: (self.is64Bit ? MagicType.macho64 : MagicType.macho32).readable) }
-        section.translateNextDoubleWord { Readable(description: "CPU Type", explanation: self.cpuType.name) }
-        section.translateNextDoubleWord { Readable(description: "CPU Sub Type", explanation: self.cpuSubtype.name) }
-        section.translateNextDoubleWord { Readable(description: "Macho Type", explanation: self.machoType.readable) }
-        section.translateNextDoubleWord { Readable(description: "Number of commands", explanation: "\(self.numberOfLoadCommands)") }
-        section.translateNextDoubleWord { Readable(description: "Size of all commands", explanation: "\(self.sizeOfAllLoadCommand.hex)") }
-        section.translateNextDoubleWord { Readable(description: "Valid Flags", explanation: "\(self.flagsDescriptionFrom(self.flags).joined(separator: "\n"))") }
-        if let reserved = reserved {
-            section.translateNextDoubleWord { Readable(description: "Reversed", explanation: "\(reserved.hex)") }
-        }
-        return section
+    override func numberOfTranslationSections() -> Int {
+        return 1
     }
     
-    private func flagsDescriptionFrom(_ flags: UInt32) -> [String] {
+    override func translationItems(at section: Int) -> [TranslationItem] {
+        return self.itemsContainer.items
+    }
+    
+    private static func flagsDescriptionFrom(_ flags: UInt32) -> String {
         // this line of shit I'll never understand.. after today...
         return [
             "MH_NOUNDEFS",
@@ -110,7 +145,7 @@ class MachoHeader: MachoComponent {
             "MH_DEAD_STRIPPABLE_DYLIB",
             "MH_HAS_TLV_DESCRIPTORS",
             "MH_NO_HEAP_EXECUTION",
-        ].enumerated().filter { flags & (0x1 << $0.offset) != 0 }.map { $0.element }
+        ].enumerated().filter { flags & (0x1 << $0.offset) != 0 }.map { $0.element }.joined(separator: "\n")
     }
 }
 
@@ -137,30 +172,20 @@ class Macho: Equatable {
         guard let magicType = MagicType(machoData.truncated(from: .zero, length: 4)) else { fatalError() }
         let is64bit = magicType == .macho64
         
-        // generate macho header
         let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
         self.header = header
         
-        // generate load commands
-        var loadCommands: [LoadCommand] = []
-        for _ in 0..<header.numberOfLoadCommands {
-            let nextLCOffset: Int
-            if let lastLoadCommand = loadCommands.last {
-                nextLCOffset = Int(lastLoadCommand.fileOffsetInMacho + lastLoadCommand.size)
-            } else {
-                nextLCOffset = header.size
-            }
-            let loadCommandSize = machoData.truncated(from: nextLCOffset + 4, length: 4).raw.UInt32
-            let loadCommandData = machoData.truncated(from: nextLCOffset, length: Int(loadCommandSize))
-            loadCommands.append(LoadCommand.loadCommand(with: loadCommandData))
-        }
+        let allLoadCommandData = machoData.truncated(from: header.size, length: Int(header.sizeOfAllLoadCommand))
+        let loadCommands = LoadCommand.loadCommands(from: allLoadCommandData, numberOfLoadCommands: Int(header.numberOfLoadCommands))
         self.loadCommands = loadCommands
+        
+        // macho header as macho component
+        self.machoComponents.append(header)
         
         // macho components from load commands
         self.machoComponents.append(contentsOf: loadCommands)
         
         // loop load command to collect components
-        var stringTableInterpreter: CStringInterpreter?
         loadCommands.forEach { loadCommand in
             if let segment = loadCommand as? Segment {
                 let componentsSection = segment.sectionHeaders.compactMap({
@@ -178,7 +203,7 @@ class Macho: Equatable {
                 self.machoComponents.append(Macho.machoComponent(from: linkedITData, machoData: machoData, is64Bit: header.is64Bit))
             }
             
-            if let symbolTableCommand = (loadCommand as? LCSymbolTable) {
+            if let symbolTableCommand = (loadCommand as? SymbolTable) {
                 
                 let symbolTableComponent = Macho.symbolTableComponent(from: symbolTableCommand,
                                                                       machoData: machoData,
@@ -190,7 +215,17 @@ class Macho: Equatable {
                 self.stringTableInterpreter = stringTableComponent.interpreter as? CStringInterpreter
                 self.machoComponents.append(contentsOf: [symbolTableComponent, stringTableComponent])
             }
+            
+            if let dyldInfo = loadCommand as? LCDyldInfo {
+                
+                let rebaseInfoComponent = Macho.rebaseInfoComponent(from: dyldInfo, machoData: machoData, is64Bit: header.is64Bit)
+                
+                self.machoComponents.append(rebaseInfoComponent)
+            }
         }
+        
+        // sort
+        self.machoComponents.sort { $0.fileOffsetInMacho < $1.fileOffsetInMacho }
     }
 }
 
@@ -205,9 +240,9 @@ extension Macho {
             let entriesData = machoData.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.modelSize(is64Bit: is64Bit))
             return MachoInterpreterBasedComponent.init(entriesData,
                                                        is64Bit: is64Bit,
-                                                       interpreterType: ModelBasedInterpreter<RelocationEntry>.self,
+                                                       interpreterType: LazyModelBasedInterpreter<RelocationEntry>.self,
                                                        title: "Relocation Table",
-                                                       primaryName: "__LINKEDIT" + "," + sectionHeader.section)
+                                                       subTitle: "__LINKEDIT" + "," + sectionHeader.section)
         } else {
             return nil
         }
@@ -243,7 +278,7 @@ extension Macho {
                                               is64Bit: is64Bit,
                                               interpreterType: interpreterType,
                                               title: "Section",
-                                              primaryName: sectionHeader.segment + "," + sectionHeader.section)
+                                              subTitle: sectionHeader.segment + "," + sectionHeader.section)
     }
     
     fileprivate static func machoComponent(from linkedITData: LinkedITData, machoData: DataSlice, is64Bit: Bool) -> MachoComponent {
@@ -251,10 +286,10 @@ extension Macho {
                                               is64Bit: is64Bit,
                                               interpreterType: linkedITData.interpreterType,
                                               title: linkedITData.dataName,
-                                              primaryName: "__LINKEDIT")
+                                              subTitle: "__LINKEDIT")
     }
     
-    fileprivate static func symbolTableComponent(from symbolTableCommand: LCSymbolTable,
+    fileprivate static func symbolTableComponent(from symbolTableCommand: SymbolTable,
                                                  machoData: DataSlice,
                                                  is64Bit: Bool,
                                                  stringTableSearchingDelegate: StringTableSearchingDelegate) -> MachoInterpreterBasedComponent {
@@ -264,13 +299,13 @@ extension Macho {
         let symbolTableData = machoData.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
         return MachoInterpreterBasedComponent(symbolTableData,
                                               is64Bit: is64Bit,
-                                              interpreterType: ModelBasedInterpreter<SymbolTableEntry>.self,
+                                              interpreterType: LazyModelBasedInterpreter<SymbolTableEntry>.self,
                                               title: "Symbol Table",
                                               interpreterSettings: [.stringTableSearchingDelegate: stringTableSearchingDelegate],
-                                              primaryName: "__LINKEDIT")
+                                              subTitle: "__LINKEDIT")
     }
     
-    fileprivate static func stringTableComponent(from symbolTableCommand: LCSymbolTable, machoData: DataSlice, is64Bit: Bool) -> MachoInterpreterBasedComponent {
+    fileprivate static func stringTableComponent(from symbolTableCommand: SymbolTable, machoData: DataSlice, is64Bit: Bool) -> MachoInterpreterBasedComponent {
         let stringTableStartOffset = Int(symbolTableCommand.stringTableOffset)
         let stringTableSize = Int(symbolTableCommand.sizeOfStringTable)
         let stringTableData = machoData.truncated(from: stringTableStartOffset, length: stringTableSize)
@@ -279,7 +314,19 @@ extension Macho {
                                               interpreterType: CStringInterpreter.self,
                                               title: "String Table",
                                               interpreterSettings: [.shouldDemangleCString: true],
-                                              primaryName: "__LINKEDIT")
+                                              subTitle: "__LINKEDIT")
+    }
+    
+    fileprivate static func rebaseInfoComponent(from dyldInfoCommand: LCDyldInfo, machoData: DataSlice, is64Bit: Bool) -> MachoComponent {
+        let rebaseInfoStart = Int(dyldInfoCommand.rebaseOffset)
+        let rebaseInfoSize = Int(dyldInfoCommand.rebaseSize)
+        let rebaseInfoData = machoData.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
+        return MachoInterpreterBasedComponent(rebaseInfoData,
+                                              is64Bit: is64Bit,
+                                              interpreterType: RebaseInfoInterpreter.self,
+                                              title: "Rebase Opcode",
+                                              interpreterSettings: nil,
+                                              subTitle: "__LINKEDIT")
     }
 }
 

@@ -40,8 +40,8 @@ struct ContentView: View {
     let openPanelDelegate = OpenPanelDelegate()
     
     var body: some View {
-        if let fileURL = fileURL, let file = try? File(with: fileURL) {
-            FileView(file: file).navigationTitle(fileURL.absoluteString)
+        if let fileURL = fileURL {
+            FileView(file: File(with: fileURL)).navigationTitle(fileURL.absoluteString)
         } else {
             VStack {
                 Spacer()

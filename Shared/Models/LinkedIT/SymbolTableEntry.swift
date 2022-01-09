@@ -36,12 +36,7 @@ enum SymbolType {
 
 struct SymbolTableEntry: InterpretableModel {
     
-    let data: DataSlice
-    let is64Bit: Bool
-    weak var stringTableSearchingDelegate: StringTableSearchingDelegate?
-    
     let indexInStringTable: UInt32
-    
     // flags
     let symbolType: SymbolType
     let isPrivateExternalSymbol: Bool
@@ -51,14 +46,18 @@ struct SymbolTableEntry: InterpretableModel {
     let n_desc: Swift.UInt16
     let n_value: UInt64
     
+    let itemsContainer: TranslationItemContainer
     
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
-        self.data = data
-        self.is64Bit = is64Bit
-        self.stringTableSearchingDelegate = settings?[.stringTableSearchingDelegate] as? StringTableSearchingDelegate
         
-        var shifter = DataShifter(data)
-        self.indexInStringTable = shifter.nextDoubleWord().UInt32
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        
+        self.indexInStringTable = itemsContainer.translate(next: .doubleWords,
+                                                           dataInterpreter: DataInterpreterPreset.UInt32,
+                                                           itemContentGenerator: { indexInStringTable in
+            let demangledString = (settings?[.stringTableSearchingDelegate] as? StringTableSearchingDelegate)?.searchStringTable(with: Int(indexInStringTable))?.value
+            return TranslationItemContent(description: "String table index", explanation: indexInStringTable.hex, extraExplanation: demangledString)
+        })
         
         /*
          * The n_type field really contains four fields:
@@ -69,59 +68,58 @@ struct SymbolTableEntry: InterpretableModel {
          * which are used via the following masks.
          */
         
-        let flagsValue = shifter.shift(1).first! // n_type field
+        let flagsValue = data.truncated(from: 4, length: 1).raw.first! // n_type field
+        let flagsByteRange = data.absoluteRange(4, 1)
         
+        let symbolType: SymbolType
         if (flagsValue & 0xe0) != 0 { // 0xe0 == N_STAB mask == 01110000
-            self.symbolType = .debugging
+            symbolType = .debugging
         } else {
             let valueN_TYPE = flagsValue & 0x0e // 0x0e == N_TYPE mask == 00001110
             switch valueN_TYPE {
             case 0x0: // N_UNDF    0x0        /* undefined, n_sect == NO_SECT */
-                self.symbolType = .undefined
+                symbolType = .undefined
             case 0x2: // N_ABS    0x2        /* absolute, n_sect == NO_SECT */
-                self.symbolType = .absolute
+                symbolType = .absolute
             case 0xe: // N_SECT    0xe        /* defined in section number n_sect */
-                self.symbolType = .section
+                symbolType = .section
             case 0xc: // N_PBUD    0xc        /* prebound undefined (defined in a dylib) */
-                self.symbolType = .preBound
+                symbolType = .preBound
             case 0xa: // N_INDR    0xa        /* indirect */
-                self.symbolType = .indirect
+                symbolType = .indirect
             default:
                 fatalError()
             }
         }
+        self.symbolType = symbolType
         
         let valueN_PEXT = (flagsValue & 0x10) != 0 // 0x10 == N_PEXT mask == 00010000 /* private external symbol bit */
         let valueN_EXT = (flagsValue & 0x01) != 0 // 0x01 == N_EXT mask == 00000001 /* external symbol bit, set for external symbols */
         self.isPrivateExternalSymbol = valueN_PEXT
         self.isExternalSymbol = valueN_EXT
         
-        let sectionNumber = shifter.shift(1).first!
-        self.sectionNumber = sectionNumber
+        itemsContainer.append(TranslationItemContent(description: "Type", explanation: symbolType.name), forRange: flagsByteRange)
+        itemsContainer.append(TranslationItemContent(description: "Private External", explanation: "\(valueN_PEXT)"), forRange: flagsByteRange)
+        itemsContainer.append(TranslationItemContent(description: "External", explanation: "\(valueN_EXT)"), forRange: flagsByteRange)
+        _ = itemsContainer.skip(.rawNumber(1))
         
-        let n_desc = shifter.shift(2).UInt16
-        self.n_desc = n_desc
+        self.sectionNumber = itemsContainer.translate(next: .rawNumber(1),
+                                                      dataInterpreter: { $0.first! },
+                                                      itemContentGenerator: { sectionNumber in TranslationItemContent(description: "Section Number", explanation: "\(sectionNumber)") })
         
-        let n_value = shifter.shift(is64Bit ? 8 : 4).UInt64
-        self.n_value = n_value
+        self.n_desc = itemsContainer.translate(next: .word,
+                                               dataInterpreter: { $0.UInt16 },
+                                               itemContentGenerator: { n_desc in TranslationItemContent(description: "n_desc", explanation: n_desc.hex) })
+        
+        self.n_value = itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+                                               dataInterpreter: { $0.UInt64 },
+                                               itemContentGenerator: { n_value in TranslationItemContent(description: "n_value", explanation: n_value.hex) })
+        
+        self.itemsContainer = itemsContainer
     }
     
-    func makeTransSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startIndex, title: nil)
-        section.addTranslation(forRange: 0..<4) {
-            let cStringSearchingResult = self.stringTableSearchingDelegate?.searchStringTable(with: Int(self.indexInStringTable))
-            let referredCString = cStringSearchingResult?.value ?? "Didn't find"
-            return Readable(description: "String table index",
-                            explanation: "\(self.indexInStringTable.hex)",
-                            extraExplanation: "Referred string: \(referredCString)")
-        }
-        
-        section.addTranslation(forRange: 4..<5) { Readable(description: "Type", explanation: self.symbolType.name) }
-        section.addTranslation(forRange: 1..<2) { Readable(description: "Private External", explanation: "\(self.isPrivateExternalSymbol)") } // FIXME: range bug
-        section.addTranslation(forRange: 2..<3) { Readable(description: "External", explanation: "\(self.isExternalSymbol)") } // FIXME: range bug
-        section.addTranslation(forRange: 5..<7) { Readable(description: "n_desc", explanation: "\(self.n_desc.hex)") }
-        section.addTranslation(forRange: 8..<(self.is64Bit ? 16 : 12)) { Readable(description: "n_value", explanation: "\(self.n_value.hex)") }
-        return section
+    func translationItems() -> [TranslationItem] {
+        return itemsContainer.items
     }
     
     static func modelSize(is64Bit: Bool) -> Int {
@@ -129,6 +127,6 @@ struct SymbolTableEntry: InterpretableModel {
     }
 }
 
-struct DynamicSymbolTable {
+struct DynamicSymbolTableEntry {
     
 }

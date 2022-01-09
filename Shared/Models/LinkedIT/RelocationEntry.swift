@@ -20,8 +20,6 @@ import Foundation
 
 struct RelocationEntry: InterpretableModel {
     
-    let data: DataSlice
-    
     let address: UInt32
     let symbolNum: UInt32 // 24 bits
     let pcRelocated: Bool // 1 bit
@@ -29,28 +27,46 @@ struct RelocationEntry: InterpretableModel {
     let isExternal: Bool // 1 bit
     let type: UInt8 // 4
     
+    let itemsContainer: TranslationItemContainer
+    
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
-        self.data = data
-        self.address = data.truncated(from: 0, length: 4).raw.UInt32
-        self.symbolNum = ([UInt8(0)] + data.truncated(from: 4, length: 3).raw).UInt32
+        
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        
+        self.address = itemsContainer.translate(next: .doubleWords,
+                                                dataInterpreter: DataInterpreterPreset.UInt32,
+                                                itemContentGenerator: { value in TranslationItemContent(description: "Address", explanation: value.hex) })
+        
+        self.symbolNum = itemsContainer.translate(next: .rawNumber(3),
+                                                  dataInterpreter: { ([UInt8(0)] + $0).UInt32 },
+                                                  itemContentGenerator: { value in TranslationItemContent(description: "symbolNum", explanation: "\(value)") })
+        
+        let rangeOfLastByte = data.absoluteRange(7, 1)
         let lastByte = data.truncated(from: 7, length: 1).raw.first!
-        self.pcRelocated = (lastByte & 0b10000000) != 0
-        self.length = UInt8((lastByte & 0b01100000) >> 4)
-        self.isExternal = (lastByte & 0b00010000) != 0
-        self.type = UInt8((lastByte & 0b00001111) >> 4)
+        
+        let pcRelocated = (lastByte & 0b10000000) != 0
+        self.pcRelocated = pcRelocated
+        
+        let length = UInt8((lastByte & 0b01100000) >> 4)
+        self.length = length
+        
+        let isExternal = (lastByte & 0b00010000) != 0
+        self.isExternal = isExternal
+        
+        let type = UInt8((lastByte & 0b00001111) >> 4)
+        self.type = type
+        
+        itemsContainer.append(TranslationItemContent(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)"),
+                              forRange: rangeOfLastByte)
+        
+        self.itemsContainer = itemsContainer
     }
     
-    func makeTransSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startIndex, title: nil)
-        section.translateNextDoubleWord { Readable(description: "Address", explanation: self.address.hex) }
-        section.translateNext(3) { Readable(description: "symbolNum", explanation: "\(self.symbolNum)") }
-        section.translateNext(1) { Readable(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)") }
-        //FIXME: better explanations
-        return section
+    func translationItems() -> [TranslationItem] {
+        return itemsContainer.items
     }
 
     static func modelSize(is64Bit: Bool) -> Int {
         return 8
     }
-    
 }

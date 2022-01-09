@@ -18,31 +18,27 @@ struct MachoComponentView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 0) {
-                Text(cellModel.machoComponent.title)
+                Text(cellModel.machoComponent.componentTitle)
                     .font(.system(size: 13).bold())
                     .foregroundColor(cellModel.isSelected ? .white : .black)
                     .padding(.bottom, 2)
-                if let primaryName = cellModel.machoComponent.primaryName {
+                if let primaryName = cellModel.machoComponent.componentSubTitle {
                     Text(primaryName)
                         .font(.system(size: 12))
                         .foregroundColor(cellModel.isSelected ? .white : .black)
                         .padding(.bottom, 2)
                 }
-                if let secondaryDescription = cellModel.machoComponent.secondaryName {
+                if let secondaryDescription = cellModel.machoComponent.componentDescription {
                     Text(secondaryDescription)
                         .font(.system(size: 12))
                         .foregroundColor(cellModel.isSelected ? .white : .secondary)
                         .lineLimit(1)
                         .padding(.bottom, 2)
                 }
-                Text(String(format: "Rnage: 0x%0\(hexDigits)X - 0x%0\(hexDigits)X", cellModel.machoComponent.fileOffsetInMacho, cellModel.machoComponent.fileOffsetInMacho + cellModel.machoComponent.size))
+                Text(String(format: "Range: 0x%0\(hexDigits)X - 0x%0\(hexDigits)X", cellModel.machoComponent.fileOffsetInMacho, cellModel.machoComponent.fileOffsetInMacho + cellModel.machoComponent.size))
                     .font(.system(size: 12))
                     .foregroundColor(cellModel.isSelected ? .white : .secondary)
                     .padding(.trailing, 8) // extra space for complete range info
-                Text(String(format: "Size: 0x%0\(hexDigits)X", cellModel.machoComponent.size))
-                    .font(.system(size: 12))
-                    .foregroundColor(cellModel.isSelected ? .white : .secondary)
-                    .padding(.top, 2)
             }
             Spacer()
         }
@@ -64,11 +60,11 @@ struct MachoView: View {
     
     @Binding var macho: Macho
     
-    @State fileprivate var cellModels: [MachoViewCellModel]
-    @State fileprivate var selectedCellModel: MachoViewCellModel?
-    @State fileprivate var selectedMachoComponent: MachoComponent
-    @State fileprivate var hexStore: HexLineStore
-    @State var selectedBinaryRange: Range<Int>?
+    @State var cellModels: [MachoViewCellModel]
+    @State var selectedCellModel: MachoViewCellModel?
+    @State var selectedMachoComponent: MachoComponent
+    @State var hexStore: HexLineStore
+    @State var sourceDataRangeOfSelecteditem: Range<Int>?
     
     var body: some View {
         HStack(spacing: 0) {
@@ -79,9 +75,9 @@ struct MachoView: View {
                             .onTapGesture {
                                 if self.selectedCellModel?.machoComponent == cellModel.machoComponent { return }
                                 self.selectedMachoComponent = cellModel.machoComponent
-                                self.selectedBinaryRange = cellModel.machoComponent.translationSection(at: 0).terms.first?.range
+                                self.sourceDataRangeOfSelecteditem = cellModel.machoComponent.translationItems(at: .zero).first?.sourceDataRange
                                 self.hexStore = HexLineStore(cellModel.machoComponent.machoDataSlice)
-                                self.hexStore.updateLinesWith(selectedBytesRange: self.selectedBinaryRange)
+                                self.hexStore.updateLinesWith(selectedBytesRange: self.sourceDataRangeOfSelecteditem)
                                 
                                 cellModel.isSelected.toggle()
                                 self.selectedCellModel?.isSelected.toggle()
@@ -99,8 +95,8 @@ struct MachoView: View {
                 MiniMap(machoFileSize: macho.fileSize, selectedMachoComponent: $selectedMachoComponent)
                     .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
                 HStack(alignment: .top, spacing: 0) {
-                    HexView(store: $hexStore, selectedBinaryRange: $selectedBinaryRange)
-                    TranslationView(machoComponent: $selectedMachoComponent, selectedBinaryRange: $selectedBinaryRange)
+                    HexView(store: $hexStore, sourceDataRangeOfSelecteditem: $sourceDataRangeOfSelecteditem)
+                    TranslationView(machoComponent: selectedMachoComponent, sourceDataRangeOfSelecteditem: $sourceDataRangeOfSelecteditem)
                 }
                 .padding(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
             }
@@ -111,8 +107,8 @@ struct MachoView: View {
             self.selectedCellModel = self.cellModels.first
             self.selectedMachoComponent = newValue.header
             self.hexStore = HexLineStore(newValue.header.machoDataSlice)
-            self.selectedBinaryRange = newValue.header.translationSection(at: 0).terms.first?.range
-            self.hexStore.updateLinesWith(selectedBytesRange: self.selectedBinaryRange)
+            self.sourceDataRangeOfSelecteditem = newValue.header.translationItems(at: .zero).first?.sourceDataRange
+            self.hexStore.updateLinesWith(selectedBytesRange: self.sourceDataRangeOfSelecteditem)
         }
     }
     
@@ -126,8 +122,8 @@ struct MachoView: View {
         _selectedCellModel = State(initialValue: cellModels.first)
         
         _selectedMachoComponent = State(initialValue: machoUnwrapp.header)
-        let selectedRange = macho.wrappedValue.header.translationSection(at: 0).terms.first?.range
-        _selectedBinaryRange = State(initialValue: selectedRange)
+        let selectedRange = macho.wrappedValue.header.translationItems(at: .zero).first?.sourceDataRange
+        _sourceDataRangeOfSelecteditem = State(initialValue: selectedRange)
         let hexStore = HexLineStore(macho.wrappedValue.header.machoDataSlice)
         hexStore.updateLinesWith(selectedBytesRange: selectedRange)
         _hexStore = State(initialValue: hexStore)

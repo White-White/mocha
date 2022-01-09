@@ -70,7 +70,7 @@ enum LoadCommandType: UInt32 {
     case dyldChainedFixups
     case fileSetEntry
     
-    var commandName: String {
+    var name: String {
         switch self {
         case .segment:
             return "LC_SEGMENT"
@@ -186,74 +186,77 @@ enum LoadCommandType: UInt32 {
 
 class LoadCommand: MachoComponent {
     
-    let loadCommandType: LoadCommandType
-    var translationDividerName: String? { nil }
+    let type: LoadCommandType
+    let itemsContainer: TranslationItemContainer
     
-    override var title: String { "Load Command" }
-    override var primaryName: String { loadCommandType.commandName }
+    override var componentTitle: String { "Load Command" }
+    override var componentSubTitle: String { type.name }
     
-    init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
-        self.loadCommandType = loadCommandType
-        super.init(loadCommandData)
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        self.type = type
+        let itemsContainer = itemsContainer ?? TranslationItemContainer(machoDataSlice: data.truncated(from: 0, length: 8), sectionTitle: nil)
+        itemsContainer.insert(TranslationItemContent(description: "Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
+        itemsContainer.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
+        self.itemsContainer = itemsContainer
+        super.init(data)
     }
     
-    static func loadCommand(with data: DataSlice) -> LoadCommand {
-        
-        let loadCommandTypeValue = data.truncated(from: 0, length: 4).raw.UInt32
-        guard let type = LoadCommandType(rawValue: loadCommandTypeValue) else {
-            print("Unknown load command type \(loadCommandTypeValue.hex). This must be a new one.")
-            fatalError()
-        }
-        
-        switch type {
-        case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
-            return MinOSVersion(with: data, loadCommandType: type)
-        case .linkerOption:
-            return LCLinkerOption(with: data, loadCommandType: type)
-        case .segment, .segment64:
-            return Segment(with: data, loadCommandType: type)
-        case .symbolTable:
-            return LCSymbolTable(with: data, loadCommandType: type)
-        case .dynamicSymbolTable:
-            return LCDynamicSymbolTable(with: data, loadCommandType: type)
-        case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
-            return Dylib(with: data, loadCommandType: type)
-        case .rpath:
-            return LCOneString(with: data, loadCommandType: type, description: "rpath")
-        case .idDynamicLinker:
-            return LCOneString(with: data, loadCommandType: type, description: "Dynamic Linker ID")
-        case .loadDynamicLinker:
-            return LCOneString(with: data, loadCommandType: type, description: "Dynamic Linker")
-        case .dyldEnvironment:
-            return LCOneString(with: data, loadCommandType: type, description: "Dynamic Linker Env")
-        case .uuid:
-            return LCUUID(with: data, loadCommandType: type)
-        case .sourceVersion:
-            return LCSourceVersion(with: data, loadCommandType: type)
-        case .dataInCode:
-            return LinkedITData(with: data, loadCommandType: type,
-                                dataName: "Data in Code",
-                                interpreterType: ModelBasedInterpreter<DataInCodeModel>.self)
-        case .codeSignature:
-            return LinkedITData(with: data, loadCommandType: type,
-                                dataName: "Code Signature",
-                                interpreterType: CodeInterpreter.self)
-        case .functionStarts:
-            return LinkedITData(with: data, loadCommandType: type,
-                                dataName: "Function Starts",
-                                interpreterType: ULEB128Interpreter.self)
-        default:
-            Log.warning("Unknown load command \(type.commandName). Debug me.")
-            return LoadCommand(with: data, loadCommandType: type)
-        }
+    override func numberOfTranslationSections() -> Int {
+        return 1
     }
     
-    override func translationSection(at index: Int) -> TransSection {
-        guard index == 0 else { fatalError() }
-        let section = TransSection(baseIndex: machoDataSlice.startIndex, title: "Load Command")
-        section.translateNextDoubleWord { Readable(description: "Load Command Type", explanation: "\(self.loadCommandType.commandName)") }
-        section.translateNextDoubleWord { Readable(description: "Size", explanation: self.machoDataSlice.count.hex) }
-        return section
+    override func translationItems(at section: Int) -> [TranslationItem] {
+        return itemsContainer.items
+    }
+    
+    static func loadCommands(from allLoadCommandData: DataSlice, numberOfLoadCommands: Int) -> [LoadCommand] {
+        var loadCommands: [LoadCommand] = []
+        for _ in 0..<numberOfLoadCommands {
+            let nextLoadCommandStartIndex = loadCommands.reduce(.zero) { $0 + $1.size }
+            let typeValue = allLoadCommandData.truncated(from: nextLoadCommandStartIndex, length: 4).raw.UInt32
+            guard let type = LoadCommandType(rawValue: typeValue) else {
+                print("Unknown load command type \(typeValue.hex). This must be a new one.")
+                fatalError()
+            }
+            
+            let loadCommandSize = Int(allLoadCommandData.truncated(from: nextLoadCommandStartIndex + 4, length: 4).raw.UInt32)
+            let loadCommandData = allLoadCommandData.truncated(from: nextLoadCommandStartIndex, length: loadCommandSize)
+            
+            let loadCommandClass: LoadCommand.Type
+            switch type {
+            case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
+                loadCommandClass = MinOSVersion.self
+            case .linkerOption:
+                loadCommandClass = LinkerOption.self
+            case .segment, .segment64:
+                loadCommandClass = Segment.self
+            case .symbolTable:
+                loadCommandClass = SymbolTable.self
+            case .dynamicSymbolTable:
+                loadCommandClass = DynamicSymbolTable.self
+            case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
+                loadCommandClass = Dylib.self
+            case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
+                loadCommandClass = LCOneString.self
+            case .uuid:
+                loadCommandClass = LCUUID.self
+            case .sourceVersion:
+                loadCommandClass = LCSourceVersion.self
+            case .dataInCode, .codeSignature, .functionStarts:
+                loadCommandClass = LinkedITData.self
+            case .main:
+                loadCommandClass = LCMain.self
+            case .dyldInfo, .dyldInfoOnly:
+                loadCommandClass = LCDyldInfo.self
+            default:
+                Log.warning("Unknown load command \(type.name). Debug me.")
+                loadCommandClass = LoadCommand.self
+            }
+            let loadCommandInstance = loadCommandClass.init(with: type, data: loadCommandData)
+            loadCommands.append(loadCommandInstance)
+        }
+        
+        return loadCommands
     }
 }
 
@@ -261,27 +264,19 @@ class LCOneString: LoadCommand {
     
     let stringOffset: UInt32
     let string: String
-    let description: String
     
-    init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType, description: String) {
-        var shifter = DataShifter(loadCommandData)
-        _ = shifter.nextQuadWord() // skip basic data
-        let stringOffset = shifter.nextDoubleWord().UInt32
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let stringOffset =  itemsContainer.translate(next: .doubleWords,
+                                                     dataInterpreter: DataInterpreterPreset.UInt32,
+                                                     itemContentGenerator: { stringOffset in TranslationItemContent(description: "String Offset", explanation: stringOffset.hex) })
         self.stringOffset = stringOffset
-        if let string = loadCommandData.truncated(from: Int(stringOffset)).raw.utf8String {
-            self.string = string.spaceRemoved
-        } else {
-            self.string = Log.warning("Failed to parse \(description). Debug me.")
-        }
-        self.description = description
-        super.init(with: loadCommandData, loadCommandType: loadCommandType)
-    }
-    
-    override func translationSection(at index: Int) -> TransSection {
-        let section = super.translationSection(at: index)
-        section.translateNextDoubleWord { Readable(description: "String Offset", explanation: "\(self.stringOffset)") }
-        section.translateNext(string.count) { Readable(description: self.description, explanation: self.string) }
-        return section
+        
+        self.string = itemsContainer.translate(next: .rawNumber(data.count - Int(stringOffset)),
+                                               dataInterpreter: { $0.utf8String ?? Log.warning("Failed to parse \(type.name). Debug me.") },
+                                               itemContentGenerator: { string in TranslationItemContent(description: "Content", explanation: string) })
+        
+        super.init(with: type, data: data, itemsContainer: itemsContainer)
     }
 }
 
@@ -289,17 +284,17 @@ class LCUUID: LoadCommand {
     
     let uuid: UUID
     
-    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
-        let uuidData = loadCommandData.truncated(from: 8).raw.map { UInt8($0) }
-        self.uuid = UUID(uuid: (uuidData[0], uuidData[1], uuidData[2], uuidData[3], uuidData[4], uuidData[5], uuidData[6], uuidData[7],
-                                  uuidData[8], uuidData[9], uuidData[10], uuidData[11], uuidData[12], uuidData[13], uuidData[14], uuidData[15]))
-        super.init(with: loadCommandData, loadCommandType: loadCommandType)
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        self.uuid = itemsContainer.translate(next: .rawNumber(16),
+                                             dataInterpreter: { uuidData in LCUUID.uuid(from: [UInt8](uuidData)) },
+                                             itemContentGenerator: { uuid in TranslationItemContent(description: "UUID", explanation: uuid.uuidString) })
+        super.init(with: type, data: data, itemsContainer: itemsContainer)
     }
     
-    override func translationSection(at index: Int) -> TransSection {
-        let section = super.translationSection(at: index)
-        section.translateNext(16) { Readable(description: "UUID", explanation: self.uuid.uuidString) }
-        return section
+    static func uuid(from uuidData: [UInt8]) -> UUID {
+        return UUID(uuid: (uuidData[0], uuidData[1], uuidData[2], uuidData[3], uuidData[4], uuidData[5], uuidData[6], uuidData[7],
+                           uuidData[8], uuidData[9], uuidData[10], uuidData[11], uuidData[12], uuidData[13], uuidData[14], uuidData[15]))
     }
 }
 
@@ -307,8 +302,17 @@ class LCSourceVersion: LoadCommand {
     
     let version: String
     
-    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
-        let versionValue = loadCommandData.truncated(from: 8).raw.UInt64
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        
+        self.version = itemsContainer.translate(next: .quadWords,
+                                                dataInterpreter: { LCSourceVersion.versionString(from: $0.UInt64) },
+                                                itemContentGenerator: { version in TranslationItemContent(description: "Source Version", explanation: version) })
+        
+        super.init(with: type, data: data, itemsContainer: itemsContainer)
+    }
+    
+    static func versionString(from versionValue: UInt64) -> String {
         /* A.B.C.D.E packed as a24.b10.c10.d10.e10 */
         let mask: Swift.UInt64 = 0x3ff
         let e = versionValue & mask
@@ -316,13 +320,28 @@ class LCSourceVersion: LoadCommand {
         let c = (versionValue >> 20) & mask
         let b = (versionValue >> 30) & mask
         let a = versionValue >> 40
-        self.version = String(format: "%d.%d.%d.%d.%d", a, b, c, d, e)
-        super.init(with: loadCommandData, loadCommandType: loadCommandType)
+        return String(format: "%d.%d.%d.%d.%d", a, b, c, d, e)
     }
+}
+
+class LCMain: LoadCommand {
     
-    override func translationSection(at index: Int) -> TransSection {
-        let section = super.translationSection(at: index)
-        section.translateNext(8) { Readable(description: "Source Version", explanation: self.version) }
-        return section
+    let entryOffset: UInt64
+    let stackSize: UInt64
+    
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        
+        self.entryOffset = itemsContainer.translate(next: .quadWords,
+                                                    dataInterpreter: { $0.UInt64 },
+                                                    itemContentGenerator: { entryOffset in TranslationItemContent(description: "Entry Offset (relative to __TEXT)",
+                                                                                                                  explanation: entryOffset.hex) })
+        
+        self.stackSize = itemsContainer.translate(next: .quadWords,
+                                                  dataInterpreter: { $0.UInt64 },
+                                                  itemContentGenerator: { stackSize in TranslationItemContent(description: "Stack Size",
+                                                                                                              explanation: stackSize.hex) })
+        
+        super.init(with: type, data: data, itemsContainer: itemsContainer)
     }
 }

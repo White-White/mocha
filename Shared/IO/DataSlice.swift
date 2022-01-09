@@ -79,3 +79,13 @@ struct DataSlice: Equatable {
         return DataSlice(one.basedData, startOffsetInMacho: one.startIndex, length: one.length + another.length)
     }
 }
+
+extension DataSlice {
+    func absoluteRange(_ start: Int, _ length: Int) -> Range<Int> {
+        return startIndex+start..<startIndex+start+length
+    }
+    
+    func absoluteRange(_ range: Range<Int>) -> Range<Int> {
+        return startIndex+range.lowerBound..<startIndex+range.upperBound
+    }
+}

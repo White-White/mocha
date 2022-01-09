@@ -32,32 +32,31 @@ struct DataInCodeModel: InterpretableModel {
         }
     }
     
-    let data: DataSlice
     let offset: UInt32
     let length: UInt16
     let kind: DataInCodeKind
+    let itemsContainer: TranslationItemContainer
     
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]?) {
-        self.data = data
-        self.offset = data.truncated(from: 0, length: 4).raw.UInt32
-        self.length = data.truncated(from: 4, length: 2).raw.UInt16
-        let kindValue = data.truncated(from: 6, length: 2).raw.UInt16
-        if let kind = DataInCodeKind(rawValue: kindValue) {
-            self.kind = kind
-        } else {
-            Log.error("Unknown data in code kind value \(kindValue). Debug me.")
-            fatalError()
-        }
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        
+        self.offset = itemsContainer.translate(next: .doubleWords,
+                                               dataInterpreter: DataInterpreterPreset.UInt32,
+                                               itemContentGenerator: { offset in TranslationItemContent(description: "File Offset", explanation: offset.hex) })
+        
+        self.length = itemsContainer.translate(next: .word,
+                                               dataInterpreter: { $0.UInt16 },
+                                               itemContentGenerator: { length in TranslationItemContent(description: "Size", explanation: "\(length)") })
+        
+        self.kind = itemsContainer.translate(next: .word,
+                                             dataInterpreter: { DataInCodeKind(rawValue: $0.UInt16)! /* Unknown Kind. Unlikely */ },
+                                             itemContentGenerator: { kind in TranslationItemContent(description: "Kind", explanation: kind.name) })
+        
+        self.itemsContainer = itemsContainer
     }
     
-    func makeTransSection() -> TransSection {
-        let section = TransSection(baseIndex: data.startIndex, title: "Data In Code")
-        section.translateNextDoubleWord { Readable(description: "File Offset", explanation: "\(self.offset.hex)") }
-        section.translateNext(2) { Readable(description: "Size", explanation: "\(self.length)") }
-        section.translateNext(2) {
-            Readable(description: "Kind", explanation: self.kind.name)
-        }
-        return section
+    func translationItems() -> [TranslationItem] {
+        return itemsContainer.items
     }
     
     static func modelSize(is64Bit: Bool) -> Int {

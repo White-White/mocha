@@ -51,22 +51,23 @@ struct File {
     var fileSize: Int { fileData.count }
     let machos: [Macho]
     
-    init(with fileURL: URL) throws {
+    init(with fileURL: URL) {
         let fileName = fileURL.lastPathComponent
-        let fileData = DataSlice(try Data(contentsOf: fileURL))
-        try self.init(with: fileName, fileData: fileData)
+        guard let fileDataRaw = try? Data(contentsOf: fileURL) else { fatalError() }
+        let fileData = DataSlice(fileDataRaw)
+        self.init(with: fileName, fileData: fileData)
     }
     
-    init(with fileName: String, fileData: DataSlice) throws {
+    init(with fileName: String, fileData: DataSlice) {
         self.fileName = fileName
         self.fileData = fileData
         guard let magicType = MagicType(fileData) else { fatalError() /* Unknown Magic */ }
         switch magicType {
         case .ar:
-            let ar = try UnixArchive(with: fileData)
+            let ar = UnixArchive(with: fileData)
             self.machos = ar.machos
         case .fat:
-            self.machos = (try FatBinary(with: fileData, machoFileName: fileName)).machos
+            self.machos = FatBinary(with: fileData, machoFileName: fileName).machos
         case .macho32, .macho64:
             self.machos = [Macho(with: fileData, machoFileName: fileName)]
         }

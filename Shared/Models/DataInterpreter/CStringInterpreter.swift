@@ -51,27 +51,23 @@ class CStringInterpreter: BaseInterpreter<[CStringRawData]> {
         
         return cStringRaws
     }
- 
-    override func numberOfTransSections() -> Int {
+    
+    override func numberOfTranslationSections() -> Int {
         return self.payload.count
     }
     
-    override func transSection(at index: Int) -> TransSection {
-        let cStringRaw = self.payload[index]
+    override func translationItems(at section: Int) -> [TranslationItem] {
+        let cStringRaw = self.payload[section]
         let stringLength = cStringRaw.range.upperBound - cStringRaw.range.lowerBound
-        let section = TransSection(baseIndex: self.data.startIndex + cStringRaw.range.lowerBound)
         if let string = cStringRaw.data.utf8String {
             let explanation: String = string.replacingOccurrences(of: "\n", with: "\\n")
             let demangledCString: String? = self.demanglingCString ? swift_demangle(explanation) : nil
-            section.translateNext(stringLength) {
-                Readable(description: "UTF8 encoded string", explanation: explanation, extraExplanation: demangledCString)
-            }
+            return [TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
+                                    content: TranslationItemContent(description: "UTF8-String", explanation: explanation, extraExplanation: demangledCString))]
         } else {
-            section.translateNext(stringLength) {
-                Readable(description: "Invalid utf8 encoded", explanation: "🙅‍♂️ Invalid utf8 string")
-            }
+            return [TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
+                                    content: TranslationItemContent(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF8 String"))]
         }
-        return section
     }
 }
 
@@ -85,6 +81,7 @@ extension CStringInterpreter {
     }
     
     func findString(at stringTableByteIndex: Int) -> StringTableSearched? {
+        // FIXME: wasting too much time
         for interpretedString in self.payload {
             if interpretedString.range.lowerBound == stringTableByteIndex, let stringValue = interpretedString.data.utf8String {
                 return StringTableSearched(value: stringValue,

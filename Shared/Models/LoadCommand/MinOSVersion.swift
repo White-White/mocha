@@ -9,19 +9,25 @@ import Foundation
 
 class MinOSVersion: LoadCommand {
     
-    private let osVersion: String
-    private let sdkVersion: String
+    let osVersion: String
+    let sdkVersion: String
     
-    override init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType) {
-        let osVersionConstraint = loadCommandData.truncated(from: 8, length: 4).raw.UInt32
-        let sdkVersionConstraint = loadCommandData.truncated(from: 12, length: 4).raw.UInt32
-        self.osVersion = String(format: "%d.%d.%d", osVersionConstraint >> 16, (osVersionConstraint >> 8) & 0xff, osVersionConstraint & 0xff)
-        self.sdkVersion = String(format: "%d.%d.%d", sdkVersionConstraint >> 16, (sdkVersionConstraint >> 8) & 0xff, sdkVersionConstraint & 0xff)
-        super.init(with: loadCommandData, loadCommandType: loadCommandType)
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        
+        self.osVersion = itemsContainer.translate(next: .doubleWords,
+                                                  dataInterpreter: { MinOSVersion.version(for: $0.UInt32) },
+                                                  itemContentGenerator: { version in TranslationItemContent(description: "Required \(MinOSVersion.osName(for: type)) version", explanation: version) })
+        
+        self.sdkVersion = itemsContainer.translate(next: .doubleWords,
+                                                   dataInterpreter: { MinOSVersion.version(for: $0.UInt32) },
+                                                   itemContentGenerator: { version in TranslationItemContent(description: "Required min \(MinOSVersion.osName(for: type)) SDK version", explanation: version) })
+        
+        super.init(with: type, data: data, itemsContainer: itemsContainer)
     }
     
-    var osName: String {
-        switch self.loadCommandType {
+    static func osName(for type: LoadCommandType) -> String {
+        switch type {
         case .iOSMinVersion:
             return "iOS"
         case .macOSMinVersion:
@@ -35,10 +41,7 @@ class MinOSVersion: LoadCommand {
         }
     }
     
-    override func translationSection(at index: Int) -> TransSection {
-        let section = super.translationSection(at: index)
-        section.translateNextDoubleWord { Readable(description: "Required \(self.osName) version", explanation: "\(self.osVersion)") }
-        section.translateNextDoubleWord { Readable(description: "Required min \(self.osName) SDK version", explanation: "\(self.sdkVersion)") }
-        return section
+    static func version(for value: UInt32) -> String {
+        return String(format: "%d.%d.%d", value >> 16, (value >> 8) & 0xff, value & 0xff)
     }
 }

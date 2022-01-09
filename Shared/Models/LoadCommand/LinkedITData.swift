@@ -18,21 +18,46 @@ class LinkedITData: LoadCommand {
     
     let fileOffset: UInt32
     let dataSize: UInt32
-    let dataName: String
-    let interpreterType: Interpreter.Type
     
-    init(with loadCommandData: DataSlice, loadCommandType: LoadCommandType, dataName: String, interpreterType: Interpreter.Type) {
-        self.fileOffset = loadCommandData.truncated(from: 8, length: 4).raw.UInt32
-        self.dataSize = loadCommandData.truncated(from: 12, length: 4).raw.UInt32
-        self.dataName = dataName
-        self.interpreterType = interpreterType
-        super.init(with: loadCommandData, loadCommandType: loadCommandType)
+    var interpreterType: Interpreter.Type {
+        switch self.type {
+        case .dataInCode:
+            return LazyModelBasedInterpreter<DataInCodeModel>.self
+        case .codeSignature:
+            return CodeSignatureInterpreter.self
+        case .functionStarts:
+            return ULEB128Interpreter.self
+        default:
+            fatalError()
+        }
     }
     
-    override func translationSection(at index: Int) -> TransSection {
-        let section = super.translationSection(at: index)
-        section.translateNextDoubleWord { Readable(description: "File Offset", explanation: "\(self.fileOffset.hex)") }
-        section.translateNextDoubleWord { Readable(description: "Size", explanation: "\(self.dataSize)") }
-        return section
+    var dataName: String {
+        switch self.type {
+        case .dataInCode:
+            return "Data in Code"
+        case .codeSignature:
+            return "Code Signature"
+        case .functionStarts:
+            return "Function Starts"
+        default:
+            fatalError()
+        }
+    }
+    
+    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        
+        self.fileOffset =
+        itemsContainer.translate(next: .doubleWords,
+                                 dataInterpreter: DataInterpreterPreset.UInt32,
+                                 itemContentGenerator: { fileOffset in TranslationItemContent(description: "File Offset", explanation: "\(fileOffset)") })
+        
+        self.dataSize =
+        itemsContainer.translate(next: .doubleWords,
+                                 dataInterpreter: DataInterpreterPreset.UInt32,
+                                 itemContentGenerator: { dataSize in TranslationItemContent(description: "Size", explanation: "\(dataSize)") })
+        
+        super.init(with: type, data: data, itemsContainer: itemsContainer)
     }
 }
