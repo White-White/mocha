@@ -9,14 +9,21 @@ import Foundation
 
 class ASCIIInterpreter: BaseInterpreter<[String]> {
     
-    override func numberOfTranslationSections() -> Int {
+    private let numberOfASCIILines: Int
+    
+    required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         var numberOfASCIILines = data.count / HexLineStore.NumberOfBytesPerLine
         if data.count % HexLineStore.NumberOfBytesPerLine != 0 { numberOfASCIILines += 1 }
+        self.numberOfASCIILines = numberOfASCIILines
+        super.init(data, is64Bit: is64Bit, settings: settings)
+    }
+    
+    override var numberOfTranslationItems: Int {
         return numberOfASCIILines
     }
     
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        let lineData = self.data.truncated(from: section * HexLineStore.NumberOfBytesPerLine, maxLength: HexLineStore.NumberOfBytesPerLine)
+    override func translationItem(at index: Int) -> TranslationItem {
+        let lineData = self.data.truncated(from: index * HexLineStore.NumberOfBytesPerLine, maxLength: HexLineStore.NumberOfBytesPerLine)
         let chars = lineData.raw.map { char -> Character in
             if char < 32 || char > 126 {
                 return "."
@@ -24,7 +31,7 @@ class ASCIIInterpreter: BaseInterpreter<[String]> {
             return Character(UnicodeScalar(char))
         }
         let string = String(chars)
-        return [TranslationItem(sourceDataRange: data.absoluteRange(section * HexLineStore.NumberOfBytesPerLine, HexLineStore.NumberOfBytesPerLine),
-                                content: TranslationItemContent(description: nil, explanation: string, monoSpaced: true))]
+        return TranslationItem(sourceDataRange: data.absoluteRange(index * HexLineStore.NumberOfBytesPerLine, HexLineStore.NumberOfBytesPerLine),
+                               content: TranslationItemContent(description: nil, explanation: string, monoSpaced: true))
     }
 }

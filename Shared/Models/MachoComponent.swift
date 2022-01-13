@@ -7,7 +7,7 @@
 
 import Foundation
 
-class MachoComponent: Equatable {
+class MachoComponent: Equatable, TranslationDataSource {
     
     static func == (lhs: MachoComponent, rhs: MachoComponent) -> Bool {
         return lhs.machoDataSlice == rhs.machoDataSlice
@@ -25,20 +25,16 @@ class MachoComponent: Equatable {
         self.machoDataSlice = machoDataSlice
     }
     
-    func numberOfTranslationSections() -> Int {
+    var firstTransItem: TranslationItem {
+        self.translationItem(at: .zero)
+    }
+    
+    var numberOfTranslationItems: Int {
         return 1 /* default 1 */
     }
     
-    func translationItems(at section: Int) -> [TranslationItem] {
+    func translationItem(at index: Int) -> TranslationItem {
         fatalError()
-    }
-    
-    func sectionTile(of section: Int) -> String? {
-        return nil
-    }
-    
-    var firstTransItem: TranslationItem? {
-        self.translationItems(at: .zero).first
     }
 }
 
@@ -67,15 +63,11 @@ class MachoInterpreterBasedComponent: MachoComponent {
         super.init(machoDataSlice)
     }
     
-    override func numberOfTranslationSections() -> Int {
-        return interpreter.numberOfTranslationSections()
+    override var numberOfTranslationItems: Int {
+        return interpreter.numberOfTranslationItems
     }
     
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        return interpreter.translationItems(at: section)
-    }
-    
-    override func sectionTile(of section: Int) -> String? {
-        return interpreter.sectionTitle(of: section)
+    override func translationItem(at index: Int) -> TranslationItem {
+        return interpreter.translationItem(at: index)
     }
 }

@@ -8,22 +8,12 @@
 import Foundation
 import SwiftUI
 
-class IdentifiableTranslationItem: ObservableObject {
-    let item: TranslationItem
-    let indexPath: IndexPath
-    @Published var isSelected: Bool
-    init(item: TranslationItem, indexPath: IndexPath, isSelected: Bool = false) {
-        self.item = item
-        self.indexPath = indexPath
-        self.isSelected = isSelected
-    }
-}
-
 private struct TranslationItemView: View {
     
-    @ObservedObject var identifiableItem: IdentifiableTranslationItem
-    var item: TranslationItem { identifiableItem.item }
-    var isSelected: Bool { identifiableItem.isSelected }
+    let item: TranslationItem
+    let index: Int
+    var isSelected: Bool { selectedIndexWrapper.selectedIndex == index }
+    @EnvironmentObject var selectedIndexWrapper: SelectedIndexWrapper
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -49,44 +39,24 @@ private struct TranslationItemView: View {
     }
 }
 
-class SelectedItemWrapper {
-    var selectedItem: IdentifiableTranslationItem
-    init(_ t: IdentifiableTranslationItem) { self.selectedItem = t }
+class SelectedIndexWrapper: ObservableObject {
+    @Published var selectedIndex: Int = 0
 }
 
 struct TranslationView: View {
     
     let machoComponent: MachoComponent
-    let selectedItemWrapper: SelectedItemWrapper
+    let selectedIndexWrapper: SelectedIndexWrapper = SelectedIndexWrapper()
     @Binding var sourceDataRangeOfSelecteditem: Range<Int>?
     
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView(.vertical, showsIndicators: true)  {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(0..<numberOfSection(), id: \.self) { section in
-                        if let sectionTitle = machoComponent.sectionTile(of: section) {
-                            VStack(alignment: .center, spacing: 0) {
-                                Text(sectionTitle)
-                                    .font(.system(size: 15).bold())
-                                    .padding(.leading, 4)
-                                    .padding(.top, 6)
-                                    .padding(.bottom, 4)
-                                Divider()
-                            }
-                        }
-                        ForEach(items(at: section), id: \.indexPath) { identifiableItem in
-                            VStack(alignment: .leading, spacing: 0) {
-                                TranslationItemView(identifiableItem: identifiableItem)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        sourceDataRangeOfSelecteditem = identifiableItem.item.sourceDataRange
-                                        identifiableItem.isSelected.toggle()
-                                        self.selectedItemWrapper.selectedItem.isSelected.toggle()
-                                        self.selectedItemWrapper.selectedItem = identifiableItem
-                                    }
-                                Divider()
-                            }
+                    ForEach(0..<machoComponent.numberOfTranslationItems, id: \.self) { index in
+                        VStack(alignment: .leading, spacing: 0) {
+                            self.translationView(at: index)
+                            Divider()
                         }
                     }
                 }
@@ -99,37 +69,22 @@ struct TranslationView: View {
                 scrollProxy.scrollTo(0, anchor: .top)
             }
         }
-        .onChange(of: machoComponent) { newValue in
-            let firstItem = IdentifiableTranslationItem(item: newValue.firstTransItem!,
-                                                        indexPath: IndexPath(item: .zero, section: .zero),
-                                                        isSelected: true)
-            self.selectedItemWrapper.selectedItem = firstItem
-        }
     }
     
-    func numberOfSection() -> Int {
-        return machoComponent.numberOfTranslationSections()
-    }
-    
-    func items(at section: Int) -> [IdentifiableTranslationItem] {
-        return machoComponent.translationItems(at: section).enumerated().map {
-            let indexPath = IndexPath(item: $0.offset, section: section)
-            if indexPath == self.selectedItemWrapper.selectedItem.indexPath {
-                return self.selectedItemWrapper.selectedItem
-            } else {
-                return IdentifiableTranslationItem(item: $0.element, indexPath: indexPath)
+    func translationView(at index: Int) -> some View {
+        let item = machoComponent.translationItem(at: index)
+        return TranslationItemView(item: item, index: index)
+            .environmentObject(self.selectedIndexWrapper)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                self.sourceDataRangeOfSelecteditem = item.sourceDataRange
+                self.selectedIndexWrapper.selectedIndex = index
             }
-        }
     }
     
     init(machoComponent: MachoComponent, sourceDataRangeOfSelecteditem: Binding<Range<Int>?>) {
         self.machoComponent = machoComponent
         _sourceDataRangeOfSelecteditem = sourceDataRangeOfSelecteditem
-        
-        let firstItem = IdentifiableTranslationItem(item: machoComponent.firstTransItem!,
-                                                    indexPath: IndexPath(item: .zero, section: .zero),
-                                                    isSelected: true)
-        self.selectedItemWrapper = SelectedItemWrapper(firstItem)
     }
 }
     

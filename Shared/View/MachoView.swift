@@ -75,7 +75,7 @@ struct MachoView: View {
                             .onTapGesture {
                                 if self.selectedCellModel?.machoComponent == cellModel.machoComponent { return }
                                 self.selectedMachoComponent = cellModel.machoComponent
-                                self.sourceDataRangeOfSelecteditem = cellModel.machoComponent.translationItems(at: .zero).first?.sourceDataRange
+                                self.sourceDataRangeOfSelecteditem = cellModel.machoComponent.firstTransItem.sourceDataRange
                                 self.hexStore = HexLineStore(cellModel.machoComponent.machoDataSlice)
                                 self.hexStore.updateLinesWith(selectedBytesRange: self.sourceDataRangeOfSelecteditem)
                                 
@@ -107,7 +107,7 @@ struct MachoView: View {
             self.selectedCellModel = self.cellModels.first
             self.selectedMachoComponent = newValue.header
             self.hexStore = HexLineStore(newValue.header.machoDataSlice)
-            self.sourceDataRangeOfSelecteditem = newValue.header.translationItems(at: .zero).first?.sourceDataRange
+            self.sourceDataRangeOfSelecteditem = newValue.header.firstTransItem.sourceDataRange
             self.hexStore.updateLinesWith(selectedBytesRange: self.sourceDataRangeOfSelecteditem)
         }
     }
@@ -121,8 +121,8 @@ struct MachoView: View {
         _cellModels = State(initialValue: cellModels)
         _selectedCellModel = State(initialValue: cellModels.first)
         
-        _selectedMachoComponent = State(initialValue: machoUnwrapp.header)
-        let selectedRange = macho.wrappedValue.header.translationItems(at: .zero).first?.sourceDataRange
+        _selectedMachoComponent = State(initialValue: machoUnwrapp.machoComponents.first!)
+        let selectedRange = macho.wrappedValue.header.firstTransItem.sourceDataRange
         _sourceDataRangeOfSelecteditem = State(initialValue: selectedRange)
         let hexStore = HexLineStore(macho.wrappedValue.header.machoDataSlice)
         hexStore.updateLinesWith(selectedBytesRange: selectedRange)

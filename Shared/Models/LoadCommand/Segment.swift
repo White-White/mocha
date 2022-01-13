@@ -9,6 +9,7 @@ import Foundation
 
 class Segment: LoadCommand {
     
+    let is64Bit: Bool
     let segmentName: String
     let vmaddr: UInt64
     let vmsize: UInt64
@@ -22,44 +23,45 @@ class Segment: LoadCommand {
     
     override var componentSubTitle: String { type.name + " (\(segmentName))" }
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
         let is64Bit = type == LoadCommandType.segment64
+        self.is64Bit = is64Bit
         
-        self.segmentName = itemsContainer.translate(next: .rawNumber(16),
+        self.segmentName = translationStore.translate(next: .rawNumber(16),
                                                     dataInterpreter: { $0.utf8String!.spaceRemoved /* Unlikely Error */ },
                                                         itemContentGenerator: { segmentName in TranslationItemContent(description: "Segment Name", explanation: segmentName) })
         
-        self.vmaddr = itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        self.vmaddr = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
                                                itemContentGenerator: { value in TranslationItemContent(description: "vmaddr", explanation: value.hex) })
         
-        self.vmsize = itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        self.vmsize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
                                                itemContentGenerator: { value in TranslationItemContent(description: "vmsize", explanation: value.hex) })
         
-        self.fileoff = itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        self.fileoff = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
                                                itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
         
-        self.segmentSize = itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        self.segmentSize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
                                                itemContentGenerator: { value in TranslationItemContent(description: "Amount to map", explanation: value.hex) })
         
-        self.maxprot = itemsContainer.translate(next: .doubleWords,
+        self.maxprot = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
                                                itemContentGenerator: { value in TranslationItemContent(description: "maxprot", explanation: "\(value)") })
         
-        self.initprot = itemsContainer.translate(next: .doubleWords,
+        self.initprot = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
                                                itemContentGenerator: { value in TranslationItemContent(description: "initprot", explanation: "\(value)") })
         
-        self.numberOfSections = itemsContainer.translate(next: .doubleWords,
+        self.numberOfSections = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
                                                itemContentGenerator: { value in TranslationItemContent(description: "Number of Sections", explanation: "\(value)") })
         
-        self.flags = itemsContainer.translate(next: .doubleWords,
+        self.flags = translationStore.translate(next: .doubleWords,
                                               dataInterpreter: { $0.UInt32 },
                                               itemContentGenerator: { flags in TranslationItemContent(description: "Flags",
                                                                                                       explanation: Segment.flags(for: flags)) })
@@ -75,28 +77,21 @@ class Segment: LoadCommand {
         }
         self.sectionHeaders = sectionHeaders
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
     
-    override func numberOfTranslationSections() -> Int {
-        return super.numberOfTranslationSections() + sectionHeaders.count
+    override var numberOfTranslationItems: Int {
+        return super.numberOfTranslationItems + sectionHeaders.count * SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
     }
     
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        switch section {
-        case 0:
-            return self.itemsContainer.items
-        default:
-            return self.sectionHeaders[section - 1].itemsContainer.items
-        }
-    }
-    
-    override func sectionTile(of section: Int) -> String? {
-        switch section {
-        case 0:
-            return nil
-        default:
-            return "Section Header (\(self.sectionHeaders[section - 1].section))"
+    override func translationItem(at index: Int) -> TranslationItem {
+        if index < super.numberOfTranslationItems {
+            return super.translationItem(at: index)
+        } else {
+            let targetIndex = index - super.numberOfTranslationItems
+            let sectionHeaderIndex = targetIndex / SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
+            let sectionHeaderOffset = targetIndex % SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
+            return self.sectionHeaders[sectionHeaderIndex].translationStore.items[sectionHeaderOffset]
         }
     }
     

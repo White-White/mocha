@@ -9,27 +9,33 @@ import Foundation
 
 protocol InterpretableModel {
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey: Any]?)
-    func translationItems() -> [TranslationItem]
+    func translationItem(at index: Int) -> TranslationItem
     static func modelSize(is64Bit: Bool) -> Int
+    static func numberOfTranslationItems() -> Int
 }
 
 class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]> {
     
     private var modelsCache: [Model?]
+    private let numberOfAllTranslationItems: Int
     
     required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         let modelSize = Model.modelSize(is64Bit: is64Bit)
         let numberOfModels = data.count / modelSize
+        self.numberOfAllTranslationItems = numberOfModels * Model.numberOfTranslationItems()
         self.modelsCache = [Model?](repeating: nil, count: numberOfModels)
         super.init(data, is64Bit: is64Bit, settings: settings)
     }
-    
-    override func numberOfTranslationSections() -> Int {
-        return self.modelsCache.count
-    }
 
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        return self.model(at: section).translationItems()
+    override var numberOfTranslationItems: Int {
+        return self.numberOfAllTranslationItems
+    }
+    
+    override func translationItem(at index: Int) -> TranslationItem {
+        let numberOfTransItemsPerModel = Model.numberOfTranslationItems()
+        let modelIndex = index / numberOfTransItemsPerModel
+        let modelItemOffset = index % numberOfTransItemsPerModel
+        return self.model(at: modelIndex).translationItem(at: modelItemOffset)
     }
     
     private func model(at index: Int) -> Model {

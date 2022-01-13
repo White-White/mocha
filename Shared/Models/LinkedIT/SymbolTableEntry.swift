@@ -46,13 +46,13 @@ struct SymbolTableEntry: InterpretableModel {
     let n_desc: Swift.UInt16
     let n_value: UInt64
     
-    let itemsContainer: TranslationItemContainer
+    let translationStore: TranslationStore
     
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil)
         
-        self.indexInStringTable = itemsContainer.translate(next: .doubleWords,
+        self.indexInStringTable = translationStore.translate(next: .doubleWords,
                                                            dataInterpreter: DataInterpreterPreset.UInt32,
                                                            itemContentGenerator: { indexInStringTable in
             let demangledString = (settings?[.stringTableSearchingDelegate] as? StringTableSearchingDelegate)?.searchStringTable(with: Int(indexInStringTable))?.value
@@ -98,32 +98,36 @@ struct SymbolTableEntry: InterpretableModel {
         self.isPrivateExternalSymbol = valueN_PEXT
         self.isExternalSymbol = valueN_EXT
         
-        itemsContainer.append(TranslationItemContent(description: "Type", explanation: symbolType.name), forRange: flagsByteRange)
-        itemsContainer.append(TranslationItemContent(description: "Private External", explanation: "\(valueN_PEXT)"), forRange: flagsByteRange)
-        itemsContainer.append(TranslationItemContent(description: "External", explanation: "\(valueN_EXT)"), forRange: flagsByteRange)
-        _ = itemsContainer.skip(.rawNumber(1))
+        translationStore.append(TranslationItemContent(description: "Type", explanation: symbolType.name), forRange: flagsByteRange)
+        translationStore.append(TranslationItemContent(description: "Private External", explanation: "\(valueN_PEXT)"), forRange: flagsByteRange)
+        translationStore.append(TranslationItemContent(description: "External", explanation: "\(valueN_EXT)"), forRange: flagsByteRange)
+        _ = translationStore.skip(.rawNumber(1))
         
-        self.sectionNumber = itemsContainer.translate(next: .rawNumber(1),
+        self.sectionNumber = translationStore.translate(next: .rawNumber(1),
                                                       dataInterpreter: { $0.first! },
                                                       itemContentGenerator: { sectionNumber in TranslationItemContent(description: "Section Number", explanation: "\(sectionNumber)") })
         
-        self.n_desc = itemsContainer.translate(next: .word,
+        self.n_desc = translationStore.translate(next: .word,
                                                dataInterpreter: { $0.UInt16 },
                                                itemContentGenerator: { n_desc in TranslationItemContent(description: "n_desc", explanation: n_desc.hex) })
         
-        self.n_value = itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        self.n_value = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
                                                itemContentGenerator: { n_value in TranslationItemContent(description: "n_value", explanation: n_value.hex) })
         
-        self.itemsContainer = itemsContainer
+        self.translationStore = translationStore
     }
     
-    func translationItems() -> [TranslationItem] {
-        return itemsContainer.items
+    func translationItem(at index: Int) -> TranslationItem {
+        return translationStore.items[index]
     }
     
     static func modelSize(is64Bit: Bool) -> Int {
         return is64Bit ? 16 : 12
+    }
+    
+    static func numberOfTranslationItems() -> Int {
+        return 7
     }
 }
 

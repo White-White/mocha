@@ -14,9 +14,8 @@ enum InterpreterSettingsKey {
 
 protocol Interpreter {
     init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey: Any]?)
-    func numberOfTranslationSections() -> Int
-    func translationItems(at section: Int) -> [TranslationItem]
-    func sectionTitle(of section: Int) -> String?
+    var numberOfTranslationItems: Int { get }
+    func translationItem(at index: Int) -> TranslationItem
 }
 
 class BaseInterpreter<Payload>: Interpreter {
@@ -70,20 +69,14 @@ class BaseInterpreter<Payload>: Interpreter {
         fatalError() // must override
     }
     
-    func numberOfTranslationSections() -> Int {
-        fatalError()
-    }
-
-    func translationItems(at section: Int) -> [TranslationItem] {
+    func translationItem(at index: Int) -> TranslationItem {
         fatalError()
     }
     
-    func sectionTitle(of section: Int) -> String? {
-        return nil
+    var numberOfTranslationItems: Int {
+        fatalError()
     }
 }
-
-
 
 class AnonymousInterpreter: BaseInterpreter<AnonymousInterpreter.Dummy> {
     
@@ -96,13 +89,13 @@ class AnonymousInterpreter: BaseInterpreter<AnonymousInterpreter.Dummy> {
         return Dummy()
     }
     
-    override func numberOfTranslationSections() -> Int {
+    override var numberOfTranslationItems: Int {
         return 1
     }
     
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        return [TranslationItem(sourceDataRange: nil,
-                                content: TranslationItemContent(description: description, explanation: explanation))]
+    override func translationItem(at index: Int) -> TranslationItem {
+        return TranslationItem(sourceDataRange: nil,
+                               content: TranslationItemContent(description: description, explanation: explanation))
     }
 }
 

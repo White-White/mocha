@@ -12,18 +12,18 @@ class MinOSVersion: LoadCommand {
     let osVersion: String
     let sdkVersion: String
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
-        self.osVersion = itemsContainer.translate(next: .doubleWords,
+        self.osVersion = translationStore.translate(next: .doubleWords,
                                                   dataInterpreter: { MinOSVersion.version(for: $0.UInt32) },
                                                   itemContentGenerator: { version in TranslationItemContent(description: "Required \(MinOSVersion.osName(for: type)) version", explanation: version) })
         
-        self.sdkVersion = itemsContainer.translate(next: .doubleWords,
+        self.sdkVersion = translationStore.translate(next: .doubleWords,
                                                    dataInterpreter: { MinOSVersion.version(for: $0.UInt32) },
                                                    itemContentGenerator: { version in TranslationItemContent(description: "Required min \(MinOSVersion.osName(for: type)) SDK version", explanation: version) })
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
     
     static func osName(for type: LoadCommandType) -> String {

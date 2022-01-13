@@ -35,31 +35,35 @@ struct DataInCodeModel: InterpretableModel {
     let offset: UInt32
     let length: UInt16
     let kind: DataInCodeKind
-    let itemsContainer: TranslationItemContainer
+    let translationStore: TranslationStore
     
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]?) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil)
         
-        self.offset = itemsContainer.translate(next: .doubleWords,
+        self.offset = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
                                                itemContentGenerator: { offset in TranslationItemContent(description: "File Offset", explanation: offset.hex) })
         
-        self.length = itemsContainer.translate(next: .word,
+        self.length = translationStore.translate(next: .word,
                                                dataInterpreter: { $0.UInt16 },
                                                itemContentGenerator: { length in TranslationItemContent(description: "Size", explanation: "\(length)") })
         
-        self.kind = itemsContainer.translate(next: .word,
+        self.kind = translationStore.translate(next: .word,
                                              dataInterpreter: { DataInCodeKind(rawValue: $0.UInt16)! /* Unknown Kind. Unlikely */ },
                                              itemContentGenerator: { kind in TranslationItemContent(description: "Kind", explanation: kind.name) })
         
-        self.itemsContainer = itemsContainer
+        self.translationStore = translationStore
     }
     
-    func translationItems() -> [TranslationItem] {
-        return itemsContainer.items
+    func translationItem(at index: Int) -> TranslationItem {
+        return translationStore.items[index]
     }
     
     static func modelSize(is64Bit: Bool) -> Int {
         return 8
+    }
+    
+    static func numberOfTranslationItems() -> Int {
+        return 3
     }
 }

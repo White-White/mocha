@@ -27,17 +27,17 @@ struct RelocationEntry: InterpretableModel {
     let isExternal: Bool // 1 bit
     let type: UInt8 // 4
     
-    let itemsContainer: TranslationItemContainer
+    let translationStore: TranslationStore
     
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil)
         
-        self.address = itemsContainer.translate(next: .doubleWords,
+        self.address = translationStore.translate(next: .doubleWords,
                                                 dataInterpreter: DataInterpreterPreset.UInt32,
                                                 itemContentGenerator: { value in TranslationItemContent(description: "Address", explanation: value.hex) })
         
-        self.symbolNum = itemsContainer.translate(next: .rawNumber(3),
+        self.symbolNum = translationStore.translate(next: .rawNumber(3),
                                                   dataInterpreter: { ([UInt8(0)] + $0).UInt32 },
                                                   itemContentGenerator: { value in TranslationItemContent(description: "symbolNum", explanation: "\(value)") })
         
@@ -56,17 +56,21 @@ struct RelocationEntry: InterpretableModel {
         let type = UInt8((lastByte & 0b00001111) >> 4)
         self.type = type
         
-        itemsContainer.append(TranslationItemContent(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)"),
+        translationStore.append(TranslationItemContent(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)"),
                               forRange: rangeOfLastByte)
         
-        self.itemsContainer = itemsContainer
+        self.translationStore = translationStore
     }
     
-    func translationItems() -> [TranslationItem] {
-        return itemsContainer.items
+    func translationItem(at index: Int) -> TranslationItem {
+        return translationStore.items[index]
     }
 
     static func modelSize(is64Bit: Bool) -> Int {
         return 8
+    }
+    
+    static func numberOfTranslationItems() -> Int {
+        return 1
     }
 }

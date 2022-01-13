@@ -51,7 +51,7 @@ struct SectionHeader {
     
     let is64Bit: Bool
     let data: DataSlice
-    let itemsContainer: TranslationItemContainer
+    let translationStore: TranslationStore
     
     var isZerofilled: Bool {
         // ref: https://lists.llvm.org/pipermail/llvm-commits/Week-of-Mon-20151207/319108.html
@@ -71,51 +71,51 @@ struct SectionHeader {
         self.is64Bit = is64Bit
         self.data = data
         
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil)
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil)
         
         self.section =
-        itemsContainer.translate(next: .rawNumber(16),
+        translationStore.translate(next: .rawNumber(16),
                                  dataInterpreter: { $0.utf8String!.spaceRemoved /* Very unlikely crash */ },
                                  itemContentGenerator: { string in TranslationItemContent(description: "Section Name", explanation: string) })
         
         self.segment =
-        itemsContainer.translate(next: .rawNumber(16),
+        translationStore.translate(next: .rawNumber(16),
                                  dataInterpreter: { $0.utf8String!.spaceRemoved /* Very unlikely crash */ },
                                  itemContentGenerator: { string in TranslationItemContent(description: "Segment Name", explanation: string) })
         
         self.addr =
-        itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                  dataInterpreter: { $0.UInt64 },
                                  itemContentGenerator: { value in TranslationItemContent(description: "Address in memory", explanation: value.hex) })
         
         self.size =
-        itemsContainer.translate(next: (is64Bit ? .quadWords : .doubleWords),
+        translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                  dataInterpreter: { $0.UInt64 },
                                  itemContentGenerator: { value in TranslationItemContent(description: "Size", explanation: value.hex) })
         
         self.offset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
         
         self.align =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Align", explanation: "\(value)") })
         
         self.fileOffsetOfRelocationEntries =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Reloc Entry Offset", explanation: value.hex) })
         
         self.numberOfRelocatioEntries =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Reloc Entry Num", explanation: "\(value)") })
         
         // parse flags
-        let flags = data.truncated(from: itemsContainer.translated, length: 4).raw.UInt32
-        let rangeOfNextDWords = data.absoluteRange(itemsContainer.translated, 4)
+        let flags = data.truncated(from: translationStore.translated, length: 4).raw.UInt32
+        let rangeOfNextDWords = data.absoluteRange(translationStore.translated, 4)
         
         let sectionTypeRawValue = flags & 0x000000ff
         guard let sectionType = SectionType(rawValue: sectionTypeRawValue) else {
@@ -123,33 +123,37 @@ struct SectionHeader {
             fatalError()
         }
         self.sectionType = sectionType
-        itemsContainer.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionType)"), forRange: rangeOfNextDWords)
+        translationStore.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionType)"), forRange: rangeOfNextDWords)
         
         let sectionAttributes = flags & 0xffffff00 // section attributes mask
-        itemsContainer.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionAttributes.hex)"), forRange: rangeOfNextDWords)
+        translationStore.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionAttributes.hex)"), forRange: rangeOfNextDWords)
         self.sectionAttributes = sectionAttributes
         
-        _ = itemsContainer.skip(.doubleWords)
+        _ = translationStore.skip(.doubleWords)
         
         self.reserved1 =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "reserved1", explanation: value.hex) })
         
         self.reserved2 =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "reserved2", explanation: value.hex) })
         
         if is64Bit {
             self.reserved3 =
-            itemsContainer.translate(next: .doubleWords,
+            translationStore.translate(next: .doubleWords,
                                      dataInterpreter: DataInterpreterPreset.UInt32,
                                      itemContentGenerator: { value in TranslationItemContent(description: "reserved3", explanation: value.hex) })
         } else {
             self.reserved3 = nil
         }
         
-        self.itemsContainer = itemsContainer
+        self.translationStore = translationStore
+    }
+    
+    static func numberOfTranslationItems(is64Bit: Bool) -> Int {
+        return is64Bit ? 13 : 12
     }
 }

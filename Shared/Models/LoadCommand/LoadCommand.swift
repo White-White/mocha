@@ -187,26 +187,26 @@ enum LoadCommandType: UInt32 {
 class LoadCommand: MachoComponent {
     
     let type: LoadCommandType
-    let itemsContainer: TranslationItemContainer
+    let translationStore: TranslationStore
     
     override var componentTitle: String { "Load Command" }
     override var componentSubTitle: String { type.name }
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
+    override var numberOfTranslationItems: Int {
+        return translationStore.items.count
+    }
+    
+    override func translationItem(at index: Int) -> TranslationItem {
+        return translationStore.items[index]
+    }
+    
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
         self.type = type
-        let itemsContainer = itemsContainer ?? TranslationItemContainer(machoDataSlice: data.truncated(from: 0, length: 8), sectionTitle: nil)
-        itemsContainer.insert(TranslationItemContent(description: "Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
-        itemsContainer.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
-        self.itemsContainer = itemsContainer
+        let translationStore = translationStore ?? TranslationStore(machoDataSlice: data.truncated(from: 0, length: 8), sectionTitle: nil)
+        translationStore.insert(TranslationItemContent(description: "Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
+        translationStore.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
+        self.translationStore = translationStore
         super.init(data)
-    }
-    
-    override func numberOfTranslationSections() -> Int {
-        return 1
-    }
-    
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        return itemsContainer.items
     }
     
     static func loadCommands(from allLoadCommandData: DataSlice, numberOfLoadCommands: Int) -> [LoadCommand] {
@@ -265,18 +265,18 @@ class LCOneString: LoadCommand {
     let stringOffset: UInt32
     let string: String
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
-        let stringOffset =  itemsContainer.translate(next: .doubleWords,
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let stringOffset =  translationStore.translate(next: .doubleWords,
                                                      dataInterpreter: DataInterpreterPreset.UInt32,
                                                      itemContentGenerator: { stringOffset in TranslationItemContent(description: "String Offset", explanation: stringOffset.hex) })
         self.stringOffset = stringOffset
         
-        self.string = itemsContainer.translate(next: .rawNumber(data.count - Int(stringOffset)),
+        self.string = translationStore.translate(next: .rawNumber(data.count - Int(stringOffset)),
                                                dataInterpreter: { $0.utf8String ?? Log.warning("Failed to parse \(type.name). Debug me.") },
                                                itemContentGenerator: { string in TranslationItemContent(description: "Content", explanation: string) })
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
 }
 
@@ -284,12 +284,12 @@ class LCUUID: LoadCommand {
     
     let uuid: UUID
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
-        self.uuid = itemsContainer.translate(next: .rawNumber(16),
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        self.uuid = translationStore.translate(next: .rawNumber(16),
                                              dataInterpreter: { uuidData in LCUUID.uuid(from: [UInt8](uuidData)) },
                                              itemContentGenerator: { uuid in TranslationItemContent(description: "UUID", explanation: uuid.uuidString) })
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
     
     static func uuid(from uuidData: [UInt8]) -> UUID {
@@ -302,14 +302,14 @@ class LCSourceVersion: LoadCommand {
     
     let version: String
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
-        self.version = itemsContainer.translate(next: .quadWords,
+        self.version = translationStore.translate(next: .quadWords,
                                                 dataInterpreter: { LCSourceVersion.versionString(from: $0.UInt64) },
                                                 itemContentGenerator: { version in TranslationItemContent(description: "Source Version", explanation: version) })
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
     
     static func versionString(from versionValue: UInt64) -> String {
@@ -329,19 +329,19 @@ class LCMain: LoadCommand {
     let entryOffset: UInt64
     let stackSize: UInt64
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
-        self.entryOffset = itemsContainer.translate(next: .quadWords,
+        self.entryOffset = translationStore.translate(next: .quadWords,
                                                     dataInterpreter: { $0.UInt64 },
                                                     itemContentGenerator: { entryOffset in TranslationItemContent(description: "Entry Offset (relative to __TEXT)",
                                                                                                                   explanation: entryOffset.hex) })
         
-        self.stackSize = itemsContainer.translate(next: .quadWords,
+        self.stackSize = translationStore.translate(next: .quadWords,
                                                   dataInterpreter: { $0.UInt64 },
                                                   itemContentGenerator: { stackSize in TranslationItemContent(description: "Stack Size",
                                                                                                               explanation: stackSize.hex) })
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
 }

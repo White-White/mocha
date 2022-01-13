@@ -41,7 +41,7 @@ enum MachoType {
 }
 
 class MachoHeader: MachoComponent {
-
+    
     let is64Bit: Bool
     let cpuType: CPUType
     let cpuSubtype: CPUSubtype
@@ -50,71 +50,71 @@ class MachoHeader: MachoComponent {
     let sizeOfAllLoadCommand: UInt32
     let flags: UInt32
     let reserved: UInt32?
-    let itemsContainer: TranslationItemContainer
+    let translationStore: TranslationStore
     
     override var componentTitle: String { "Macho Header" }
     
+    override var numberOfTranslationItems: Int {
+        return translationStore.items.count
+    }
+    
+    override func translationItem(at index: Int) -> TranslationItem {
+        return translationStore.items[index]
+    }
+    
     init(from machoDataSlice: DataSlice, is64Bit: Bool) {
         self.is64Bit = is64Bit
-       
-        let smartTransSection = TranslationItemContainer(machoDataSlice: machoDataSlice, sectionTitle: nil)
+        
+        let transStore = TranslationStore(machoDataSlice: machoDataSlice, sectionTitle: nil)
         
         _ =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: { $0 },
-                                    itemContentGenerator: { _  in TranslationItemContent(description: "File Magic", explanation: (is64Bit ? MagicType.macho64 : MagicType.macho32).readable) })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: { $0 },
+                             itemContentGenerator: { _  in TranslationItemContent(description: "File Magic", explanation: (is64Bit ? MagicType.macho64 : MagicType.macho32).readable) })
         
         let cpuType =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: { CPUType($0.UInt32) },
-                                    itemContentGenerator: { cpuType  in TranslationItemContent(description: "CPU Type", explanation: cpuType.name) })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: { CPUType($0.UInt32) },
+                             itemContentGenerator: { cpuType  in TranslationItemContent(description: "CPU Type", explanation: cpuType.name) })
         self.cpuType = cpuType
         
         self.cpuSubtype =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: { CPUSubtype($0.UInt32, cpuType: cpuType) },
-                                    itemContentGenerator: { cpuSubtype  in TranslationItemContent(description: "CPU Sub Type", explanation: cpuSubtype.name) })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: { CPUSubtype($0.UInt32, cpuType: cpuType) },
+                             itemContentGenerator: { cpuSubtype  in TranslationItemContent(description: "CPU Sub Type", explanation: cpuSubtype.name) })
         
         self.machoType =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: { MachoType(with: $0.UInt32) },
-                                    itemContentGenerator: { machoType  in TranslationItemContent(description: "Macho Type", explanation: machoType.readable) })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: { MachoType(with: $0.UInt32) },
+                             itemContentGenerator: { machoType  in TranslationItemContent(description: "Macho Type", explanation: machoType.readable) })
         
         self.numberOfLoadCommands =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: DataInterpreterPreset.UInt32,
-                                    itemContentGenerator: { numberOfLoadCommands  in TranslationItemContent(description: "Number of commands", explanation: "\(numberOfLoadCommands)") })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: DataInterpreterPreset.UInt32,
+                             itemContentGenerator: { numberOfLoadCommands  in TranslationItemContent(description: "Number of commands", explanation: "\(numberOfLoadCommands)") })
         
         self.sizeOfAllLoadCommand =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: DataInterpreterPreset.UInt32,
-                                    itemContentGenerator: { sizeOfAllLoadCommand  in TranslationItemContent(description: "Size of all commands", explanation: "\(sizeOfAllLoadCommand)") })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: DataInterpreterPreset.UInt32,
+                             itemContentGenerator: { sizeOfAllLoadCommand  in TranslationItemContent(description: "Size of all commands", explanation: "\(sizeOfAllLoadCommand)") })
         
         self.flags =
-        smartTransSection.translate(next: .doubleWords,
-                                    dataInterpreter: DataInterpreterPreset.UInt32,
-                                    itemContentGenerator: { flags  in TranslationItemContent(description: "Valid Flags", explanation: MachoHeader.flagsDescriptionFrom(flags)) })
+        transStore.translate(next: .doubleWords,
+                             dataInterpreter: DataInterpreterPreset.UInt32,
+                             itemContentGenerator: { flags  in TranslationItemContent(description: "Valid Flags", explanation: MachoHeader.flagsDescriptionFrom(flags)) })
         
         if is64Bit {
             self.reserved =
-            smartTransSection.translate(next: .doubleWords,
-                                        dataInterpreter: DataInterpreterPreset.UInt32,
-                                        itemContentGenerator: { reserved  in TranslationItemContent(description: "Reversed", explanation: reserved.hex) })
+            transStore.translate(next: .doubleWords,
+                                 dataInterpreter: DataInterpreterPreset.UInt32,
+                                 itemContentGenerator: { reserved  in TranslationItemContent(description: "Reversed", explanation: reserved.hex) })
         } else {
             self.reserved = nil
         }
         
-        self.itemsContainer = smartTransSection
+        self.translationStore = transStore
         
         super.init(machoDataSlice)
-    }
-    
-    override func numberOfTranslationSections() -> Int {
-        return 1
-    }
-    
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        return self.itemsContainer.items
     }
     
     private static func flagsDescriptionFrom(_ flags: UInt32) -> String {
@@ -217,10 +217,8 @@ class Macho: Equatable {
             }
             
             if let dyldInfo = loadCommand as? LCDyldInfo {
-                
-                let rebaseInfoComponent = Macho.rebaseInfoComponent(from: dyldInfo, machoData: machoData, is64Bit: header.is64Bit)
-                
-                self.machoComponents.append(rebaseInfoComponent)
+                let dyldInfoComponents = Macho.dyldInfoComponents(from: dyldInfo, machoData: machoData, is64Bit: header.is64Bit)
+                self.machoComponents.append(contentsOf: dyldInfoComponents)
             }
         }
         
@@ -317,16 +315,48 @@ extension Macho {
                                               subTitle: "__LINKEDIT")
     }
     
-    fileprivate static func rebaseInfoComponent(from dyldInfoCommand: LCDyldInfo, machoData: DataSlice, is64Bit: Bool) -> MachoComponent {
+    fileprivate static func dyldInfoComponents(from dyldInfoCommand: LCDyldInfo, machoData: DataSlice, is64Bit: Bool) -> [MachoComponent] {
         let rebaseInfoStart = Int(dyldInfoCommand.rebaseOffset)
         let rebaseInfoSize = Int(dyldInfoCommand.rebaseSize)
         let rebaseInfoData = machoData.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
-        return MachoInterpreterBasedComponent(rebaseInfoData,
+        let rebaseInfoComponent = MachoInterpreterBasedComponent(rebaseInfoData,
                                               is64Bit: is64Bit,
-                                              interpreterType: RebaseInfoInterpreter.self,
+                                              interpreterType: DyldInfoInterpreter<RebaseOperationCode>.self,
                                               title: "Rebase Opcode",
                                               interpreterSettings: nil,
                                               subTitle: "__LINKEDIT")
+        
+        let bindInfoStart = Int(dyldInfoCommand.bindOffset)
+        let bindInfoSize = Int(dyldInfoCommand.bindSize)
+        let bindInfoData = machoData.truncated(from: bindInfoStart, length: bindInfoSize)
+        let bindingInfoComponent = MachoInterpreterBasedComponent(bindInfoData,
+                                              is64Bit: is64Bit,
+                                              interpreterType: DyldInfoInterpreter<BindOperationCode>.self,
+                                              title: "Binding Opcode",
+                                              interpreterSettings: nil,
+                                              subTitle: "__LINKEDIT")
+        
+        let weakBindInfoStart = Int(dyldInfoCommand.weakBindOffset)
+        let weakBindSize = Int(dyldInfoCommand.weakBindSize)
+        let weakBindData = machoData.truncated(from: weakBindInfoStart, length: weakBindSize)
+        let weakBindingInfoComponent = MachoInterpreterBasedComponent(weakBindData,
+                                              is64Bit: is64Bit,
+                                              interpreterType: DyldInfoInterpreter<BindOperationCode>.self,
+                                              title: "Weak Binding Opcode",
+                                              interpreterSettings: nil,
+                                              subTitle: "__LINKEDIT")
+        
+        let lazyBindInfoStart = Int(dyldInfoCommand.lazyBindOffset)
+        let lazyBindSize = Int(dyldInfoCommand.lazyBindSize)
+        let lazyBindData = machoData.truncated(from: lazyBindInfoStart, length: lazyBindSize)
+        let lazyBindingInfoComponent = MachoInterpreterBasedComponent(lazyBindData,
+                                              is64Bit: is64Bit,
+                                              interpreterType: DyldInfoInterpreter<BindOperationCode>.self,
+                                              title: "Weak Binding Opcode",
+                                              interpreterSettings: nil,
+                                              subTitle: "__LINKEDIT")
+        
+        return [rebaseInfoComponent, bindingInfoComponent, weakBindingInfoComponent, lazyBindingInfoComponent]
     }
 }
 

@@ -43,13 +43,13 @@ class ULEB128Interpreter: BaseInterpreter<[ULEB128Interpreter.DecodedInteger]> {
         return resultAddresses
     }
     
-    override func numberOfTranslationSections() -> Int {
+    override var numberOfTranslationItems: Int {
         return self.payload.count
     }
     
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        let decoded = self.payload[section]
-        return [TranslationItem(sourceDataRange: data.absoluteRange(decoded.range.lowerBound, decoded.range.upperBound - decoded.range.lowerBound),
-                                content: TranslationItemContent(description: "Address", explanation: "\(decoded.value.hex)"))]
+    override func translationItem(at index: Int) -> TranslationItem {
+        let decoded = self.payload[index]
+        return TranslationItem(sourceDataRange: data.absoluteRange(decoded.range.lowerBound, decoded.range.upperBound - decoded.range.lowerBound),
+                               content: TranslationItemContent(description: "Address", explanation: "\(decoded.value.hex)"))
     }
 }

@@ -52,21 +52,21 @@ class CStringInterpreter: BaseInterpreter<[CStringRawData]> {
         return cStringRaws
     }
     
-    override func numberOfTranslationSections() -> Int {
+    override var numberOfTranslationItems: Int {
         return self.payload.count
     }
     
-    override func translationItems(at section: Int) -> [TranslationItem] {
-        let cStringRaw = self.payload[section]
+    override func translationItem(at index: Int) -> TranslationItem {
+        let cStringRaw = self.payload[index]
         let stringLength = cStringRaw.range.upperBound - cStringRaw.range.lowerBound
         if let string = cStringRaw.data.utf8String {
             let explanation: String = string.replacingOccurrences(of: "\n", with: "\\n")
             let demangledCString: String? = self.demanglingCString ? swift_demangle(explanation) : nil
-            return [TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
-                                    content: TranslationItemContent(description: "UTF8-String", explanation: explanation, extraExplanation: demangledCString))]
+            return TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
+                                   content: TranslationItemContent(description: "UTF8-String", explanation: explanation, extraExplanation: demangledCString))
         } else {
-            return [TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
-                                    content: TranslationItemContent(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF8 String"))]
+            return TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
+                                   content: TranslationItemContent(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF8 String"))
         }
     }
 }

@@ -45,19 +45,19 @@ class LinkedITData: LoadCommand {
         }
     }
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
         self.fileOffset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { fileOffset in TranslationItemContent(description: "File Offset", explanation: "\(fileOffset)") })
         
         self.dataSize =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { dataSize in TranslationItemContent(description: "Size", explanation: "\(dataSize)") })
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
 }

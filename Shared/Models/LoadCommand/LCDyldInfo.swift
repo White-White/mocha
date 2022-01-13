@@ -24,59 +24,59 @@ class LCDyldInfo: LoadCommand {
     let exportOffset: UInt32
     let exportSize: UInt32
     
-    required init(with type: LoadCommandType, data: DataSlice, itemsContainer: TranslationItemContainer? = nil) {
-        let itemsContainer = TranslationItemContainer(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
         self.rebaseOffset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Rebase Info File Offset", explanation: value.hex) })
         
         self.rebaseSize =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Rebase Info Size", explanation: "\(value)") })
         
         self.bindOffset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Binding Info File Offset", explanation: value.hex) })
         
         self.bindSize =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Binding Info Size", explanation: "\(value)") })
         
         self.weakBindOffset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Weak Binding Info File Offset", explanation: value.hex) })
         
         self.weakBindSize =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Weak Binding Info Size", explanation: "\(value)") })
         
         self.lazyBindOffset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Lazy Binding Info File Offset", explanation: value.hex) })
         
         self.lazyBindSize =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Lazy Binding Info Size", explanation: "\(value)") })
         
         self.exportOffset =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Export Info File Offset", explanation: value.hex) })
         
         self.exportSize =
-        itemsContainer.translate(next: .doubleWords,
+        translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Export Info Size", explanation: "\(value)") })
         
-        super.init(with: type, data: data, itemsContainer: itemsContainer)
+        super.init(with: type, data: data, translationStore: translationStore)
     }
 }
