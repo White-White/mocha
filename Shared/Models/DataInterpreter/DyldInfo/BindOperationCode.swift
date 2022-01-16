@@ -7,10 +7,6 @@
 
 import Foundation
 
-//#define BIND_TYPE_POINTER                    1
-//#define BIND_TYPE_TEXT_ABSOLUTE32                2
-//#define BIND_TYPE_TEXT_PCREL32                    3
-//
 //#define BIND_SPECIAL_DYLIB_SELF                     0
 //#define BIND_SPECIAL_DYLIB_MAIN_EXECUTABLE            -1
 //#define BIND_SPECIAL_DYLIB_FLAT_LOOKUP                -2
@@ -19,11 +15,16 @@ import Foundation
 //#define BIND_SYMBOL_FLAGS_WEAK_IMPORT                0x1
 //#define BIND_SYMBOL_FLAGS_NON_WEAK_DEFINITION            0x8
 
-// FIXME: consume these symbols
+// FIXME: these flags are not explained in Mocha yet.
 
 enum BindImmediateType {
+    
     case threadedSubSetBindOrdinalTableSizeULEB
     case threadedSubApple
+    case bindTypePointer
+    case bindTypeTextAbsolute32
+    case bindTypeTextPCRel32
+    
     case rawValue(UInt8)
     
     var readable: String {
@@ -32,8 +33,14 @@ enum BindImmediateType {
             return "BIND_SUBOPCODE_THREADED_SET_BIND_ORDINAL_TABLE_SIZE_ULEB"
         case .threadedSubApple:
             return "BIND_SUBOPCODE_THREADED_APPLY"
-        case .rawValue(let uInt8):
-            return "Raw Integer: \(uInt8)"
+        case .bindTypePointer:
+            return "BIND_TYPE_POINTER"
+        case .bindTypeTextAbsolute32:
+            return "BIND_TYPE_TEXT_ABSOLUTE32"
+        case .bindTypeTextPCRel32:
+            return "BIND_TYPE_TEXT_PCREL32"
+        case .rawValue(let value):
+            return "\(value)"
         }
     }
 }
@@ -92,6 +99,7 @@ struct BindOperationCode: OperationCodeProtocol {
     
     let bindOperationType: BindOperationType
     let bindImmediateType: BindImmediateType
+    let hasTrailingCString: Bool
     
     init(operationCodeValue: UInt8, immediateValue: UInt8) {
         guard let bindOperationType = BindOperationType(rawValue: operationCodeValue) else {
@@ -100,8 +108,20 @@ struct BindOperationCode: OperationCodeProtocol {
             fatalError()
         }
         self.bindOperationType = bindOperationType
+        self.hasTrailingCString = bindOperationType == .setSymbolTrailingFlagsImm
         
         switch bindOperationType {
+        case .setTypeImm:
+            switch immediateValue {
+            case 1:
+                self.bindImmediateType = .bindTypePointer
+            case 2:
+                self.bindImmediateType = .bindTypeTextAbsolute32
+            case 3:
+                self.bindImmediateType = .bindTypeTextPCRel32
+            default:
+                fatalError()
+            }
         case .threaded:
             switch immediateValue {
             case 0:
@@ -149,9 +169,5 @@ struct BindOperationCode: OperationCodeProtocol {
         default:
             return .unsigned
         }
-    }
-    
-    func actionDescription() -> String {
-        return "//FIXME: " //FIXME:
     }
 }

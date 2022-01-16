@@ -199,7 +199,7 @@ class Macho: Equatable {
                 self.machoComponents.append(contentsOf: componentsRelocations)
             }
             
-            if let linkedITData = (loadCommand as? LinkedITData) {
+            if let linkedITData = (loadCommand as? LinkedITData), linkedITData.dataSize.isNotZero {
                 self.machoComponents.append(Macho.machoComponent(from: linkedITData, machoData: machoData, is64Bit: header.is64Bit))
             }
             
@@ -316,47 +316,75 @@ extension Macho {
     }
     
     fileprivate static func dyldInfoComponents(from dyldInfoCommand: LCDyldInfo, machoData: DataSlice, is64Bit: Bool) -> [MachoComponent] {
+        var components: [MachoComponent] = []
+        
         let rebaseInfoStart = Int(dyldInfoCommand.rebaseOffset)
         let rebaseInfoSize = Int(dyldInfoCommand.rebaseSize)
-        let rebaseInfoData = machoData.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
-        let rebaseInfoComponent = MachoInterpreterBasedComponent(rebaseInfoData,
-                                              is64Bit: is64Bit,
-                                              interpreterType: DyldInfoInterpreter<RebaseOperationCode>.self,
-                                              title: "Rebase Opcode",
-                                              interpreterSettings: nil,
-                                              subTitle: "__LINKEDIT")
+        if rebaseInfoStart.isNotZero && rebaseInfoSize.isNotZero {
+            let rebaseInfoData = machoData.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
+            let rebaseInfoComponent = MachoInterpreterBasedComponent(rebaseInfoData,
+                                                  is64Bit: is64Bit,
+                                                  interpreterType: OperationCodeInterpreter<RebaseOperationCode>.self,
+                                                  title: "Rebase Opcode",
+                                                  interpreterSettings: nil,
+                                                  subTitle: "__LINKEDIT")
+            components.append(rebaseInfoComponent)
+        }
+        
         
         let bindInfoStart = Int(dyldInfoCommand.bindOffset)
         let bindInfoSize = Int(dyldInfoCommand.bindSize)
-        let bindInfoData = machoData.truncated(from: bindInfoStart, length: bindInfoSize)
-        let bindingInfoComponent = MachoInterpreterBasedComponent(bindInfoData,
-                                              is64Bit: is64Bit,
-                                              interpreterType: DyldInfoInterpreter<BindOperationCode>.self,
-                                              title: "Binding Opcode",
-                                              interpreterSettings: nil,
-                                              subTitle: "__LINKEDIT")
+        if bindInfoStart.isNotZero && bindInfoSize.isNotZero {
+            let bindInfoData = machoData.truncated(from: bindInfoStart, length: bindInfoSize)
+            let bindingInfoComponent = MachoInterpreterBasedComponent(bindInfoData,
+                                                  is64Bit: is64Bit,
+                                                  interpreterType: OperationCodeInterpreter<BindOperationCode>.self,
+                                                  title: "Binding Opcode",
+                                                  interpreterSettings: nil,
+                                                  subTitle: "__LINKEDIT")
+            components.append(bindingInfoComponent)
+        }
         
         let weakBindInfoStart = Int(dyldInfoCommand.weakBindOffset)
         let weakBindSize = Int(dyldInfoCommand.weakBindSize)
-        let weakBindData = machoData.truncated(from: weakBindInfoStart, length: weakBindSize)
-        let weakBindingInfoComponent = MachoInterpreterBasedComponent(weakBindData,
-                                              is64Bit: is64Bit,
-                                              interpreterType: DyldInfoInterpreter<BindOperationCode>.self,
-                                              title: "Weak Binding Opcode",
-                                              interpreterSettings: nil,
-                                              subTitle: "__LINKEDIT")
+        if weakBindInfoStart.isNotZero && weakBindSize.isNotZero {
+            let weakBindData = machoData.truncated(from: weakBindInfoStart, length: weakBindSize)
+            let weakBindingInfoComponent = MachoInterpreterBasedComponent(weakBindData,
+                                                  is64Bit: is64Bit,
+                                                  interpreterType: OperationCodeInterpreter<BindOperationCode>.self,
+                                                  title: "Weak Binding Opcode",
+                                                  interpreterSettings: nil,
+                                                  subTitle: "__LINKEDIT")
+            components.append(weakBindingInfoComponent)
+        }
         
         let lazyBindInfoStart = Int(dyldInfoCommand.lazyBindOffset)
         let lazyBindSize = Int(dyldInfoCommand.lazyBindSize)
-        let lazyBindData = machoData.truncated(from: lazyBindInfoStart, length: lazyBindSize)
-        let lazyBindingInfoComponent = MachoInterpreterBasedComponent(lazyBindData,
-                                              is64Bit: is64Bit,
-                                              interpreterType: DyldInfoInterpreter<BindOperationCode>.self,
-                                              title: "Weak Binding Opcode",
-                                              interpreterSettings: nil,
-                                              subTitle: "__LINKEDIT")
+        if lazyBindInfoStart.isNotZero && lazyBindSize.isNotZero {
+            let lazyBindData = machoData.truncated(from: lazyBindInfoStart, length: lazyBindSize)
+            let lazyBindingInfoComponent = MachoInterpreterBasedComponent(lazyBindData,
+                                                  is64Bit: is64Bit,
+                                                  interpreterType: OperationCodeInterpreter<BindOperationCode>.self,
+                                                  title: "Lazy Binding Opcode",
+                                                  interpreterSettings: nil,
+                                                  subTitle: "__LINKEDIT")
+            components.append(lazyBindingInfoComponent)
+        }
         
-        return [rebaseInfoComponent, bindingInfoComponent, weakBindingInfoComponent, lazyBindingInfoComponent]
+        let exportInfoStart = Int(dyldInfoCommand.exportOffset)
+        let exportInfoSize = Int(dyldInfoCommand.exportSize)
+        if exportInfoStart.isNotZero && exportInfoSize.isNotZero {
+            let exportInfoData = machoData.truncated(from: exportInfoStart, length: exportInfoSize)
+            let exportInfoComponent = MachoInterpreterBasedComponent(exportInfoData,
+                                                                     is64Bit: is64Bit,
+                                                                     interpreterType: ExportInfoInterpreter.self,
+                                                                     title: "Export Info",
+                                                                     interpreterSettings: nil,
+                                                                     subTitle: "__LINKEDIT")
+            components.append(exportInfoComponent)
+        }
+        
+        return components
     }
 }
 

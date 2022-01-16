@@ -42,17 +42,47 @@ extension String {
 
 extension Int {
     var hex: String { String(format: "0x%0X", self) }
+    var isNotZero: Bool { self != .zero }
 }
 
 extension UInt16 {
     var hex: String { String(format: "0x%0X", self) }
+    var isNotZero: Bool { self != .zero }
 }
 
 extension UInt32 {
     var hex: String { String(format: "0x%0X", self) }
+    var isNotZero: Bool { self != .zero }
 }
 
 extension UInt64 {
     var hex: String { String(format: "0x%0X", self) }
+    var isNotZero: Bool { self != .zero }
+}
+
+class Utils {
+    
+    struct TickTock {
+        let time = CACurrentMediaTime() * 1000
+        let name: String
+    }
+    
+    static func makeRange(start: Int, length: Int) -> Range<Int> {
+        return start..<start+length
+    }
+    static func range(after range: Range<Int>, distance: Int = 0, length: Int) -> Range<Int> {
+        guard length != 0 else { fatalError() }
+        return range.upperBound+distance..<range.upperBound+distance+length
+    }
+    
+    static func tick(_ name: String) -> TickTock {
+        return TickTock(name: name)
+    }
+    
+    static func tock(_ tickTock: TickTock) {
+        let timeGap = CACurrentMediaTime() * 1000 - tickTock.time
+        print("\n \(tickTock.name)'s Time Usage:")
+        print("--- \(timeGap) ms. ---")
+    }
 }
 

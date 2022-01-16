@@ -34,8 +34,8 @@ private struct TranslationItemView: View {
             }
         }
         .padding(.leading, 4)
-        .padding(.bottom, 6)
-        .padding(.top, 6)
+        .padding(.bottom, 3)
+        .padding(.top, 3)
     }
 }
 
@@ -47,17 +47,14 @@ struct TranslationView: View {
     
     let machoComponent: MachoComponent
     let selectedIndexWrapper: SelectedIndexWrapper = SelectedIndexWrapper()
-    @Binding var sourceDataRangeOfSelecteditem: Range<Int>?
+    @Binding var selectedDataRange: Range<Int>?
     
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView(.vertical, showsIndicators: true)  {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(0..<machoComponent.numberOfTranslationItems, id: \.self) { index in
-                        VStack(alignment: .leading, spacing: 0) {
-                            self.translationView(at: index)
-                            Divider()
-                        }
+                        self.translationView(at: index)
                     }
                 }
                 .padding(4)
@@ -73,18 +70,23 @@ struct TranslationView: View {
     
     func translationView(at index: Int) -> some View {
         let item = machoComponent.translationItem(at: index)
-        return TranslationItemView(item: item, index: index)
-            .environmentObject(self.selectedIndexWrapper)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                self.sourceDataRangeOfSelecteditem = item.sourceDataRange
-                self.selectedIndexWrapper.selectedIndex = index
+        return VStack(alignment: .leading, spacing: 0) {
+            TranslationItemView(item: item, index: index)
+                .environmentObject(self.selectedIndexWrapper)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    self.selectedDataRange = item.sourceDataRange
+                    self.selectedIndexWrapper.selectedIndex = index
+                }
+            if item.hasDivider {
+                Divider()
             }
+        }
     }
     
     init(machoComponent: MachoComponent, sourceDataRangeOfSelecteditem: Binding<Range<Int>?>) {
         self.machoComponent = machoComponent
-        _sourceDataRangeOfSelecteditem = sourceDataRangeOfSelecteditem
+        _selectedDataRange = sourceDataRangeOfSelecteditem
     }
 }
     

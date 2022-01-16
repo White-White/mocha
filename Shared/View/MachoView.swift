@@ -64,7 +64,7 @@ struct MachoView: View {
     @State var selectedCellModel: MachoViewCellModel?
     @State var selectedMachoComponent: MachoComponent
     @State var hexStore: HexLineStore
-    @State var sourceDataRangeOfSelecteditem: Range<Int>?
+    @State var selectedDataRange: Range<Int>?
     
     var body: some View {
         HStack(spacing: 0) {
@@ -75,9 +75,9 @@ struct MachoView: View {
                             .onTapGesture {
                                 if self.selectedCellModel?.machoComponent == cellModel.machoComponent { return }
                                 self.selectedMachoComponent = cellModel.machoComponent
-                                self.sourceDataRangeOfSelecteditem = cellModel.machoComponent.firstTransItem.sourceDataRange
+                                self.selectedDataRange = cellModel.machoComponent.firstTransItem.sourceDataRange
                                 self.hexStore = HexLineStore(cellModel.machoComponent.machoDataSlice)
-                                self.hexStore.updateLinesWith(selectedBytesRange: self.sourceDataRangeOfSelecteditem)
+                                self.hexStore.updateLinesWith(selectedBytesRange: self.selectedDataRange)
                                 
                                 cellModel.isSelected.toggle()
                                 self.selectedCellModel?.isSelected.toggle()
@@ -95,8 +95,8 @@ struct MachoView: View {
                 MiniMap(machoFileSize: macho.fileSize, selectedMachoComponent: $selectedMachoComponent)
                     .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
                 HStack(alignment: .top, spacing: 0) {
-                    HexView(store: $hexStore, sourceDataRangeOfSelecteditem: $sourceDataRangeOfSelecteditem)
-                    TranslationView(machoComponent: selectedMachoComponent, sourceDataRangeOfSelecteditem: $sourceDataRangeOfSelecteditem)
+                    HexView(store: $hexStore, selectedDataRange: $selectedDataRange)
+                    TranslationView(machoComponent: selectedMachoComponent, sourceDataRangeOfSelecteditem: $selectedDataRange)
                 }
                 .padding(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
             }
@@ -107,8 +107,8 @@ struct MachoView: View {
             self.selectedCellModel = self.cellModels.first
             self.selectedMachoComponent = newValue.header
             self.hexStore = HexLineStore(newValue.header.machoDataSlice)
-            self.sourceDataRangeOfSelecteditem = newValue.header.firstTransItem.sourceDataRange
-            self.hexStore.updateLinesWith(selectedBytesRange: self.sourceDataRangeOfSelecteditem)
+            self.selectedDataRange = newValue.header.firstTransItem.sourceDataRange
+            self.hexStore.updateLinesWith(selectedBytesRange: self.selectedDataRange)
         }
     }
     
@@ -123,7 +123,7 @@ struct MachoView: View {
         
         _selectedMachoComponent = State(initialValue: machoUnwrapp.machoComponents.first!)
         let selectedRange = macho.wrappedValue.header.firstTransItem.sourceDataRange
-        _sourceDataRangeOfSelecteditem = State(initialValue: selectedRange)
+        _selectedDataRange = State(initialValue: selectedRange)
         let hexStore = HexLineStore(macho.wrappedValue.header.machoDataSlice)
         hexStore.updateLinesWith(selectedBytesRange: selectedRange)
         _hexStore = State(initialValue: hexStore)

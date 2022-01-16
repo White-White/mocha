@@ -104,7 +104,7 @@ This project is still in development.
 | Binding Info  | ✅ |
 | Weak Binding Info  | ✅ |
 | Lazy Binding Info  | ✅ |
-| Exporting Info  | ⌛️ |
+| Export Info  | ✅ |
 | String Table  | ✅ |
 | Symbol Table  | ✅ 🔨 |
 | Code Signature  | ✅ |

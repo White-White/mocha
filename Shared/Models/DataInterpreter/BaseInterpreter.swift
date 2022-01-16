@@ -59,7 +59,9 @@ class BaseInterpreter<Payload>: Interpreter {
                 self.preloadingLock.unlock()
                 return
             }
+            let tick = Utils.tick(String(describing: self))
             self.payloadInside = self.generatePayload()
+            Utils.tock(tick)
             self.hasPreloaded = true
             self.preloadingLock.unlock()
         }

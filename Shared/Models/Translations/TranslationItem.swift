@@ -27,9 +27,11 @@ struct TranslationItem {
     
     var sourceDataRange: Range<Int>?
     let content: TranslationItemContent
+    let hasDivider: Bool
     
-    init(sourceDataRange: Range<Int>?, content: TranslationItemContent) {
+    init(sourceDataRange: Range<Int>?, content: TranslationItemContent, hasDivider: Bool = false) {
         self.sourceDataRange = sourceDataRange
         self.content = content
+        self.hasDivider = hasDivider
     }
 }

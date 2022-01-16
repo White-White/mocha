@@ -13,7 +13,7 @@
 		1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F184B272769EBB700CA286A /* SymbolTableEntry.swift */; };
 		1F68325A276C49AB002609C5 /* RelocationEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F683259276C49AB002609C5 /* RelocationEntry.swift */; };
 		1F6EB9FC278AE46500590729 /* LCDyldInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB9FB278AE46500590729 /* LCDyldInfo.swift */; };
-		1F6EB9FE278AECB000590729 /* DyldInfoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB9FD278AECB000590729 /* DyldInfoInterpreter.swift */; };
+		1F6EB9FE278AECB000590729 /* OperationCodeInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB9FD278AECB000590729 /* OperationCodeInterpreter.swift */; };
 		1F73C6C9275A31F00020E581 /* LoadCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BC275A31F00020E581 /* LoadCommand.swift */; };
 		1F73C6CD275A31F00020E581 /* Section.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BE275A31F00020E581 /* Section.swift */; };
 		1F73C6CF275A31F00020E581 /* Macho.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BF275A31F00020E581 /* Macho.swift */; };
@@ -33,6 +33,8 @@
 		1FB6504827904971004327BB /* OperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504727904971004327BB /* OperationCode.swift */; };
 		1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */; };
 		1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504D279051FF004327BB /* BindOperationCode.swift */; };
+		1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */; };
+		1FB6505227918F85004327BB /* InterpreterUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6505127918F85004327BB /* InterpreterUtils.swift */; };
 		1FC11B0A277B10F3008D42D9 /* HexLineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B09277B10F3008D42D9 /* HexLineStore.swift */; };
 		1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */; };
 		1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258CE275F6250008C2826 /* TranslationItem.swift */; };
@@ -63,7 +65,7 @@
 		1F184B272769EBB700CA286A /* SymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTableEntry.swift; sourceTree = "<group>"; };
 		1F683259276C49AB002609C5 /* RelocationEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelocationEntry.swift; sourceTree = "<group>"; };
 		1F6EB9FB278AE46500590729 /* LCDyldInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCDyldInfo.swift; sourceTree = "<group>"; };
-		1F6EB9FD278AECB000590729 /* DyldInfoInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DyldInfoInterpreter.swift; sourceTree = "<group>"; };
+		1F6EB9FD278AECB000590729 /* OperationCodeInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationCodeInterpreter.swift; sourceTree = "<group>"; };
 		1F73C6BC275A31F00020E581 /* LoadCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadCommand.swift; sourceTree = "<group>"; };
 		1F73C6BE275A31F00020E581 /* Section.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Section.swift; sourceTree = "<group>"; };
 		1F73C6BF275A31F00020E581 /* Macho.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macho.swift; sourceTree = "<group>"; };
@@ -87,6 +89,8 @@
 		1FB6504727904971004327BB /* OperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationCode.swift; sourceTree = "<group>"; };
 		1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RebaseOperationCode.swift; sourceTree = "<group>"; };
 		1FB6504D279051FF004327BB /* BindOperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindOperationCode.swift; sourceTree = "<group>"; };
+		1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportInfoInterpreter.swift; sourceTree = "<group>"; };
+		1FB6505127918F85004327BB /* InterpreterUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterUtils.swift; sourceTree = "<group>"; };
 		1FC11B09277B10F3008D42D9 /* HexLineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexLineStore.swift; sourceTree = "<group>"; };
 		1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
 		1FC258CE275F6250008C2826 /* TranslationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItem.swift; sourceTree = "<group>"; };
@@ -217,7 +221,8 @@
 				1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */,
 				1FB6504D279051FF004327BB /* BindOperationCode.swift */,
 				1FB6504727904971004327BB /* OperationCode.swift */,
-				1F6EB9FD278AECB000590729 /* DyldInfoInterpreter.swift */,
+				1F6EB9FD278AECB000590729 /* OperationCodeInterpreter.swift */,
+				1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */,
 			);
 			path = DyldInfo;
 			sourceTree = "<group>";
@@ -271,6 +276,7 @@
 		1FFE560727803AE200ECD395 /* DataInterpreter */ = {
 			isa = PBXGroup;
 			children = (
+				1FB6505127918F85004327BB /* InterpreterUtils.swift */,
 				1FFCA6DD2780C1E600634B79 /* BaseInterpreter.swift */,
 				1FFCA6DF2780C20700634B79 /* LazyModelBasedInterpreter.swift */,
 				1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */,
@@ -363,11 +369,13 @@
 				1FFCA6E02780C20700634B79 /* LazyModelBasedInterpreter.swift in Sources */,
 				1FFE55FB278030DA00ECD395 /* LinkerOption.swift in Sources */,
 				1FFE56022780325D00ECD395 /* Dylib.swift in Sources */,
+				1FB6505227918F85004327BB /* InterpreterUtils.swift in Sources */,
 				1F73C70C275C872D0020E581 /* ContentView.swift in Sources */,
-				1F6EB9FE278AECB000590729 /* DyldInfoInterpreter.swift in Sources */,
+				1F6EB9FE278AECB000590729 /* OperationCodeInterpreter.swift in Sources */,
 				1FFCA6E22780C22600634B79 /* CStringInterpreter.swift in Sources */,
 				1FFE5604278032D200ECD395 /* Log.swift in Sources */,
 				1FEF55DA278B3C170037098B /* TranslationStore.swift in Sources */,
+				1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */,
 				1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */,
 				1F16F22C278813E70094E720 /* DataShifter.swift in Sources */,
 				1FEF55DC278B43130037098B /* TranslationDataSource.swift in Sources */,

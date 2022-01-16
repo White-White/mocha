@@ -36,7 +36,7 @@ class HexViewHelper {
 struct HexView: View {
     
     @Binding var store: HexLineStore
-    @Binding var sourceDataRangeOfSelecteditem: Range<Int>?
+    @Binding var selectedDataRange: Range<Int>?
     let helper = HexViewHelper()
     
     var body: some View {
@@ -53,10 +53,10 @@ struct HexView: View {
                 .onChange(of: store, perform: { newValue in
                     scrollProxy.scrollTo(0, anchor: .top)
                 })
-                .onChange(of: sourceDataRangeOfSelecteditem) { newValue in
-                    store.updateLinesWith(selectedBytesRange: sourceDataRangeOfSelecteditem)
-                    if let sourceDataRangeOfSelecteditem = sourceDataRangeOfSelecteditem {
-                        let targetElementIndexRange = store.targetIndexRange(for: sourceDataRangeOfSelecteditem)
+                .onChange(of: selectedDataRange) { newValue in
+                    store.updateLinesWith(selectedBytesRange: selectedDataRange)
+                    if let selectedDataRange = selectedDataRange {
+                        let targetElementIndexRange = store.targetIndexRange(for: selectedDataRange)
                         let targetElementIndex = (targetElementIndexRange.lowerBound + targetElementIndexRange.upperBound) / 2
                         if let visibleRect = helper.rawScrollView?.documentView?.visibleRect {
                             let beginIndex = Int(visibleRect.origin.y / (LazyHexLine.lineHeight))

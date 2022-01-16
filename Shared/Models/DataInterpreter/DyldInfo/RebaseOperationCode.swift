@@ -9,21 +9,22 @@ import Foundation
 
 enum RebaseImmediateType {
     
-    case pointer
-    case textAbsolute32
-    case textPCRel32
+    case rebaseTypePointer
+    case rebaseTypeTextAbsolute32
+    case rebaseTypeTextPCRel32
+    
     case rawValue(UInt8)
     
     var readable: String {
         switch self {
-        case .pointer:
+        case .rebaseTypePointer:
             return "REBASE_TYPE_POINTER"
-        case .textAbsolute32:
+        case .rebaseTypeTextAbsolute32:
             return "REBASE_TYPE_TEXT_ABSOLUTE32"
-        case .textPCRel32:
+        case .rebaseTypeTextPCRel32:
             return "REBASE_TYPE_TEXT_PCREL32"
         case .rawValue(let value):
-            return "Raw Integer: \(value)"
+            return "\(value)"
         }
     }
 }
@@ -67,6 +68,7 @@ struct RebaseOperationCode: OperationCodeProtocol {
     
     let operationType: RebaseOperationType
     let immediateType: RebaseImmediateType
+    let hasTrailingCString: Bool = false
     
     init(operationCodeValue: UInt8, immediateValue: UInt8) {
         guard let operationType = RebaseOperationType(rawValue: operationCodeValue) else {
@@ -80,11 +82,11 @@ struct RebaseOperationCode: OperationCodeProtocol {
         case .setTypeImm:
             switch immediateValue {
             case 1:
-                self.immediateType = .pointer
+                self.immediateType = .rebaseTypePointer
             case 2:
-                self.immediateType = .textAbsolute32
+                self.immediateType = .rebaseTypeTextAbsolute32
             case 3:
-                self.immediateType = .textPCRel32
+                self.immediateType = .rebaseTypeTextPCRel32
             default:
                 fatalError()
             }
@@ -115,9 +117,5 @@ struct RebaseOperationCode: OperationCodeProtocol {
     
     func immediateReadable() -> String {
         return self.immediateType.readable
-    }
-    
-    func actionDescription() -> String {
-        return "//FIXME: " //FIXME:
     }
 }
