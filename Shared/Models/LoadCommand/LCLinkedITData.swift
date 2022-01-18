@@ -14,7 +14,7 @@ import Foundation
  LC_DYLD_EXPORTS_TRIE, or
  LC_DYLD_CHAINED_FIXUPS. */
 
-class LinkedITData: LoadCommand {
+class LCLinkedITData: LoadCommand {
     
     let fileOffset: UInt32
     let dataSize: UInt32
@@ -22,13 +22,16 @@ class LinkedITData: LoadCommand {
     var interpreterType: Interpreter.Type {
         switch self.type {
         case .dataInCode:
-            return LazyModelBasedInterpreter<DataInCodeModel>.self
+            return ModelBasedInterpreter<DataInCodeModel>.self
         case .codeSignature:
             return CodeSignatureInterpreter.self
         case .functionStarts:
             return ULEB128Interpreter.self
+        case .dyldExportsTrie:
+            return ExportInfoInterpreter.self
         default:
-            fatalError()
+            print("Unknow how to parse \(self). Please contact the author.")
+            return ASCIIInterpreter.self // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
         }
     }
     
@@ -40,13 +43,23 @@ class LinkedITData: LoadCommand {
             return "Code Signature"
         case .functionStarts:
             return "Function Starts"
+        case .segmentSplitInfo:
+            return "Segment Split Info"
+        case .dylibCodeSigDRs:
+            return "Dylib Code SigDRs"
+        case .linkerOptimizationHint:
+            return "Linker Opt Hint"
+        case .dyldExportsTrie:
+            return "Export Info (LC)"
+        case .dyldChainedFixups:
+            return "Dyld Chained Fixups"
         default:
             fatalError()
         }
     }
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
         self.fileOffset =
         translationStore.translate(next: .doubleWords,

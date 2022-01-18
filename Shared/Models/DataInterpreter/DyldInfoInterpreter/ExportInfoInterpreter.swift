@@ -104,7 +104,7 @@ class ExportInfoNode {
             for leb in leb128Array {
                 let lastRange = rangeOfLastLEB ?? flagsRange
                 let thisLEBRange = Utils.range(after: lastRange, length: leb.byteCount)
-                transItems.append(TranslationItem(sourceDataRange: flagsRange,
+                transItems.append(TranslationItem(sourceDataRange: thisLEBRange,
                                                   content: TranslationItemContent(description: "LEB", explanation: leb.rawValue.hex)))
                 rangeOfLastLEB = thisLEBRange
             }
@@ -120,8 +120,8 @@ class ExportInfoNode {
         
         let edgeCountRnage = Utils.range(after: terminalSizeRange, distance: Int(terminalSize.rawValue), length: edgesCount.byteCount)
         transItems.append(TranslationItem(sourceDataRange: edgeCountRnage,
-                                          content: TranslationItemContent(description: "Number of Edges", explanation: "\(edgesCount.rawValue)"),
-                                          hasDivider: edges.isEmpty))
+                                          content: TranslationItemContent(description: "Number of Edges", explanation: "\(edgesCount.rawValue)",
+                                                                          hasDivider: edges.isEmpty)))
         
         var rangeOfLastEdge: Range<Int>?
         for index in edges.indices {
@@ -135,14 +135,15 @@ class ExportInfoNode {
             let edgeOffsetRange = Utils.range(after: edgeNameRange, length: edge.offset.byteCount)
             transItems.append(TranslationItem(sourceDataRange: edgeOffsetRange,
                                               content: TranslationItemContent(description: "Edge Offset",
-                                                                              explanation: edge.offset.rawValue.hex),
-                                              hasDivider: index == edges.count - 1))
+                                                                              explanation: edge.offset.rawValue.hex,
+                                                                              hasDivider: index == edges.count - 1)))
             rangeOfLastEdge = edgeOffsetRange
         }
         
-        let lastRange = rangeOfLastEdge ?? edgeCountRnage
-        transItems.insert(TranslationItem(sourceDataRange: startOffsetInMacho..<lastRange.upperBound,
-                                          content: TranslationItemContent(description: "Trie Node Full Name", explanation: accumulatedString)),
+        transItems.insert(TranslationItem(sourceDataRange: nil,
+                                          content: TranslationItemContent(description: "Trie Node Full Name",
+                                                                          explanation: accumulatedString,
+                                                                          explanationStyle: .extraDetail)),
                           at: .zero)
         
         return transItems

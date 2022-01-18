@@ -7,20 +7,20 @@
 
 import Foundation
 
-class LinkerOption: LoadCommand {
+class LCLinkerOption: LoadCommand {
     
     let numberOfOptions: Int
     let options: [String]
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
         self.numberOfOptions = translationStore.translate(next: .doubleWords,
                                                         dataInterpreter: { Int($0.UInt32) },
                                                         itemContentGenerator: { number in TranslationItemContent(description: "Number of options", explanation: "\(number)") })
         
         self.options = translationStore.translate(next: .rawNumber(data.count - 12),
-                                                dataInterpreter: { LinkerOption.options(from: $0) },
+                                                dataInterpreter: { LCLinkerOption.options(from: $0) },
                                                 itemContentGenerator: { options in TranslationItemContent(description: "Options(s)", explanation: options.joined(separator: " ")) })
         
         super.init(with: type, data: data, translationStore: translationStore)

@@ -56,7 +56,7 @@ This project is still in development.
 | LC_TWOLEVEL_HINTS | ⌛️ |        
 | LC_PREBIND_CKSUM | ⌛️ |        
 | LC_LOAD_WEAK_DYLIB | ✅ |        
-| LC_SEGMENT_64 | ⌛️ |        
+| LC_SEGMENT_64 | ✅ |        
 | LC_ROUTINES_64 | ⌛️ |        
 | LC_UUID | ✅ |        
 | LC_RPATH | ✅ |        
@@ -64,7 +64,7 @@ This project is still in development.
 | LC_SEGMENT_SPLIT_INFO | ⌛️ |        
 | LC_REEXPORT_DYLIB | ⌛️ |        
 | LC_LAZY_LOAD_DYLIB | ⌛️ |        
-| LC_ENCRYPTION_INFO | ⌛️ |        
+| LC_ENCRYPTION_INFO | ✅ |        
 | LC_DYLD_INFO | ⌛️ |        
 | LC_DYLD_INFO_ONLY | ⌛️ |        
 | LC_LOAD_UPWARD_DYLIB | ⌛️ |        
@@ -76,13 +76,13 @@ This project is still in development.
 | LC_DATA_IN_CODE | ⌛️ |        
 | LC_SOURCE_VERSION | ✅ |        
 | LC_DYLIB_CODE_SIGN_DRS | ⌛️ |        
-| LC_ENCRYPTION_INFO_64 | ⌛️ |        
+| LC_ENCRYPTION_INFO_64 | ✅ |        
 | LC_LINKER_OPTION | ✅ |        
 | LC_LINKER_OPTIMIZATION_HINT | ⌛️ |        
 | LC_VERSION_MIN_TVOS | ✅ |        
 | LC_VERSION_MIN_WATCHOS | ✅ |        
 | LC_NOTE | ⌛️ |        
-| LC_BUILD_VERSION | ⌛️ |        
+| LC_BUILD_VERSION | ✅ |        
 | LC_DYLD_EXPORTS_TRIE | ⌛️ |        
 | LC_DYLD_CHAINED_FIXUPS | ⌛️ |        
 | LC_FILESET_ENTRY | ⌛️ |

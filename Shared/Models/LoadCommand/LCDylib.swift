@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Dylib: LoadCommand {
+class LCDylib: LoadCommand {
     
     let libPathOffset: UInt32
     let libPath: String
@@ -17,7 +17,7 @@ class Dylib: LoadCommand {
     let compatibilityVersion: String /* library's compatibility vers number*/
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
         let libPathOffset =
         translationStore.translate(next: .doubleWords,
@@ -32,12 +32,12 @@ class Dylib: LoadCommand {
         
         self.currentVersion =
         translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: { Dylib.version(for: $0.UInt32) },
+                                 dataInterpreter: { LCDylib.version(for: $0.UInt32) },
                                  itemContentGenerator: { version in TranslationItemContent(description: "Version", explanation: version) })
         
         self.compatibilityVersion =
         translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: { Dylib.version(for: $0.UInt32) },
+                                 dataInterpreter: { LCDylib.version(for: $0.UInt32) },
                                  itemContentGenerator: { version in TranslationItemContent(description: "Comtatible Version", explanation: version) })
         
         self.libPath =

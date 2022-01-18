@@ -13,7 +13,7 @@ class TranslationStore {
     private(set) var translated: Int = 0
     private(set) var items: [TranslationItem] = []
 
-    init(machoDataSlice: DataSlice, sectionTitle: String? = nil) {
+    init(machoDataSlice: DataSlice) {
         self.machoDataSlice = machoDataSlice
     }
 

@@ -71,7 +71,7 @@ struct SectionHeader {
         self.is64Bit = is64Bit
         self.data = data
         
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil)
+        let translationStore = TranslationStore(machoDataSlice: data)
         
         self.section =
         translationStore.translate(next: .rawNumber(16),
@@ -145,7 +145,7 @@ struct SectionHeader {
             self.reserved3 =
             translationStore.translate(next: .doubleWords,
                                      dataInterpreter: DataInterpreterPreset.UInt32,
-                                     itemContentGenerator: { value in TranslationItemContent(description: "reserved3", explanation: value.hex) })
+                                     itemContentGenerator: { value in TranslationItemContent(description: "reserved3", explanation: value.hex, hasDivider: true) })
         } else {
             self.reserved3 = nil
         }
