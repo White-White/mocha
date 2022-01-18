@@ -25,7 +25,7 @@ class LCDyldInfo: LoadCommand {
     let exportSize: UInt32
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
         self.rebaseOffset =
         translationStore.translate(next: .doubleWords,

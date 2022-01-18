@@ -14,7 +14,7 @@ protocol InterpretableModel {
     static func numberOfTranslationItems() -> Int
 }
 
-class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]> {
+class ModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]> {
     
     private var modelsCache: [Model?]
     private let numberOfAllTranslationItems: Int

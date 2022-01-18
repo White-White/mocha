@@ -7,7 +7,7 @@
 
 import Foundation
 
-class SymbolTable: LoadCommand {
+class LCSymbolTable: LoadCommand {
     
     let symbolTableOffset: UInt32
     let numberOfSymbolTableEntries: UInt32
@@ -15,7 +15,7 @@ class SymbolTable: LoadCommand {
     let sizeOfStringTable: UInt32
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
         self.symbolTableOffset = translationStore.translate(next: .doubleWords,
                                                           dataInterpreter: DataInterpreterPreset.UInt32,
@@ -37,7 +37,7 @@ class SymbolTable: LoadCommand {
     }
 }
 
-class DynamicSymbolTable: LoadCommand {
+class LCDynamicSymbolTable: LoadCommand {
     let ilocalsym: UInt32       /* index to local symbols */
     let nlocalsym: UInt32       /* number of local symbols */
     
@@ -66,7 +66,7 @@ class DynamicSymbolTable: LoadCommand {
     let nlocrel: UInt32         /* number of local relocation entries */
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
         self.ilocalsym =
         translationStore.translate(next: .doubleWords,
