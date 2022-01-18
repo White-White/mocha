@@ -7,7 +7,7 @@
 
 import Foundation
 
-class LCSegment: LoadCommand {
+class Segment: LoadCommand {
     
     let is64Bit: Bool
     let segmentName: String
@@ -24,7 +24,7 @@ class LCSegment: LoadCommand {
     override var componentSubTitle: String { type.name + " (\(segmentName))" }
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
         
         let is64Bit = type == LoadCommandType.segment64
         self.is64Bit = is64Bit
@@ -64,7 +64,7 @@ class LCSegment: LoadCommand {
         self.flags = translationStore.translate(next: .doubleWords,
                                               dataInterpreter: { $0.UInt32 },
                                               itemContentGenerator: { flags in TranslationItemContent(description: "Flags",
-                                                                                                      explanation: LCSegment.flags(for: flags)) })
+                                                                                                      explanation: Segment.flags(for: flags)) })
         
         var sectionHeaders: [SectionHeader] = []
         for index in 0..<Int(numberOfSections) {

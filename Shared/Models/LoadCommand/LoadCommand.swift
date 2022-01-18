@@ -202,7 +202,7 @@ class LoadCommand: MachoComponent {
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
         self.type = type
-        let translationStore = translationStore ?? TranslationStore(machoDataSlice: data.truncated(from: 0, length: 8))
+        let translationStore = translationStore ?? TranslationStore(machoDataSlice: data.truncated(from: 0, length: 8), sectionTitle: nil)
         translationStore.insert(TranslationItemContent(description: "Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
         translationStore.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
         self.translationStore = translationStore
@@ -225,33 +225,29 @@ class LoadCommand: MachoComponent {
             let loadCommandClass: LoadCommand.Type
             switch type {
             case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
-                loadCommandClass = LCMinOSVersion.self
+                loadCommandClass = MinOSVersion.self
             case .linkerOption:
-                loadCommandClass = LCLinkerOption.self
+                loadCommandClass = LinkerOption.self
             case .segment, .segment64:
-                loadCommandClass = LCSegment.self
+                loadCommandClass = Segment.self
             case .symbolTable:
-                loadCommandClass = LCSymbolTable.self
+                loadCommandClass = SymbolTable.self
             case .dynamicSymbolTable:
-                loadCommandClass = LCDynamicSymbolTable.self
+                loadCommandClass = DynamicSymbolTable.self
             case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
-                loadCommandClass = LCDylib.self
+                loadCommandClass = Dylib.self
             case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
-                loadCommandClass = LCMonoString.self
+                loadCommandClass = LCOneString.self
             case .uuid:
                 loadCommandClass = LCUUID.self
             case .sourceVersion:
                 loadCommandClass = LCSourceVersion.self
-            case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
-                loadCommandClass = LCLinkedITData.self
+            case .dataInCode, .codeSignature, .functionStarts:
+                loadCommandClass = LinkedITData.self
             case .main:
                 loadCommandClass = LCMain.self
             case .dyldInfo, .dyldInfoOnly:
                 loadCommandClass = LCDyldInfo.self
-            case .encryptionInfo64,. encryptionInfo:
-                loadCommandClass = LCEncryptionInfo.self
-            case .buildVersion:
-                loadCommandClass = LCBuildVersion.self
             default:
                 Log.warning("Unknown load command \(type.name). Debug me.")
                 loadCommandClass = LoadCommand.self
@@ -261,5 +257,91 @@ class LoadCommand: MachoComponent {
         }
         
         return loadCommands
+    }
+}
+
+class LCOneString: LoadCommand {
+    
+    let stringOffset: UInt32
+    let string: String
+    
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        let stringOffset =  translationStore.translate(next: .doubleWords,
+                                                     dataInterpreter: DataInterpreterPreset.UInt32,
+                                                     itemContentGenerator: { stringOffset in TranslationItemContent(description: "String Offset", explanation: stringOffset.hex) })
+        self.stringOffset = stringOffset
+        
+        self.string = translationStore.translate(next: .rawNumber(data.count - Int(stringOffset)),
+                                               dataInterpreter: { $0.utf8String ?? Log.warning("Failed to parse \(type.name). Debug me.") },
+                                               itemContentGenerator: { string in TranslationItemContent(description: "Content", explanation: string) })
+        
+        super.init(with: type, data: data, translationStore: translationStore)
+    }
+}
+
+class LCUUID: LoadCommand {
+    
+    let uuid: UUID
+    
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        self.uuid = translationStore.translate(next: .rawNumber(16),
+                                             dataInterpreter: { uuidData in LCUUID.uuid(from: [UInt8](uuidData)) },
+                                             itemContentGenerator: { uuid in TranslationItemContent(description: "UUID", explanation: uuid.uuidString) })
+        super.init(with: type, data: data, translationStore: translationStore)
+    }
+    
+    static func uuid(from uuidData: [UInt8]) -> UUID {
+        return UUID(uuid: (uuidData[0], uuidData[1], uuidData[2], uuidData[3], uuidData[4], uuidData[5], uuidData[6], uuidData[7],
+                           uuidData[8], uuidData[9], uuidData[10], uuidData[11], uuidData[12], uuidData[13], uuidData[14], uuidData[15]))
+    }
+}
+
+class LCSourceVersion: LoadCommand {
+    
+    let version: String
+    
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        
+        self.version = translationStore.translate(next: .quadWords,
+                                                dataInterpreter: { LCSourceVersion.versionString(from: $0.UInt64) },
+                                                itemContentGenerator: { version in TranslationItemContent(description: "Source Version", explanation: version) })
+        
+        super.init(with: type, data: data, translationStore: translationStore)
+    }
+    
+    static func versionString(from versionValue: UInt64) -> String {
+        /* A.B.C.D.E packed as a24.b10.c10.d10.e10 */
+        let mask: Swift.UInt64 = 0x3ff
+        let e = versionValue & mask
+        let d = (versionValue >> 10) & mask
+        let c = (versionValue >> 20) & mask
+        let b = (versionValue >> 30) & mask
+        let a = versionValue >> 40
+        return String(format: "%d.%d.%d.%d.%d", a, b, c, d, e)
+    }
+}
+
+class LCMain: LoadCommand {
+    
+    let entryOffset: UInt64
+    let stackSize: UInt64
+    
+    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil).skip(.quadWords)
+        
+        self.entryOffset = translationStore.translate(next: .quadWords,
+                                                    dataInterpreter: { $0.UInt64 },
+                                                    itemContentGenerator: { entryOffset in TranslationItemContent(description: "Entry Offset (relative to __TEXT)",
+                                                                                                                  explanation: entryOffset.hex) })
+        
+        self.stackSize = translationStore.translate(next: .quadWords,
+                                                  dataInterpreter: { $0.UInt64 },
+                                                  itemContentGenerator: { stackSize in TranslationItemContent(description: "Stack Size",
+                                                                                                              explanation: stackSize.hex) })
+        
+        super.init(with: type, data: data, translationStore: translationStore)
     }
 }

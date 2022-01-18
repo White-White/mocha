@@ -31,7 +31,7 @@ struct RelocationEntry: InterpretableModel {
     
     init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
         
-        let translationStore = TranslationStore(machoDataSlice: data)
+        let translationStore = TranslationStore(machoDataSlice: data, sectionTitle: nil)
         
         self.address = translationStore.translate(next: .doubleWords,
                                                 dataInterpreter: DataInterpreterPreset.UInt32,

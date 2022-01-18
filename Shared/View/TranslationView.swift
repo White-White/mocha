@@ -24,7 +24,7 @@ private struct TranslationItemView: View {
                     .padding(.bottom, 2)
             }
             Text(item.content.explanation)
-                .foregroundColor(isSelected ? .white : item.content.explanationStyle.fontColor)
+                .foregroundColor(isSelected ? .white : .black)
                 .font(item.content.monoSpaced ? .system(size: 12).monospaced() : .system(size: 14))
                 .background(isSelected ? Theme.selected : .white)
             if let extraExplanation = item.content.extraExplanation {
@@ -75,11 +75,10 @@ struct TranslationView: View {
                 .environmentObject(self.selectedIndexWrapper)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if !item.content.explanationStyle.selectable { return }
                     self.selectedDataRange = item.sourceDataRange
                     self.selectedIndexWrapper.selectedIndex = index
                 }
-            if item.content.hasDivider {
+            if item.hasDivider {
                 Divider()
             }
         }

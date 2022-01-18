@@ -8,50 +8,18 @@
 import Foundation
 import SwiftUI
 
-enum ExplanationStyle {
-    case realContent
-    case extraDetail
-    
-    var selectable: Bool {
-        switch self {
-        case .realContent:
-            return true
-        case .extraDetail:
-            return false
-        }
-    }
-    
-    var fontColor: Color {
-        switch self {
-        case .realContent:
-            return .black
-        case .extraDetail:
-            return .gray
-        }
-    }
-}
-
 struct TranslationItemContent {
     
     let description: String?
     let explanation: String
-    let explanationStyle: ExplanationStyle
     let extraExplanation: String?
     let monoSpaced: Bool
-    let hasDivider: Bool
     
-    init(description: String?,
-         explanation: String,
-         explanationStyle: ExplanationStyle = .realContent,
-         monoSpaced: Bool = false,
-         extraExplanation: String? = nil,
-         hasDivider: Bool = false) {
+    init(description: String?, explanation: String, monoSpaced: Bool = false, extraExplanation: String? = nil) {
         self.description = description
         self.explanation = explanation
-        self.explanationStyle = explanationStyle
         self.extraExplanation = extraExplanation
         self.monoSpaced = monoSpaced
-        self.hasDivider = hasDivider
     }
 }
 
@@ -59,9 +27,11 @@ struct TranslationItem {
     
     var sourceDataRange: Range<Int>?
     let content: TranslationItemContent
+    let hasDivider: Bool
     
-    init(sourceDataRange: Range<Int>?, content: TranslationItemContent) {
+    init(sourceDataRange: Range<Int>?, content: TranslationItemContent, hasDivider: Bool = false) {
         self.sourceDataRange = sourceDataRange
         self.content = content
+        self.hasDivider = hasDivider
     }
 }
