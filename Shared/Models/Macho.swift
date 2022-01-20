@@ -159,9 +159,13 @@ class Macho: Equatable {
     /// name of the macho file
     let machoFileName: String
     let header: MachoHeader
+    var is64Bit: Bool { header.is64Bit }
     let loadCommands: [LoadCommand]
     var machoComponents: [MachoComponent] = []
+    
+    var allCStringInterpreters: [CStringInterpreter] = []
     var stringTableInterpreter: CStringInterpreter?
+    var symbolTableInterpreter: ModelBasedInterpreter<SymbolTableEntry>?
     
     let dynamicSymbolTable: LCDynamicSymbolTable? = nil //FIXME:
     
@@ -175,7 +179,7 @@ class Macho: Equatable {
         let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
         self.header = header
         
-        let allLoadCommandData = machoData.truncated(from: header.size, length: Int(header.sizeOfAllLoadCommand))
+        let allLoadCommandData = data.truncated(from: header.size, length: Int(header.sizeOfAllLoadCommand))
         let loadCommands = LoadCommand.loadCommands(from: allLoadCommandData, numberOfLoadCommands: Int(header.numberOfLoadCommands))
         self.loadCommands = loadCommands
         
@@ -189,35 +193,34 @@ class Macho: Equatable {
         loadCommands.forEach { loadCommand in
             if let segment = loadCommand as? LCSegment {
                 let componentsSection = segment.sectionHeaders.compactMap({
-                    Macho.machoComponent(from: $0, machoData: machoData, is64Bit: header.is64Bit)
+                    self.machoComponent(from: $0)
                 })
                 self.machoComponents.append(contentsOf: componentsSection)
                 
                 let componentsRelocations = segment.sectionHeaders.compactMap({
-                    Macho.relocationComponen(from: $0, machoData: machoData, is64Bit: header.is64Bit)
+                    self.relocationComponen(from: $0)
                 })
                 self.machoComponents.append(contentsOf: componentsRelocations)
             }
             
             if let linkedITData = (loadCommand as? LCLinkedITData), linkedITData.dataSize.isNotZero {
-                self.machoComponents.append(Macho.machoComponent(from: linkedITData, machoData: machoData, is64Bit: header.is64Bit))
+                self.machoComponents.append(self.machoComponent(from: linkedITData))
             }
             
             if let symbolTableCommand = (loadCommand as? LCSymbolTable) {
                 
-                let symbolTableComponent = Macho.symbolTableComponent(from: symbolTableCommand,
-                                                                      machoData: machoData,
-                                                                      is64Bit: header.is64Bit,
-                                                                      stringTableSearchingDelegate: self)
+                let symbolTableComponent = self.symbolTableComponent(from: symbolTableCommand)
                 
-                let stringTableComponent = Macho.stringTableComponent(from: symbolTableCommand, machoData: machoData, is64Bit: header.is64Bit)
+                let stringTableComponent = self.stringTableComponent(from: symbolTableCommand)
                 
+                self.symbolTableInterpreter = symbolTableComponent.interpreter as? ModelBasedInterpreter<SymbolTableEntry>
                 self.stringTableInterpreter = stringTableComponent.interpreter as? CStringInterpreter
+                
                 self.machoComponents.append(contentsOf: [symbolTableComponent, stringTableComponent])
             }
             
             if let dyldInfo = loadCommand as? LCDyldInfo {
-                let dyldInfoComponents = Macho.dyldInfoComponents(from: dyldInfo, machoData: machoData, is64Bit: header.is64Bit)
+                let dyldInfoComponents = self.dyldInfoComponents(from: dyldInfo)
                 self.machoComponents.append(contentsOf: dyldInfoComponents)
             }
         }
@@ -230,15 +233,16 @@ class Macho: Equatable {
 // MARK: MachoComponent Generation
 
 extension Macho {
-    fileprivate static func relocationComponen(from sectionHeader: SectionHeader, machoData: DataSlice, is64Bit: Bool) -> MachoComponent? {
+    fileprivate func relocationComponen(from sectionHeader: SectionHeader) -> MachoComponent? {
         let relocationOffset = Int(sectionHeader.fileOffsetOfRelocationEntries)
         let numberOfRelocEntries = Int(sectionHeader.numberOfRelocatioEntries)
         
         if relocationOffset != 0 && numberOfRelocEntries != 0 {
-            let entriesData = machoData.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.modelSize(is64Bit: is64Bit))
+            let entriesData = data.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.modelSize(is64Bit: is64Bit))
+            let interpreter = LazyModelBasedInterpreter<RelocationEntry>.init(entriesData, is64Bit: is64Bit, machoSearchSource: self)
             return MachoInterpreterBasedComponent.init(entriesData,
                                                        is64Bit: is64Bit,
-                                                       interpreterType: ModelBasedInterpreter<RelocationEntry>.self,
+                                                       interpreter: interpreter,
                                                        title: "Relocation Table",
                                                        subTitle: "__LINKEDIT" + "," + sectionHeader.section)
         } else {
@@ -246,88 +250,98 @@ extension Macho {
         }
     }
     
-    fileprivate static func machoComponent(from sectionHeader: SectionHeader, machoData: DataSlice, is64Bit: Bool) -> MachoComponent? {
+    fileprivate func machoComponent(from sectionHeader: SectionHeader) -> MachoComponent? {
         // zero filled section has no data from mach-o file
         guard !sectionHeader.isZerofilled else { return nil }
         
         // some section may contain zero bytes. (eg: cocoapods generated section)
         guard sectionHeader.size > 0 else { return nil }
         
-        var interpreterType: Interpreter.Type = ASCIIInterpreter.self
-        if sectionHeader.sectionType == .S_CSTRING_LITERALS {
-            interpreterType = CStringInterpreter.self
-        } else {
+        let dataSlice = data.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
+        let interpreter: Interpreter
+        
+        switch sectionHeader.sectionType {
+        case .S_CSTRING_LITERALS:
+            let cStringInterpreter = CStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            cStringInterpreter.componentStartVMAddr = Int(sectionHeader.addr)
+            cStringInterpreter.demanglingCString = true
+            self.allCStringInterpreters.append(cStringInterpreter)
+            interpreter = cStringInterpreter
+        case .S_LITERAL_POINTERS:
+            interpreter = LiteralPointerInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        default:
             switch sectionHeader.segment {
             case "__TEXT":
                 switch sectionHeader.section {
                 case "__text":
-                    interpreterType = CodeInterpreter.self
+                    interpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
                 default:
-                    break
+                    interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
                 }
-            case "__DATA":
-                break
+//            case "__DATA":
+//                break
             default:
-                break
+                interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             }
         }
         
-        return MachoInterpreterBasedComponent(machoData.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size)),
+        return MachoInterpreterBasedComponent(dataSlice,
                                               is64Bit: is64Bit,
-                                              interpreterType: interpreterType,
+                                              interpreter: interpreter,
                                               title: "Section",
                                               subTitle: sectionHeader.segment + "," + sectionHeader.section)
     }
     
-    fileprivate static func machoComponent(from linkedITData: LCLinkedITData, machoData: DataSlice, is64Bit: Bool) -> MachoComponent {
-        return MachoInterpreterBasedComponent(machoData.truncated(from: Int(linkedITData.fileOffset), length: Int(linkedITData.dataSize)),
+    fileprivate func machoComponent(from linkedITData: LCLinkedITData) -> MachoComponent {
+        let dataSlice = data.truncated(from: Int(linkedITData.fileOffset), length: Int(linkedITData.dataSize))
+        let interpreter = linkedITData.interpreterType.init(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        return MachoInterpreterBasedComponent(dataSlice,
                                               is64Bit: is64Bit,
-                                              interpreterType: linkedITData.interpreterType,
+                                              interpreter: interpreter,
                                               title: linkedITData.dataName,
                                               subTitle: "__LINKEDIT")
     }
     
-    fileprivate static func symbolTableComponent(from symbolTableCommand: LCSymbolTable,
-                                                 machoData: DataSlice,
-                                                 is64Bit: Bool,
-                                                 stringTableSearchingDelegate: StringTableSearchingDelegate) -> MachoInterpreterBasedComponent {
+    fileprivate func symbolTableComponent(from symbolTableCommand: LCSymbolTable) -> MachoInterpreterBasedComponent {
         let symbolTableStartOffset = Int(symbolTableCommand.symbolTableOffset)
         let numberOfEntries = Int(symbolTableCommand.numberOfSymbolTableEntries)
         let entrySize = is64Bit ? 16 : 12
-        let symbolTableData = machoData.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
+        let symbolTableData = data.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
+        let interpreter = ModelBasedInterpreter<SymbolTableEntry>.init(symbolTableData, is64Bit: is64Bit, machoSearchSource: self)
         return MachoInterpreterBasedComponent(symbolTableData,
                                               is64Bit: is64Bit,
-                                              interpreterType: ModelBasedInterpreter<SymbolTableEntry>.self,
+                                              interpreter: interpreter,
                                               title: "Symbol Table",
-                                              interpreterSettings: [.stringTableSearchingDelegate: stringTableSearchingDelegate],
                                               subTitle: "__LINKEDIT")
     }
     
-    fileprivate static func stringTableComponent(from symbolTableCommand: LCSymbolTable, machoData: DataSlice, is64Bit: Bool) -> MachoInterpreterBasedComponent {
+    fileprivate func stringTableComponent(from symbolTableCommand: LCSymbolTable) -> MachoInterpreterBasedComponent {
         let stringTableStartOffset = Int(symbolTableCommand.stringTableOffset)
         let stringTableSize = Int(symbolTableCommand.sizeOfStringTable)
-        let stringTableData = machoData.truncated(from: stringTableStartOffset, length: stringTableSize)
+        let stringTableData = data.truncated(from: stringTableStartOffset, length: stringTableSize)
+        let interpreter = CStringInterpreter(stringTableData, is64Bit: is64Bit, machoSearchSource: self)
+        allCStringInterpreters.append(interpreter)
+        
         return MachoInterpreterBasedComponent(stringTableData,
                                               is64Bit: is64Bit,
-                                              interpreterType: CStringInterpreter.self,
+                                              interpreter: interpreter,
                                               title: "String Table",
-                                              interpreterSettings: [.shouldDemangleCString: true],
                                               subTitle: "__LINKEDIT")
     }
     
-    fileprivate static func dyldInfoComponents(from dyldInfoCommand: LCDyldInfo, machoData: DataSlice, is64Bit: Bool) -> [MachoComponent] {
+    fileprivate func dyldInfoComponents(from dyldInfoCommand: LCDyldInfo) -> [MachoComponent] {
         var components: [MachoComponent] = []
         
         let rebaseInfoStart = Int(dyldInfoCommand.rebaseOffset)
         let rebaseInfoSize = Int(dyldInfoCommand.rebaseSize)
         if rebaseInfoStart.isNotZero && rebaseInfoSize.isNotZero {
-            let rebaseInfoData = machoData.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
+            let rebaseInfoData = data.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
+            let interpreter = OperationCodeInterpreter<RebaseOperationCode>.init(rebaseInfoData, is64Bit: is64Bit, machoSearchSource: self)
             let rebaseInfoComponent = MachoInterpreterBasedComponent(rebaseInfoData,
-                                                  is64Bit: is64Bit,
-                                                  interpreterType: OperationCodeInterpreter<RebaseOperationCode>.self,
-                                                  title: "Rebase Opcode",
-                                                  interpreterSettings: nil,
-                                                  subTitle: "__LINKEDIT")
+                                                                     is64Bit: is64Bit,
+                                                                     interpreter: interpreter,
+                                                                     title: "Rebase Opcode",
+                                                                     subTitle: "__LINKEDIT")
             components.append(rebaseInfoComponent)
         }
         
@@ -335,51 +349,51 @@ extension Macho {
         let bindInfoStart = Int(dyldInfoCommand.bindOffset)
         let bindInfoSize = Int(dyldInfoCommand.bindSize)
         if bindInfoStart.isNotZero && bindInfoSize.isNotZero {
-            let bindInfoData = machoData.truncated(from: bindInfoStart, length: bindInfoSize)
+            let bindInfoData = data.truncated(from: bindInfoStart, length: bindInfoSize)
+            let interpreter = OperationCodeInterpreter<BindOperationCode>.init(bindInfoData, is64Bit: is64Bit, machoSearchSource: self)
             let bindingInfoComponent = MachoInterpreterBasedComponent(bindInfoData,
-                                                  is64Bit: is64Bit,
-                                                  interpreterType: OperationCodeInterpreter<BindOperationCode>.self,
-                                                  title: "Binding Opcode",
-                                                  interpreterSettings: nil,
-                                                  subTitle: "__LINKEDIT")
+                                                                      is64Bit: is64Bit,
+                                                                      interpreter: interpreter,
+                                                                      title: "Binding Opcode",
+                                                                      subTitle: "__LINKEDIT")
             components.append(bindingInfoComponent)
         }
         
         let weakBindInfoStart = Int(dyldInfoCommand.weakBindOffset)
         let weakBindSize = Int(dyldInfoCommand.weakBindSize)
         if weakBindInfoStart.isNotZero && weakBindSize.isNotZero {
-            let weakBindData = machoData.truncated(from: weakBindInfoStart, length: weakBindSize)
+            let weakBindData = data.truncated(from: weakBindInfoStart, length: weakBindSize)
+            let interpreter = OperationCodeInterpreter<BindOperationCode>.init(weakBindData, is64Bit: is64Bit, machoSearchSource: self)
             let weakBindingInfoComponent = MachoInterpreterBasedComponent(weakBindData,
-                                                  is64Bit: is64Bit,
-                                                  interpreterType: OperationCodeInterpreter<BindOperationCode>.self,
-                                                  title: "Weak Binding Opcode",
-                                                  interpreterSettings: nil,
-                                                  subTitle: "__LINKEDIT")
+                                                                          is64Bit: is64Bit,
+                                                                          interpreter: interpreter,
+                                                                          title: "Weak Binding Opcode",
+                                                                          subTitle: "__LINKEDIT")
             components.append(weakBindingInfoComponent)
         }
         
         let lazyBindInfoStart = Int(dyldInfoCommand.lazyBindOffset)
         let lazyBindSize = Int(dyldInfoCommand.lazyBindSize)
         if lazyBindInfoStart.isNotZero && lazyBindSize.isNotZero {
-            let lazyBindData = machoData.truncated(from: lazyBindInfoStart, length: lazyBindSize)
+            let lazyBindData = data.truncated(from: lazyBindInfoStart, length: lazyBindSize)
+            let interpreter = OperationCodeInterpreter<BindOperationCode>.init(lazyBindData, is64Bit: is64Bit, machoSearchSource: self)
             let lazyBindingInfoComponent = MachoInterpreterBasedComponent(lazyBindData,
-                                                  is64Bit: is64Bit,
-                                                  interpreterType: OperationCodeInterpreter<BindOperationCode>.self,
-                                                  title: "Lazy Binding Opcode",
-                                                  interpreterSettings: nil,
-                                                  subTitle: "__LINKEDIT")
+                                                                          is64Bit: is64Bit,
+                                                                          interpreter: interpreter,
+                                                                          title: "Lazy Binding Opcode",
+                                                                          subTitle: "__LINKEDIT")
             components.append(lazyBindingInfoComponent)
         }
         
         let exportInfoStart = Int(dyldInfoCommand.exportOffset)
         let exportInfoSize = Int(dyldInfoCommand.exportSize)
         if exportInfoStart.isNotZero && exportInfoSize.isNotZero {
-            let exportInfoData = machoData.truncated(from: exportInfoStart, length: exportInfoSize)
+            let exportInfoData = data.truncated(from: exportInfoStart, length: exportInfoSize)
+            let interpreter = ExportInfoInterpreter.init(exportInfoData, is64Bit: is64Bit, machoSearchSource: self)
             let exportInfoComponent = MachoInterpreterBasedComponent(exportInfoData,
                                                                      is64Bit: is64Bit,
-                                                                     interpreterType: ExportInfoInterpreter.self,
+                                                                     interpreter: interpreter,
                                                                      title: "Export Info",
-                                                                     interpreterSettings: nil,
                                                                      subTitle: "__LINKEDIT")
             components.append(exportInfoComponent)
         }
@@ -390,12 +404,32 @@ extension Macho {
 
 // MARK: Search String Table
 
-protocol StringTableSearchingDelegate: AnyObject {
+protocol MachoSearchSource: AnyObject {
+    
     func searchStringTable(with stringTableByteIndex: Int) -> CStringInterpreter.StringTableSearched?
+    func searchString(byRVA relativeVirtualAddress: Int) -> CStringInterpreter.StringTableSearched?
+    
+    func searchSymbolTable(with nValue: UInt64) -> SymbolTableEntry?
+    
 }
 
-extension Macho: StringTableSearchingDelegate {
+extension Macho: MachoSearchSource {
+    
     func searchStringTable(with stringTableByteIndex: Int) -> CStringInterpreter.StringTableSearched? {
         return self.stringTableInterpreter?.findString(at: stringTableByteIndex)
+    }
+    
+    func searchString(byRVA rva: Int) -> CStringInterpreter.StringTableSearched? {
+        for cStringInterpreter in self.allCStringInterpreters {
+            if rva >= cStringInterpreter.componentStartVMAddr
+                && rva < (cStringInterpreter.componentStartVMAddr + cStringInterpreter.data.count) {
+                return cStringInterpreter.findString(by: rva)
+            }
+        }
+        return nil
+    }
+    
+    func searchSymbolTable(with nValue: UInt64) -> SymbolTableEntry? {
+        return self.symbolTableInterpreter?.searchSymbol(with: nValue)
     }
 }

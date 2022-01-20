@@ -22,7 +22,7 @@ class LCLinkedITData: LoadCommand {
     var interpreterType: Interpreter.Type {
         switch self.type {
         case .dataInCode:
-            return ModelBasedInterpreter<DataInCodeModel>.self
+            return LazyModelBasedInterpreter<DataInCodeModel>.self
         case .codeSignature:
             return CodeSignatureInterpreter.self
         case .functionStarts:

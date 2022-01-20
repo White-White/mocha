@@ -36,6 +36,7 @@ struct TranslationItemContent {
     let description: String?
     let explanation: String
     let explanationStyle: ExplanationStyle
+    let extraDescription: String?
     let extraExplanation: String?
     let monoSpaced: Bool
     let hasDivider: Bool
@@ -43,13 +44,18 @@ struct TranslationItemContent {
     init(description: String?,
          explanation: String,
          explanationStyle: ExplanationStyle = .realContent,
-         monoSpaced: Bool = false,
+         extraDescription: String? = nil,
          extraExplanation: String? = nil,
+         monoSpaced: Bool = false,
          hasDivider: Bool = false) {
+        
         self.description = description
         self.explanation = explanation
         self.explanationStyle = explanationStyle
+        
+        self.extraDescription = extraDescription
         self.extraExplanation = extraExplanation
+        
         self.monoSpaced = monoSpaced
         self.hasDivider = hasDivider
     }

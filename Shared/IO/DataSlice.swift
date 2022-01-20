@@ -85,7 +85,7 @@ extension DataSlice {
         return startIndex+start..<startIndex+start+length
     }
     
-    func absoluteRange(_ range: Range<Int>) -> Range<Int> {
-        return startIndex+range.lowerBound..<startIndex+range.upperBound
+    func absoluteRange(_ relativeRange: Range<Int>) -> Range<Int> {
+        return startIndex+relativeRange.lowerBound..<startIndex+relativeRange.upperBound
     }
 }

@@ -7,28 +7,28 @@
 
 import Foundation
 
-struct CStringRawData {
-    let data: Data
-    let range: Range<Int>
+struct CStringPosition {
+    let relativeStartOffset: Int
+    let relativeVirtualAddress: Int
+    let length: Int
 }
 
 
-class CStringInterpreter: BaseInterpreter<[CStringRawData]> {
+class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
     
     override var shouldPreload: Bool { true }
+    var demanglingCString: Bool = false
+    var componentStartVMAddr: Int = 0
     
-    let demanglingCString: Bool
-    
-    required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
-        self.demanglingCString = (settings?[.shouldDemangleCString] as? Bool) ?? false
-        super.init(data, is64Bit: is64Bit, settings: settings)
+    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
+        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
     
-    override func generatePayload() -> [CStringRawData] {
+    override func generatePayload() -> [CStringPosition] {
         let rawData = self.data.raw
-        var cStringRaws: [CStringRawData] = []
+        var cStringPositions: [CStringPosition] = []
         var indexOfLastNull: Int? // index of last null char ( "\0" )
-        
+
         for (indexOfCurNull, byte) in rawData.enumerated() {
             guard byte == 0 else { continue } // find null characters
             
@@ -40,16 +40,15 @@ class CStringInterpreter: BaseInterpreter<[CStringRawData]> {
             
             let nextCStringStartIndex = lastIndex + 1 // lastIdnex points to last null, ignore
             let nextCStringDataLength = indexOfCurNull - nextCStringStartIndex
-            let nextCStringRawData = rawData.select(from: nextCStringStartIndex, length: nextCStringDataLength)
             
-            let cStringRaw = CStringRawData(data: nextCStringRawData,
-                                            range: nextCStringStartIndex..<nextCStringStartIndex+nextCStringDataLength)
-            
-            cStringRaws.append(cStringRaw)
+            let cStringPosition = CStringPosition(relativeStartOffset: nextCStringStartIndex,
+                                                  relativeVirtualAddress: nextCStringStartIndex + componentStartVMAddr,
+                                                  length: nextCStringDataLength)
+            cStringPositions.append(cStringPosition)
             indexOfLastNull = indexOfCurNull
         }
         
-        return cStringRaws
+        return cStringPositions
     }
     
     override var numberOfTranslationItems: Int {
@@ -57,15 +56,17 @@ class CStringInterpreter: BaseInterpreter<[CStringRawData]> {
     }
     
     override func translationItem(at index: Int) -> TranslationItem {
-        let cStringRaw = self.payload[index]
-        let stringLength = cStringRaw.range.upperBound - cStringRaw.range.lowerBound
-        if let string = cStringRaw.data.utf8String {
+        let cStringPosition = self.payload[index]
+        let cStringRelativeRange = cStringPosition.relativeStartOffset..<cStringPosition.relativeStartOffset+cStringPosition.length
+        let cStringAbsoluteRange = self.data.absoluteRange(cStringRelativeRange)
+        let cStringRaw = self.data.truncated(from: cStringPosition.relativeStartOffset, length: cStringPosition.length).raw
+        if let string = cStringRaw.utf8String {
             let explanation: String = string.replacingOccurrences(of: "\n", with: "\\n")
             let demangledCString: String? = self.demanglingCString ? swift_demangle(explanation) : nil
-            return TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
+            return TranslationItem(sourceDataRange: cStringAbsoluteRange,
                                    content: TranslationItemContent(description: "UTF8-String", explanation: explanation, extraExplanation: demangledCString))
         } else {
-            return TranslationItem(sourceDataRange: data.absoluteRange(cStringRaw.range.lowerBound, stringLength),
+            return TranslationItem(sourceDataRange: cStringAbsoluteRange,
                                    content: TranslationItemContent(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF8 String"))
         }
     }
@@ -81,9 +82,9 @@ extension CStringInterpreter {
     }
     
     func findString(at stringTableByteIndex: Int) -> StringTableSearched? {
-        // FIXME: wasting too much time
-        for interpretedString in self.payload {
-            if interpretedString.range.lowerBound == stringTableByteIndex, let stringValue = interpretedString.data.utf8String {
+        for cStringPosition in self.payload {
+            if cStringPosition.relativeStartOffset == stringTableByteIndex,
+               let stringValue = self.data.truncated(from: cStringPosition.relativeStartOffset, length: cStringPosition.length).raw.utf8String {
                 return StringTableSearched(value: stringValue,
                                            demangled: self.demanglingCString ? swift_demangle(stringValue) : nil)
             }
@@ -91,4 +92,13 @@ extension CStringInterpreter {
         return nil
     }
     
+    func findString(by relativeVirtualAddress: Int) -> StringTableSearched? {
+        for cStringPosition in self.payload {
+            if cStringPosition.relativeVirtualAddress == relativeVirtualAddress,
+               let stringValue = self.data.truncated(from: cStringPosition.relativeStartOffset, length: cStringPosition.length).raw.utf8String {
+                return StringTableSearched(value: stringValue, demangled: nil)
+            }
+        }
+        return nil
+    }
 }

@@ -56,7 +56,7 @@ extension UInt32 {
 }
 
 extension UInt64 {
-    var hex: String { String(format: "0x%0X", self) }
+    var hex: String { String(format: "0x%llX", self) }
     var isNotZero: Bool { self != .zero }
 }
 

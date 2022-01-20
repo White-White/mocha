@@ -8,7 +8,7 @@
 import Foundation
 
 protocol InterpretableModel {
-    init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey: Any]?)
+    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?)
     func translationItem(at index: Int) -> TranslationItem
     static func modelSize(is64Bit: Bool) -> Int
     static func numberOfTranslationItems() -> Int
@@ -16,15 +16,44 @@ protocol InterpretableModel {
 
 class ModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]> {
     
-    private var modelsCache: [Model?]
+    override var shouldPreload: Bool { true }
+    
+    override func generatePayload() -> [Model] {
+        let modelSize = Model.modelSize(is64Bit: is64Bit)
+        let numberOfModels = data.count / modelSize
+        var models: [Model] = []
+        for index in 0..<numberOfModels {
+            let modelSize = Model.modelSize(is64Bit: self.is64Bit)
+            let modelData = data.truncated(from: index * modelSize, length: modelSize)
+            let model = Model(with: modelData, is64Bit: self.is64Bit, machoSearchSource: self.machoSearchSource)
+            models.append(model)
+        }
+        return models
+    }
+
+    override var numberOfTranslationItems: Int {
+        return self.payload.count * Model.numberOfTranslationItems()
+    }
+    
+    override func translationItem(at index: Int) -> TranslationItem {
+        let numberOfTransItemsPerModel = Model.numberOfTranslationItems()
+        let modelIndex = index / numberOfTransItemsPerModel
+        let modelItemOffset = index % numberOfTransItemsPerModel
+        return self.payload[modelIndex].translationItem(at: modelItemOffset)
+    }
+}
+
+class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]> {
+    
     private let numberOfAllTranslationItems: Int
     
-    required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
+    override var payload: [Model] { fatalError() }
+    
+    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
         let modelSize = Model.modelSize(is64Bit: is64Bit)
         let numberOfModels = data.count / modelSize
         self.numberOfAllTranslationItems = numberOfModels * Model.numberOfTranslationItems()
-        self.modelsCache = [Model?](repeating: nil, count: numberOfModels)
-        super.init(data, is64Bit: is64Bit, settings: settings)
+        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
 
     override var numberOfTranslationItems: Int {
@@ -39,14 +68,22 @@ class ModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]>
     }
     
     private func model(at index: Int) -> Model {
-        if let model = modelsCache[index] {
-            return model
-        } else {
-            let modelSize = Model.modelSize(is64Bit: self.is64Bit)
-            let modelData = data.truncated(from: index * modelSize, length: modelSize)
-            let model = Model(with: modelData, is64Bit: self.is64Bit, settings: self.settings)
-            modelsCache[index] = model
-            return model
-        }
+        let modelSize = Model.modelSize(is64Bit: self.is64Bit)
+        let modelData = data.truncated(from: index * modelSize, length: modelSize)
+        let model = Model(with: modelData, is64Bit: self.is64Bit, machoSearchSource: machoSearchSource)
+        return model
     }
+}
+
+extension ModelBasedInterpreter where Model == SymbolTableEntry {
+    
+    func searchSymbol(with nValue: Swift.UInt64) -> SymbolTableEntry? {
+        for symbolEntry in self.payload {
+            if symbolEntry.n_value == nValue {
+                return symbolEntry
+            }
+        }
+        return nil
+    }
+    
 }

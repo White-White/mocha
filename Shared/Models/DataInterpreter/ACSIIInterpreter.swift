@@ -11,11 +11,11 @@ class ASCIIInterpreter: BaseInterpreter<[String]> {
     
     private let numberOfASCIILines: Int
     
-    required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
+    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
         var numberOfASCIILines = data.count / HexLineStore.NumberOfBytesPerLine
         if data.count % HexLineStore.NumberOfBytesPerLine != 0 { numberOfASCIILines += 1 }
         self.numberOfASCIILines = numberOfASCIILines
-        super.init(data, is64Bit: is64Bit, settings: settings)
+        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
     
     override var numberOfTranslationItems: Int {

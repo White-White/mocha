@@ -87,18 +87,33 @@ This project is still in development.
 | LC_DYLD_CHAINED_FIXUPS | ⌛️ |        
 | LC_FILESET_ENTRY | ⌛️ |
 
-| Section (__TEXT)   | Supported  |
+| Section Type | Supported  |
 |  ----  | ----  |
-| __text  | ✅ |
+| S_REGULAR | ✅ |
+| S_ZEROFILL | ✅ |
+| S_CSTRING_LITERALS | ✅ |
+| S_4BYTE_LITERALS | ⏳ |
+| S_8BYTE_LITERALS | ⏳ |
+| S_LITERAL_POINTERS | ✅ |
+| S_NON_LAZY_SYMBOL_POINTERS | ⏳ |
+| S_LAZY_SYMBOL_POINTERS | ⏳ |
+| S_SYMBOL_STUBS | ⏳ |
+| S_MOD_INIT_FUNC_POINTERS | ⏳ |
+| S_MOD_TERM_FUNC_POINTERS | ⏳ |
+| S_COALESCED | ⏳ |
+| S_GB_ZEROFILL | ⏳ |
+| S_INTERPOSING | ⏳ |
+| S_16BYTE_LITERALS | ⏳ |
+| S_DTRACE_DOF | ⏳ |
+| S_LAZY_DYLIB_SYMBOL_POINTERS | ⏳ |
+| S_THREAD_LOCAL_REGULAR | ⏳ |
+| S_THREAD_LOCAL_ZEROFILL | ⏳ |
+| S_THREAD_LOCAL_VARIABLES | ⏳ |
+| S_THREAD_LOCAL_VARIABLE_POINTERS | ⏳ |
+| S_THREAD_LOCAL_INIT_FUNCTION_POINTERS | ⏳ |
+| S_INIT_FUNC_OFFSETS  | ⏳ |
 
-| Section (__DATA)   | Supported  |
-|  ----  | ----  |
-| __cstring  | ✅ |
-|  _\_objc\_classname | ✅ |
-|  _\_objc\_methtype | ✅ |
-|  _\_objc\_methname | ✅ |
-
-| Section (__LinkedIT)   | Supported  |
+| LinkedIT Type   | Supported  |
 |  ----  | ----  |
 | Rebase Info  | ✅ |
 | Binding Info  | ✅ |

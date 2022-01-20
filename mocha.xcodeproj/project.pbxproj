@@ -41,6 +41,7 @@
 		1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504D279051FF004327BB /* BindOperationCode.swift */; };
 		1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */; };
 		1FB6505227918F85004327BB /* InterpreterUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6505127918F85004327BB /* InterpreterUtils.swift */; };
+		1FBB28222799483800E7C53D /* LiteralPointerInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */; };
 		1FC11B0A277B10F3008D42D9 /* HexLineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B09277B10F3008D42D9 /* HexLineStore.swift */; };
 		1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */; };
 		1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258CE275F6250008C2826 /* TranslationItem.swift */; };
@@ -102,6 +103,7 @@
 		1FB6504D279051FF004327BB /* BindOperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindOperationCode.swift; sourceTree = "<group>"; };
 		1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportInfoInterpreter.swift; sourceTree = "<group>"; };
 		1FB6505127918F85004327BB /* InterpreterUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterUtils.swift; sourceTree = "<group>"; };
+		1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteralPointerInterpreter.swift; sourceTree = "<group>"; };
 		1FC11B09277B10F3008D42D9 /* HexLineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexLineStore.swift; sourceTree = "<group>"; };
 		1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
 		1FC258CE275F6250008C2826 /* TranslationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItem.swift; sourceTree = "<group>"; };
@@ -288,6 +290,7 @@
 				1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */,
 				1FFCA6E32780C29C00634B79 /* ULEB128Interpreter.swift */,
 				1FFCA6EB278487D300634B79 /* ACSIIInterpreter.swift */,
+				1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */,
 				1FFE55F527802E9900ECD395 /* ModelBasedInterpreter */,
 				1FB6504627904933004327BB /* DyldInfoInterpreter */,
 			);
@@ -375,6 +378,7 @@
 				1F73C706275A322C0020E581 /* Theme.swift in Sources */,
 				1FFCA6E02780C20700634B79 /* ModelBasedInterpreter.swift in Sources */,
 				1FFE55FB278030DA00ECD395 /* LCLinkerOption.swift in Sources */,
+				1FBB28222799483800E7C53D /* LiteralPointerInterpreter.swift in Sources */,
 				1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */,
 				1FFE56022780325D00ECD395 /* LCDylib.swift in Sources */,
 				1F6212ED279693BE009A9154 /* LCBuildVersion.swift in Sources */,

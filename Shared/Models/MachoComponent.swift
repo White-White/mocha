@@ -51,12 +51,11 @@ class MachoInterpreterBasedComponent: MachoComponent {
     
     init(_ machoDataSlice: DataSlice,
          is64Bit: Bool,
-         interpreterType: Interpreter.Type,
+         interpreter: Interpreter,
          title: String,
-         interpreterSettings: [InterpreterSettingsKey: Any]? = nil,
          subTitle: String? = nil,
          description: String? = nil) {
-        self.interpreter = interpreterType.init(machoDataSlice, is64Bit: is64Bit, settings: interpreterSettings)
+        self.interpreter = interpreter
         self.title = title
         self.subTitle = subTitle
         self.description = description

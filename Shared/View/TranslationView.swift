@@ -27,6 +27,13 @@ private struct TranslationItemView: View {
                 .foregroundColor(isSelected ? .white : item.content.explanationStyle.fontColor)
                 .font(item.content.monoSpaced ? .system(size: 12).monospaced() : .system(size: 14))
                 .background(isSelected ? Theme.selected : .white)
+            if let extraDescription = item.content.extraDescription {
+                Text(extraDescription)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .padding(.top, 2)
+                    .padding(.bottom, 2)
+            }
             if let extraExplanation = item.content.extraExplanation {
                 Text(extraExplanation)
                     .foregroundColor(.gray)

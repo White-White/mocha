@@ -7,13 +7,8 @@
 
 import Foundation
 
-enum InterpreterSettingsKey {
-    case shouldDemangleCString
-    case stringTableSearchingDelegate
-}
-
 protocol Interpreter {
-    init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey: Any]?)
+    init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?)
     var numberOfTranslationItems: Int { get }
     func translationItem(at index: Int) -> TranslationItem
 }
@@ -22,7 +17,7 @@ class BaseInterpreter<Payload>: Interpreter {
     
     let data: DataSlice
     let is64Bit: Bool
-    let settings: [InterpreterSettingsKey: Any]?
+    weak var machoSearchSource: MachoSearchSource?
     var shouldPreload: Bool { false }
     
     private let preloadingLock = NSRecursiveLock()
@@ -44,10 +39,10 @@ class BaseInterpreter<Payload>: Interpreter {
         return ret
     }
     
-    required init(_ data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
+    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
         self.data = data
         self.is64Bit = is64Bit
-        self.settings = settings
+        self.machoSearchSource = machoSearchSource
         self.preloadIfNeeded()
     }
     

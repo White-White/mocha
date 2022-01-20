@@ -48,14 +48,14 @@ struct SymbolTableEntry: InterpretableModel {
     
     let translationStore: TranslationStore
     
-    init(with data: DataSlice, is64Bit: Bool, settings: [InterpreterSettingsKey : Any]? = nil) {
+    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
         
         let translationStore = TranslationStore(machoDataSlice: data)
         
         self.indexInStringTable = translationStore.translate(next: .doubleWords,
                                                            dataInterpreter: DataInterpreterPreset.UInt32,
                                                            itemContentGenerator: { indexInStringTable in
-            let demangledString = (settings?[.stringTableSearchingDelegate] as? StringTableSearchingDelegate)?.searchStringTable(with: Int(indexInStringTable))?.value
+            let demangledString = machoSearchSource?.searchStringTable(with: Int(indexInStringTable))?.value
             return TranslationItemContent(description: "String table index", explanation: indexInStringTable.hex, extraExplanation: demangledString)
         })
         
