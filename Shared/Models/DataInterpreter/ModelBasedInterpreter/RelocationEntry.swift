@@ -29,7 +29,7 @@ struct RelocationEntry: InterpretableModel {
     
     let translationStore: TranslationStore
     
-    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
+    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         
         let translationStore = TranslationStore(machoDataSlice: data)
         
@@ -42,7 +42,7 @@ struct RelocationEntry: InterpretableModel {
                                                   itemContentGenerator: { value in TranslationItemContent(description: "symbolNum", explanation: "\(value)") })
         
         let rangeOfLastByte = data.absoluteRange(7, 1)
-        let lastByte = data.truncated(from: 7, length: 1).raw.first!
+        let lastByte = data.truncated(from: 7, length: 1).raw.UInt8
         
         let pcRelocated = (lastByte & 0b10000000) != 0
         self.pcRelocated = pcRelocated

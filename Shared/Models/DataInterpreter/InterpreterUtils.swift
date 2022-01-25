@@ -33,6 +33,7 @@ class InterpreterUtils {
     }
     
     private static func _readULEB128(in data: Data, at offset: Int) -> (Swift.UInt64, Swift.UInt32, Int) {
+        // ref: https://opensource.apple.com/source/ld64/ld64-127.2/src/other/dyldinfo.cpp in function printFunctionStartsInfo
         var index = offset
         var delta: Swift.UInt64 = 0
         var shift: Swift.UInt32 = 0

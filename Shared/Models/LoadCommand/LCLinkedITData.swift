@@ -19,22 +19,6 @@ class LCLinkedITData: LoadCommand {
     let fileOffset: UInt32
     let dataSize: UInt32
     
-    var interpreterType: Interpreter.Type {
-        switch self.type {
-        case .dataInCode:
-            return LazyModelBasedInterpreter<DataInCodeModel>.self
-        case .codeSignature:
-            return CodeSignatureInterpreter.self
-        case .functionStarts:
-            return ULEB128Interpreter.self
-        case .dyldExportsTrie:
-            return ExportInfoInterpreter.self
-        default:
-            print("Unknow how to parse \(self). Please contact the author.")
-            return ASCIIInterpreter.self // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
-        }
-    }
-    
     var dataName: String {
         switch self.type {
         case .dataInCode:

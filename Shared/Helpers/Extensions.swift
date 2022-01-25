@@ -9,6 +9,10 @@ import Foundation
 import SwiftUI
 
 extension Data {
+    var UInt8: UInt8 {
+        if (self.count != 1) { fatalError() }
+        return self.first!
+    }
     var UInt16: UInt16 {
         if (self.count != 2) { fatalError() }
         return self.withUnsafeBytes { $0.load(as: Swift.UInt16.self) }

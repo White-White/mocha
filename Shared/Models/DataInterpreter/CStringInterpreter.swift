@@ -9,7 +9,7 @@ import Foundation
 
 struct CStringPosition {
     let relativeStartOffset: Int
-    let relativeVirtualAddress: Int
+    let relativeVirtualAddress: Swift.UInt64
     let length: Int
 }
 
@@ -18,9 +18,9 @@ class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
     
     override var shouldPreload: Bool { true }
     var demanglingCString: Bool = false
-    var componentStartVMAddr: Int = 0
+    var componentStartVMAddr: Swift.UInt64 = 0
     
-    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
+    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
     
@@ -42,7 +42,7 @@ class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
             let nextCStringDataLength = indexOfCurNull - nextCStringStartIndex
             
             let cStringPosition = CStringPosition(relativeStartOffset: nextCStringStartIndex,
-                                                  relativeVirtualAddress: nextCStringStartIndex + componentStartVMAddr,
+                                                  relativeVirtualAddress: Swift.UInt64(nextCStringStartIndex) + componentStartVMAddr,
                                                   length: nextCStringDataLength)
             cStringPositions.append(cStringPosition)
             indexOfLastNull = indexOfCurNull
@@ -76,27 +76,21 @@ class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
 
 extension CStringInterpreter {
     
-    struct StringTableSearched {
-        let value: String?
-        let demangled: String?
-    }
-    
-    func findString(at stringTableByteIndex: Int) -> StringTableSearched? {
-        for cStringPosition in self.payload {
-            if cStringPosition.relativeStartOffset == stringTableByteIndex,
-               let stringValue = self.data.truncated(from: cStringPosition.relativeStartOffset, length: cStringPosition.length).raw.utf8String {
-                return StringTableSearched(value: stringValue,
-                                           demangled: self.demanglingCString ? swift_demangle(stringValue) : nil)
-            }
+    func findString(at offset: Int) -> String? {
+        let rawData = self.data.raw
+        for index in offset..<rawData.count {
+            let byte = rawData[rawData.startIndex+index]
+            if byte != 0 { continue }
+            let length = index - offset + 1
+            return self.data.truncated(from: offset, length: length).raw.utf8String
         }
         return nil
     }
     
-    func findString(by relativeVirtualAddress: Int) -> StringTableSearched? {
+    func findString(with relativeVirtualAddress: Swift.UInt64) -> String? {
         for cStringPosition in self.payload {
-            if cStringPosition.relativeVirtualAddress == relativeVirtualAddress,
-               let stringValue = self.data.truncated(from: cStringPosition.relativeStartOffset, length: cStringPosition.length).raw.utf8String {
-                return StringTableSearched(value: stringValue, demangled: nil)
+            if cStringPosition.relativeVirtualAddress == relativeVirtualAddress {
+                return self.data.truncated(from: cStringPosition.relativeStartOffset, length: cStringPosition.length).raw.utf8String
             }
         }
         return nil

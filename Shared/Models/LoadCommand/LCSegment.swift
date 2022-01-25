@@ -13,7 +13,7 @@ class LCSegment: LoadCommand {
     let segmentName: String
     let vmaddr: UInt64
     let vmsize: UInt64
-    let fileoff: UInt64
+    let segmentFileOff: UInt64
     let segmentSize: UInt64
     let maxprot: UInt32
     let initprot: UInt32
@@ -41,9 +41,9 @@ class LCSegment: LoadCommand {
                                                dataInterpreter: { $0.UInt64 },
                                                itemContentGenerator: { value in TranslationItemContent(description: "vmsize", explanation: value.hex) })
         
-        self.fileoff = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                               dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
+        self.segmentFileOff = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
+                                                         dataInterpreter: { $0.UInt64 },
+                                                         itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
         
         self.segmentSize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },

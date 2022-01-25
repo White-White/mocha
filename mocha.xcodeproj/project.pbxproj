@@ -11,6 +11,7 @@
 		1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F16F2202785FFBE0094E720 /* Demangle.swift */; };
 		1F16F22C278813E70094E720 /* DataShifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F16F22B278813E70094E720 /* DataShifter.swift */; };
 		1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F184B272769EBB700CA286A /* SymbolTableEntry.swift */; };
+		1F40ED2C279FF57700D93824 /* FunctionStartsInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2B279FF57700D93824 /* FunctionStartsInterpreter.swift */; };
 		1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */; };
 		1F6212E527967438009A9154 /* LCMonoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E427967438009A9154 /* LCMonoString.swift */; };
 		1F6212E72796744F009A9154 /* LCUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E62796744F009A9154 /* LCUUID.swift */; };
@@ -50,7 +51,6 @@
 		1FFCA6DE2780C1E600634B79 /* BaseInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6DD2780C1E600634B79 /* BaseInterpreter.swift */; };
 		1FFCA6E02780C20700634B79 /* ModelBasedInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6DF2780C20700634B79 /* ModelBasedInterpreter.swift */; };
 		1FFCA6E22780C22600634B79 /* CStringInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */; };
-		1FFCA6E42780C29C00634B79 /* ULEB128Interpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6E32780C29C00634B79 /* ULEB128Interpreter.swift */; };
 		1FFCA6E6278205CA00634B79 /* MachoComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6E5278205CA00634B79 /* MachoComponent.swift */; };
 		1FFCA6EC278487D300634B79 /* ACSIIInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6EB278487D300634B79 /* ACSIIInterpreter.swift */; };
 		1FFE55EB277DCFE300ECD395 /* Introspect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FFE55EA277DCFE300ECD395 /* Introspect */; };
@@ -69,6 +69,7 @@
 		1F16F2202785FFBE0094E720 /* Demangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demangle.swift; sourceTree = "<group>"; };
 		1F16F22B278813E70094E720 /* DataShifter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataShifter.swift; sourceTree = "<group>"; };
 		1F184B272769EBB700CA286A /* SymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTableEntry.swift; sourceTree = "<group>"; };
+		1F40ED2B279FF57700D93824 /* FunctionStartsInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionStartsInterpreter.swift; sourceTree = "<group>"; };
 		1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCEncryptionInfo.swift; sourceTree = "<group>"; };
 		1F6212E427967438009A9154 /* LCMonoString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCMonoString.swift; sourceTree = "<group>"; };
 		1F6212E62796744F009A9154 /* LCUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCUUID.swift; sourceTree = "<group>"; };
@@ -112,7 +113,6 @@
 		1FFCA6DD2780C1E600634B79 /* BaseInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseInterpreter.swift; sourceTree = "<group>"; };
 		1FFCA6DF2780C20700634B79 /* ModelBasedInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelBasedInterpreter.swift; sourceTree = "<group>"; };
 		1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CStringInterpreter.swift; sourceTree = "<group>"; };
-		1FFCA6E32780C29C00634B79 /* ULEB128Interpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ULEB128Interpreter.swift; sourceTree = "<group>"; };
 		1FFCA6E5278205CA00634B79 /* MachoComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoComponent.swift; sourceTree = "<group>"; };
 		1FFCA6EB278487D300634B79 /* ACSIIInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ACSIIInterpreter.swift; sourceTree = "<group>"; };
 		1FFE55F3277F766500ECD395 /* LCLinkedITData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCLinkedITData.swift; sourceTree = "<group>"; };
@@ -288,7 +288,7 @@
 				1FB6505127918F85004327BB /* InterpreterUtils.swift */,
 				1FFCA6DD2780C1E600634B79 /* BaseInterpreter.swift */,
 				1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */,
-				1FFCA6E32780C29C00634B79 /* ULEB128Interpreter.swift */,
+				1F40ED2B279FF57700D93824 /* FunctionStartsInterpreter.swift */,
 				1FFCA6EB278487D300634B79 /* ACSIIInterpreter.swift */,
 				1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */,
 				1FFE55F527802E9900ECD395 /* ModelBasedInterpreter */,
@@ -399,10 +399,10 @@
 				1FFE55F727802FA300ECD395 /* DataInCodeModel.swift in Sources */,
 				1FFE55FF2780312B00ECD395 /* LCSymbolTable.swift in Sources */,
 				1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */,
-				1FFCA6E42780C29C00634B79 /* ULEB128Interpreter.swift in Sources */,
 				1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */,
 				1F73C6D1275A31F00020E581 /* CPUType.swift in Sources */,
 				1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */,
+				1F40ED2C279FF57700D93824 /* FunctionStartsInterpreter.swift in Sources */,
 				1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */,
 				1F73C6CF275A31F00020E581 /* Macho.swift in Sources */,
 				1FFE55F4277F766500ECD395 /* LCLinkedITData.swift in Sources */,

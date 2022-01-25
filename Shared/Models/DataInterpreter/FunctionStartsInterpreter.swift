@@ -1,0 +1,66 @@
+//
+//  FunctionStartsInterpreter.swift
+//  mocha (macOS)
+//
+//  Created by white on 2022/1/25.
+//
+
+import Foundation
+
+struct FunctionStart {
+    let startOffset: Int
+    let byteLength: Int
+    let rawValue: Swift.UInt64
+}
+
+class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
+    
+    var functionStartBaseVirtualAddress: Swift.UInt64 = 0
+    
+    override func generatePayload() -> [FunctionStart] {
+        let rawData = self.data.raw
+        // ref: https://opensource.apple.com/source/ld64/ld64-127.2/src/other/dyldinfo.cpp in function printFunctionStartsInfo
+        // The code below decode (unsigned) LEB128 data into integers
+        var functionStarts: [FunctionStart] = []
+        var address: UInt64 = 0
+        var index = 0
+        while index < rawData.count {
+            var delta: Swift.UInt64 = 0
+            var shift: Swift.UInt32 = 0
+            var more = true
+            
+            let startIndex = index
+            repeat {
+                let byte = rawData[rawData.startIndex+index]; index += 1
+                delta |= ((Swift.UInt64(byte) & 0x7f) << shift)
+                shift += 7
+                if byte < 0x80 {
+                    address += delta
+                    functionStarts.append(FunctionStart(startOffset: startIndex, byteLength: index - startIndex, rawValue: address))
+                    more = false
+                }
+            } while (more)
+        }
+        return functionStarts
+    }
+    
+    override var numberOfTranslationItems: Int {
+        return self.payload.count
+    }
+    
+    override func translationItem(at index: Int) -> TranslationItem {
+        let functionStart = self.payload[index]
+        
+        var symbolName: String?
+        if let functionSymbol = self.machoSearchSource.searchSymbolTable(withRelativeVirtualAddress: functionStart.rawValue + functionStartBaseVirtualAddress),
+           let _symbolName = self.machoSearchSource.stringInStringTable(at: Int(functionSymbol.indexInStringTable)) {
+            symbolName = _symbolName
+        }
+        
+        return TranslationItem(sourceDataRange: data.absoluteRange(functionStart.startOffset, functionStart.byteLength),
+                               content: TranslationItemContent(description: "Address", explanation: functionStart.rawValue.hex,
+                                                               extraDescription: "Referred Symbol Name", extraExplanation: symbolName,
+                                                               hasDivider: true))
+    }
+    
+}

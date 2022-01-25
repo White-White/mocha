@@ -37,7 +37,7 @@ struct DataInCodeModel: InterpretableModel {
     let kind: DataInCodeKind
     let translationStore: TranslationStore
     
-    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource?) {
+    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
 
         let translationStore = TranslationStore(machoDataSlice: data)
         

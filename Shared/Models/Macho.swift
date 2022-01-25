@@ -161,6 +161,7 @@ class Macho: Equatable {
     let header: MachoHeader
     var is64Bit: Bool { header.is64Bit }
     let loadCommands: [LoadCommand]
+    let sectionHeaders: [SectionHeader]
     var machoComponents: [MachoComponent] = []
     
     var allCStringInterpreters: [CStringInterpreter] = []
@@ -183,28 +184,37 @@ class Macho: Equatable {
         let loadCommands = LoadCommand.loadCommands(from: allLoadCommandData, numberOfLoadCommands: Int(header.numberOfLoadCommands))
         self.loadCommands = loadCommands
         
+        var baseRelativeVirtualAddress: UInt64 = 0
+        var sectionHeaders: [SectionHeader] = []
+        loadCommands.forEach { loadCommand in
+            if let segment = loadCommand as? LCSegment {
+                sectionHeaders.append(contentsOf: segment.sectionHeaders)
+                if segment.segmentFileOff == 0 && segment.segmentSize != 0 {
+                    baseRelativeVirtualAddress = segment.vmaddr
+                }
+            }
+        }
+        self.sectionHeaders = sectionHeaders
+        
         // macho header as macho component
         self.machoComponents.append(header)
         
         // macho components from load commands
         self.machoComponents.append(contentsOf: loadCommands)
         
+        // macho components for sections
+        let sectionMachoComponents: [MachoComponent] = sectionHeaders.compactMap({ self.machoComponent(from: $0) })
+        self.machoComponents.append(contentsOf: sectionMachoComponents)
+        
+        // macho components for relocation entries
+        let relocationMachoComponents: [MachoComponent] = sectionHeaders.compactMap({ self.relocationComponent(from: $0) })
+        self.machoComponents.append(contentsOf: relocationMachoComponents)
+        
         // loop load command to collect components
         loadCommands.forEach { loadCommand in
-            if let segment = loadCommand as? LCSegment {
-                let componentsSection = segment.sectionHeaders.compactMap({
-                    self.machoComponent(from: $0)
-                })
-                self.machoComponents.append(contentsOf: componentsSection)
-                
-                let componentsRelocations = segment.sectionHeaders.compactMap({
-                    self.relocationComponen(from: $0)
-                })
-                self.machoComponents.append(contentsOf: componentsRelocations)
-            }
             
             if let linkedITData = (loadCommand as? LCLinkedITData), linkedITData.dataSize.isNotZero {
-                self.machoComponents.append(self.machoComponent(from: linkedITData))
+                self.machoComponents.append(self.machoComponent(from: linkedITData, functionStartBaseVirtualAddress: baseRelativeVirtualAddress))
             }
             
             if let symbolTableCommand = (loadCommand as? LCSymbolTable) {
@@ -233,7 +243,7 @@ class Macho: Equatable {
 // MARK: MachoComponent Generation
 
 extension Macho {
-    fileprivate func relocationComponen(from sectionHeader: SectionHeader) -> MachoComponent? {
+    fileprivate func relocationComponent(from sectionHeader: SectionHeader) -> MachoComponent? {
         let relocationOffset = Int(sectionHeader.fileOffsetOfRelocationEntries)
         let numberOfRelocEntries = Int(sectionHeader.numberOfRelocatioEntries)
         
@@ -263,7 +273,7 @@ extension Macho {
         switch sectionHeader.sectionType {
         case .S_CSTRING_LITERALS:
             let cStringInterpreter = CStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            cStringInterpreter.componentStartVMAddr = Int(sectionHeader.addr)
+            cStringInterpreter.componentStartVMAddr = sectionHeader.addr
             cStringInterpreter.demanglingCString = true
             self.allCStringInterpreters.append(cStringInterpreter)
             interpreter = cStringInterpreter
@@ -292,9 +302,24 @@ extension Macho {
                                               subTitle: sectionHeader.segment + "," + sectionHeader.section)
     }
     
-    fileprivate func machoComponent(from linkedITData: LCLinkedITData) -> MachoComponent {
+    fileprivate func machoComponent(from linkedITData: LCLinkedITData, functionStartBaseVirtualAddress: UInt64) -> MachoComponent {
         let dataSlice = data.truncated(from: Int(linkedITData.fileOffset), length: Int(linkedITData.dataSize))
-        let interpreter = linkedITData.interpreterType.init(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        let interpreter: Interpreter
+        switch linkedITData.type {
+        case .dataInCode:
+            interpreter = LazyModelBasedInterpreter<DataInCodeModel>(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        case .codeSignature:
+            interpreter = CodeSignatureInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        case .functionStarts:
+            let functionStartsInterpreter = FunctionStartsInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            functionStartsInterpreter.functionStartBaseVirtualAddress = functionStartBaseVirtualAddress
+            interpreter = functionStartsInterpreter
+        case .dyldExportsTrie:
+            interpreter = ExportInfoInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        default:
+            print("Unknow how to parse \(self). Please contact the author.") // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
+            interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+        }
         return MachoInterpreterBasedComponent(dataSlice,
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
@@ -406,30 +431,41 @@ extension Macho {
 
 protocol MachoSearchSource: AnyObject {
     
-    func searchStringTable(with stringTableByteIndex: Int) -> CStringInterpreter.StringTableSearched?
-    func searchString(byRVA relativeVirtualAddress: Int) -> CStringInterpreter.StringTableSearched?
+    func stringInStringTable(at offset: Int) -> String?
     
-    func searchSymbolTable(with nValue: UInt64) -> SymbolTableEntry?
+    func searchString(by relativeVirtualAddress: UInt64) -> String?
     
+    func sectionName(at ordinal: Int) -> String
+    
+    func searchSymbolTable(withRelativeVirtualAddress relativeVirtualAddress: UInt64) -> SymbolTableEntry?
 }
 
 extension Macho: MachoSearchSource {
     
-    func searchStringTable(with stringTableByteIndex: Int) -> CStringInterpreter.StringTableSearched? {
-        return self.stringTableInterpreter?.findString(at: stringTableByteIndex)
+    func stringInStringTable(at offset: Int) -> String? {
+        return self.stringTableInterpreter?.findString(at: offset)
     }
     
-    func searchString(byRVA rva: Int) -> CStringInterpreter.StringTableSearched? {
+    func searchString(by relativeVirtualAddress: UInt64) -> String? {
         for cStringInterpreter in self.allCStringInterpreters {
-            if rva >= cStringInterpreter.componentStartVMAddr
-                && rva < (cStringInterpreter.componentStartVMAddr + cStringInterpreter.data.count) {
-                return cStringInterpreter.findString(by: rva)
+            if relativeVirtualAddress >= cStringInterpreter.componentStartVMAddr
+                && relativeVirtualAddress < (cStringInterpreter.componentStartVMAddr + UInt64(cStringInterpreter.data.count)) {
+                return cStringInterpreter.findString(with: relativeVirtualAddress)
             }
         }
         return nil
     }
     
-    func searchSymbolTable(with nValue: UInt64) -> SymbolTableEntry? {
-        return self.symbolTableInterpreter?.searchSymbol(with: nValue)
+    func sectionName(at ordinal: Int) -> String {
+        if ordinal > self.sectionHeaders.count {
+            fatalError()
+        }
+        // ordinal starts from 1
+        let sectionHeader = self.sectionHeaders[ordinal - 1]
+        return sectionHeader.segment + "," + sectionHeader.section
+    }
+    
+    func searchSymbolTable(withRelativeVirtualAddress relativeVirtualAddress: UInt64) -> SymbolTableEntry? {
+        return self.symbolTableInterpreter?.searchSymbol(withRelativeVirtualAddress: relativeVirtualAddress)
     }
 }
