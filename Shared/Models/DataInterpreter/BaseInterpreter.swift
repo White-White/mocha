@@ -96,13 +96,6 @@ class AnonymousInterpreter: BaseInterpreter<AnonymousInterpreter.Dummy> {
     }
 }
 
-class CodeSignatureInterpreter: AnonymousInterpreter {
-    // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
-    // we treat parse code signature as a single arbitrary binary
-    override var description: String { "Code Signature" }
-    override var explanation: String { "We are not parsing this." }
-}
-
 class CodeInterpreter: AnonymousInterpreter {
     override var description: String { "Code" }
     override var explanation: String { "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it." }

@@ -16,6 +16,8 @@ class LCDylib: LoadCommand {
     let currentVersion: String /* library's current version number */
     let compatibilityVersion: String /* library's compatibility vers number*/
     
+    override var componentDescription: String? { libPath.components(separatedBy: "/").last }
+    
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
         let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         

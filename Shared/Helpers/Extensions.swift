@@ -30,9 +30,11 @@ extension Data {
             fatalError()
         }
     }
+    
     func select(from: Data.Index, length: Data.Index) -> Self {
         return self[self.startIndex+from..<self.startIndex+from+length]
     }
+    
     var utf8String: String? {
         return String(data: self, encoding: .utf8)
     }
@@ -47,21 +49,25 @@ extension String {
 extension Int {
     var hex: String { String(format: "0x%0X", self) }
     var isNotZero: Bool { self != .zero }
+    func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
 
 extension UInt16 {
     var hex: String { String(format: "0x%0X", self) }
     var isNotZero: Bool { self != .zero }
+    func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
 
 extension UInt32 {
     var hex: String { String(format: "0x%0X", self) }
     var isNotZero: Bool { self != .zero }
+    func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
 
 extension UInt64 {
     var hex: String { String(format: "0x%llX", self) }
     var isNotZero: Bool { self != .zero }
+    func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
 
 class Utils {

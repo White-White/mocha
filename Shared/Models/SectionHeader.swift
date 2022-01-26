@@ -31,6 +31,34 @@ enum SectionType: UInt32 {
     case S_THREAD_LOCAL_VARIABLE_POINTERS
     case S_THREAD_LOCAL_INIT_FUNCTION_POINTERS
     case S_INIT_FUNC_OFFSETS
+    
+    var hasIndirectSymbolTableEntries: Bool {
+        switch self {
+        case .S_NON_LAZY_SYMBOL_POINTERS, .S_LAZY_SYMBOL_POINTERS, .S_LAZY_DYLIB_SYMBOL_POINTERS, .S_SYMBOL_STUBS:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+struct SectionAttributes {
+    let descriptions: [String]
+    init(raw: UInt32) {
+        var descriptions: [String] = []
+        if raw.bitAnd(0x80000000) { descriptions.append("S_ATTR_PURE_INSTRUCTIONS") }
+        if raw.bitAnd(0x40000000) { descriptions.append("S_ATTR_NO_TOC") }
+        if raw.bitAnd(0x20000000) { descriptions.append("S_ATTR_STRIP_STATIC_SYMS") }
+        if raw.bitAnd(0x10000000) { descriptions.append("S_ATTR_NO_DEAD_STRIP") }
+        if raw.bitAnd(0x08000000) { descriptions.append("S_ATTR_LIVE_SUPPORT") }
+        if raw.bitAnd(0x04000000) { descriptions.append("S_ATTR_SELF_MODIFYING_CODE") }
+        if raw.bitAnd(0x02000000) { descriptions.append("S_ATTR_DEBUG") }
+        if raw.bitAnd(0x00000400) { descriptions.append("S_ATTR_SOME_INSTRUCTIONS") }
+        if raw.bitAnd(0x00000200) { descriptions.append("S_ATTR_EXT_RELOC") }
+        if raw.bitAnd(0x00000100) { descriptions.append("S_ATTR_LOC_RELOC") }
+        if descriptions.isEmpty { descriptions.append("NONE") }
+        self.descriptions = descriptions
+    }
 }
 
 struct SectionHeader {
@@ -44,7 +72,7 @@ struct SectionHeader {
     let fileOffsetOfRelocationEntries: UInt32
     let numberOfRelocatioEntries: UInt32
     let sectionType: SectionType
-    let sectionAttributes: UInt32
+    let sectionAttributes: SectionAttributes
     let reserved1: UInt32
     let reserved2: UInt32
     let reserved3: UInt32? // exists only for 64 bit
@@ -91,7 +119,7 @@ struct SectionHeader {
         self.size =
         translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                  dataInterpreter: { $0.UInt64 },
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Size", explanation: value.hex) })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Section Size", explanation: value.hex) })
         
         self.offset =
         translationStore.translate(next: .doubleWords,
@@ -103,15 +131,12 @@ struct SectionHeader {
                                  dataInterpreter: DataInterpreterPreset.UInt32,
                                  itemContentGenerator: { value in TranslationItemContent(description: "Align", explanation: "\(value)") })
         
-        self.fileOffsetOfRelocationEntries =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Reloc Entry Offset", explanation: value.hex) })
-        
-        self.numberOfRelocatioEntries =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Reloc Entry Num", explanation: "\(value)") })
+        let relocValues: (UInt32, UInt32) =
+        translationStore.translate(next: .quadWords,
+                                   dataInterpreter: { data in (data.select(from: 0, length: 4).UInt32, data.select(from: 4, length: 4).UInt32) },
+                                   itemContentGenerator: { values in TranslationItemContent(description: "Reloc Entry Offset / Number", explanation: values.0.hex + " / \(values.1)") })
+        self.fileOffsetOfRelocationEntries = relocValues.0
+        self.numberOfRelocatioEntries = relocValues.1
         
         // parse flags
         let flags = data.truncated(from: translationStore.translated, length: 4).raw.UInt32
@@ -125,35 +150,36 @@ struct SectionHeader {
         self.sectionType = sectionType
         translationStore.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionType)"), forRange: rangeOfNextDWords)
         
-        let sectionAttributes = flags & 0xffffff00 // section attributes mask
-        translationStore.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionAttributes.hex)"), forRange: rangeOfNextDWords)
+        let sectionAttributesRaw = flags & 0xffffff00 // section attributes mask
+        let sectionAttributes =  SectionAttributes(raw: sectionAttributesRaw)
+        translationStore.append(TranslationItemContent(description: "Section Attributes", explanation: sectionAttributes.descriptions.joined(separator: "\n")), forRange: rangeOfNextDWords)
         self.sectionAttributes = sectionAttributes
         
         _ = translationStore.skip(.doubleWords)
         
-        self.reserved1 =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "reserved1", explanation: value.hex) })
+        var reserved1Description = "reserved1"
+        if sectionType.hasIndirectSymbolTableEntries { reserved1Description = "Indirect Symbol Table Index" }
         
-        self.reserved2 =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "reserved2", explanation: value.hex) })
+        var reserved2Description = "reserved2"
+        if sectionType == .S_SYMBOL_STUBS { reserved2Description = "Stub Size" }
         
-        if is64Bit {
-            self.reserved3 =
-            translationStore.translate(next: .doubleWords,
-                                     dataInterpreter: DataInterpreterPreset.UInt32,
-                                     itemContentGenerator: { value in TranslationItemContent(description: "reserved3", explanation: value.hex, hasDivider: true) })
-        } else {
-            self.reserved3 = nil
-        }
+        let reservedValue: (UInt32, UInt32, UInt32?) =
+        translationStore.translate(next: .rawNumber(is64Bit ? 12 : 8),
+                                   dataInterpreter: { data -> (UInt32, UInt32, UInt32?) in (data.select(from: 0, length: 4).UInt32,
+                                                                                            data.select(from: 4, length: 4).UInt32,
+                                                                                            is64Bit ? data.select(from: 8, length: 4).UInt32 : nil) },
+                                   itemContentGenerator: { values in TranslationItemContent(description: "\(reserved1Description) / \(reserved2Description)" + (values.2 == nil ? "" : " / reserved3"),
+                                                                                            explanation: "\(values.0) / \(values.1)" + (values.2 == nil ? "" : " / \(values.2!)"),
+                                                                                            hasDivider: true) })
+        
+        self.reserved1 = reservedValue.0
+        self.reserved2 = reservedValue.1
+        self.reserved3 = reservedValue.2
         
         self.translationStore = translationStore
     }
     
     static func numberOfTranslationItems(is64Bit: Bool) -> Int {
-        return is64Bit ? 13 : 12
+        return 10
     }
 }

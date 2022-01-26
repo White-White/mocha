@@ -47,13 +47,13 @@ class LCLinkedITData: LoadCommand {
         
         self.fileOffset =
         translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { fileOffset in TranslationItemContent(description: "File Offset", explanation: "\(fileOffset)") })
+                                   dataInterpreter: DataInterpreterPreset.UInt32,
+                                   itemContentGenerator: { fileOffset in TranslationItemContent(description: "File Offset", explanation: fileOffset.hex) })
         
         self.dataSize =
         translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { dataSize in TranslationItemContent(description: "Size", explanation: "\(dataSize)") })
+                                   dataInterpreter: DataInterpreterPreset.UInt32,
+                                   itemContentGenerator: { dataSize in TranslationItemContent(description: "Size", explanation: dataSize.hex) })
         
         super.init(with: type, data: data, translationStore: translationStore)
     }

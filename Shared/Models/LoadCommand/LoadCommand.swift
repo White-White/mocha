@@ -203,63 +203,9 @@ class LoadCommand: MachoComponent {
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
         self.type = type
         let translationStore = translationStore ?? TranslationStore(machoDataSlice: data.truncated(from: 0, length: 8))
-        translationStore.insert(TranslationItemContent(description: "Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
+        translationStore.insert(TranslationItemContent(description: "Load Command Data Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
         translationStore.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
         self.translationStore = translationStore
         super.init(data)
-    }
-    
-    static func loadCommands(from allLoadCommandData: DataSlice, numberOfLoadCommands: Int) -> [LoadCommand] {
-        var loadCommands: [LoadCommand] = []
-        for _ in 0..<numberOfLoadCommands {
-            let nextLoadCommandStartIndex = loadCommands.reduce(.zero) { $0 + $1.size }
-            let typeValue = allLoadCommandData.truncated(from: nextLoadCommandStartIndex, length: 4).raw.UInt32
-            guard let type = LoadCommandType(rawValue: typeValue) else {
-                print("Unknown load command type \(typeValue.hex). This must be a new one.")
-                fatalError()
-            }
-            
-            let loadCommandSize = Int(allLoadCommandData.truncated(from: nextLoadCommandStartIndex + 4, length: 4).raw.UInt32)
-            let loadCommandData = allLoadCommandData.truncated(from: nextLoadCommandStartIndex, length: loadCommandSize)
-            
-            let loadCommandClass: LoadCommand.Type
-            switch type {
-            case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
-                loadCommandClass = LCMinOSVersion.self
-            case .linkerOption:
-                loadCommandClass = LCLinkerOption.self
-            case .segment, .segment64:
-                loadCommandClass = LCSegment.self
-            case .symbolTable:
-                loadCommandClass = LCSymbolTable.self
-            case .dynamicSymbolTable:
-                loadCommandClass = LCDynamicSymbolTable.self
-            case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
-                loadCommandClass = LCDylib.self
-            case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
-                loadCommandClass = LCMonoString.self
-            case .uuid:
-                loadCommandClass = LCUUID.self
-            case .sourceVersion:
-                loadCommandClass = LCSourceVersion.self
-            case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
-                loadCommandClass = LCLinkedITData.self
-            case .main:
-                loadCommandClass = LCMain.self
-            case .dyldInfo, .dyldInfoOnly:
-                loadCommandClass = LCDyldInfo.self
-            case .encryptionInfo64,. encryptionInfo:
-                loadCommandClass = LCEncryptionInfo.self
-            case .buildVersion:
-                loadCommandClass = LCBuildVersion.self
-            default:
-                Log.warning("Unknown load command \(type.name). Debug me.")
-                loadCommandClass = LoadCommand.self
-            }
-            let loadCommandInstance = loadCommandClass.init(with: type, data: loadCommandData)
-            loadCommands.append(loadCommandInstance)
-        }
-        
-        return loadCommands
     }
 }

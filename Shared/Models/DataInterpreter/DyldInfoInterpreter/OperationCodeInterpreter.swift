@@ -11,15 +11,17 @@ struct OperationCodeContainer<Code: OperationCodeProtocol> {
     
     let operationCodes: [OperationCode<Code>]
     let numberOfAccumulatedTransItems: [Int]
-    var numberOfTransItemsTotal: Int {
-        return numberOfAccumulatedTransItems.last!
-    }
+    let numberOfTransItemsTotal: Int
     
     init(operationCodes: [OperationCode<Code>]) {
         self.operationCodes = operationCodes
-        self.numberOfAccumulatedTransItems = operationCodes.reduce([], {
-            return $0 + [($0.last ?? 0) + $1.numberOfTranslationItems]
-        })
+        var numberOfAccumulatedTransItems = [Int].init(repeating: 0, count: operationCodes.count)
+        for (index, operationCode) in operationCodes.enumerated() {
+            let accumulated = index == 0 ? 0 : numberOfAccumulatedTransItems[index - 1]
+            numberOfAccumulatedTransItems[index] = accumulated + operationCode.numberOfTranslationItems
+        }
+        self.numberOfAccumulatedTransItems = numberOfAccumulatedTransItems
+        self.numberOfTransItemsTotal = numberOfAccumulatedTransItems.last!
     }
 }
 

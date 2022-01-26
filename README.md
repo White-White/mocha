@@ -87,7 +87,7 @@ This project is still in development.
 | LC_DYLD_CHAINED_FIXUPS | ⌛️ |        
 | LC_FILESET_ENTRY | ⌛️ |
 
-| Section Type | Supported  |
+| Section Type | Supported |
 |  ----  | ----  |
 | S_REGULAR | ✅ |
 | S_ZEROFILL | ✅ |
@@ -112,6 +112,10 @@ This project is still in development.
 | S_THREAD_LOCAL_VARIABLE_POINTERS | ⏳ |
 | S_THREAD_LOCAL_INIT_FUNCTION_POINTERS | ⏳ |
 | S_INIT_FUNC_OFFSETS  | ⏳ |
+
+| Other Section | Supported |
+| \_\_TEXT,\_\_ustring  | ✅ |
+
 
 | LinkedIT Type   | Supported  |
 |  ----  | ----  |

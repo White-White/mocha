@@ -29,11 +29,11 @@ enum MachoType {
     var readable: String {
         switch self {
         case .object:
-            return "MH_OBJECT: Relocatable object file"
+            return "MH_OBJECT" // : Relocatable object file
         case .execute:
-            return "MH_EXECUTE: Demand paged executable file"
+            return "MH_EXECUTE" // : Demand paged executable file
         case .dylib:
-            return "MH_DYLIB: Dynamically bound shared library"
+            return "MH_DYLIB" // : Dynamically bound shared library
         case .unknown(let value):
             return "unknown macho file: (\(value)"
         }
@@ -91,12 +91,12 @@ class MachoHeader: MachoComponent {
         self.numberOfLoadCommands =
         transStore.translate(next: .doubleWords,
                              dataInterpreter: DataInterpreterPreset.UInt32,
-                             itemContentGenerator: { numberOfLoadCommands  in TranslationItemContent(description: "Number of commands", explanation: "\(numberOfLoadCommands)") })
+                             itemContentGenerator: { numberOfLoadCommands  in TranslationItemContent(description: "Number of Load Commands", explanation: "\(numberOfLoadCommands)") })
         
         self.sizeOfAllLoadCommand =
         transStore.translate(next: .doubleWords,
                              dataInterpreter: DataInterpreterPreset.UInt32,
-                             itemContentGenerator: { sizeOfAllLoadCommand  in TranslationItemContent(description: "Size of all commands", explanation: "\(sizeOfAllLoadCommand)") })
+                             itemContentGenerator: { sizeOfAllLoadCommand  in TranslationItemContent(description: "Size of all Load Commands", explanation: sizeOfAllLoadCommand.hex) })
         
         self.flags =
         transStore.translate(next: .doubleWords,
@@ -155,14 +155,13 @@ class Macho: Equatable {
     }
     let data: DataSlice
     var fileSize: Int { data.count }
-    
-    /// name of the macho file
     let machoFileName: String
     let header: MachoHeader
     var is64Bit: Bool { header.is64Bit }
-    let loadCommands: [LoadCommand]
-    let sectionHeaders: [SectionHeader]
-    var machoComponents: [MachoComponent] = []
+    
+    private(set) var loadCommands: [LoadCommand] = []
+    private(set) var sectionHeaders: [SectionHeader] = []
+    private(set) var machoComponents: [MachoComponent] = []
     
     var allCStringInterpreters: [CStringInterpreter] = []
     var stringTableInterpreter: CStringInterpreter?
@@ -179,68 +178,86 @@ class Macho: Equatable {
         
         let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
         self.header = header
-        
-        let allLoadCommandData = data.truncated(from: header.size, length: Int(header.sizeOfAllLoadCommand))
-        let loadCommands = LoadCommand.loadCommands(from: allLoadCommandData, numberOfLoadCommands: Int(header.numberOfLoadCommands))
-        self.loadCommands = loadCommands
+        self.machoComponents.append(header)
         
         var baseRelativeVirtualAddress: UInt64 = 0
-        var sectionHeaders: [SectionHeader] = []
-        loadCommands.forEach { loadCommand in
-            if let segment = loadCommand as? LCSegment {
-                sectionHeaders.append(contentsOf: segment.sectionHeaders)
+        
+        var nextLoadCommandStartOffset = header.size
+        for _ in 0..<header.numberOfLoadCommands {
+            
+            let loadCommandTypeRaw = machoData.truncated(from: nextLoadCommandStartOffset, length: 4).raw.UInt32
+            guard let loadCommandType = LoadCommandType(rawValue: loadCommandTypeRaw) else {
+                print("Unknown load command type \(loadCommandTypeRaw.hex). This must be a new one.")
+                fatalError()
+            }
+            
+            let loadCommandSize = Int(machoData.truncated(from: nextLoadCommandStartOffset + 4, length: 4).raw.UInt32)
+            let loadCommandData = machoData.truncated(from: nextLoadCommandStartOffset, length: loadCommandSize)
+            nextLoadCommandStartOffset += loadCommandSize
+            
+            let loadCommand: LoadCommand
+            switch loadCommandType {
+            case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
+                loadCommand = LCMinOSVersion(with: loadCommandType, data: loadCommandData)
+            case .linkerOption:
+                loadCommand = LCLinkerOption(with: loadCommandType, data: loadCommandData)
+            case .segment, .segment64:
+                let segment = LCSegment(with: loadCommandType, data: loadCommandData)
+                let segmentSectionHeaders = segment.sectionHeaders
+                self.sectionHeaders.append(contentsOf: segmentSectionHeaders)
+                self.machoComponents.append(contentsOf: segmentSectionHeaders.compactMap({ self.machoComponent(from: $0) }))
+                self.machoComponents.append(contentsOf: segmentSectionHeaders.compactMap({ self.relocationComponent(from: $0) }))
                 if segment.segmentFileOff == 0 && segment.segmentSize != 0 {
                     baseRelativeVirtualAddress = segment.vmaddr
                 }
-            }
-        }
-        self.sectionHeaders = sectionHeaders
-        
-        // macho header as macho component
-        self.machoComponents.append(header)
-        
-        // macho components from load commands
-        self.machoComponents.append(contentsOf: loadCommands)
-        
-        // macho components for sections
-        let sectionMachoComponents: [MachoComponent] = sectionHeaders.compactMap({ self.machoComponent(from: $0) })
-        self.machoComponents.append(contentsOf: sectionMachoComponents)
-        
-        // macho components for relocation entries
-        let relocationMachoComponents: [MachoComponent] = sectionHeaders.compactMap({ self.relocationComponent(from: $0) })
-        self.machoComponents.append(contentsOf: relocationMachoComponents)
-        
-        // loop load command to collect components
-        loadCommands.forEach { loadCommand in
-            
-            if let linkedITData = (loadCommand as? LCLinkedITData), linkedITData.dataSize.isNotZero {
-                self.machoComponents.append(self.machoComponent(from: linkedITData, functionStartBaseVirtualAddress: baseRelativeVirtualAddress))
-            }
-            
-            if let symbolTableCommand = (loadCommand as? LCSymbolTable) {
-                
+                loadCommand = segment
+            case .symbolTable:
+                let symbolTableCommand = LCSymbolTable(with: loadCommandType, data: loadCommandData)
                 let symbolTableComponent = self.symbolTableComponent(from: symbolTableCommand)
-                
                 let stringTableComponent = self.stringTableComponent(from: symbolTableCommand)
-                
                 self.symbolTableInterpreter = symbolTableComponent.interpreter as? ModelBasedInterpreter<SymbolTableEntry>
                 self.stringTableInterpreter = stringTableComponent.interpreter as? CStringInterpreter
-                
                 self.machoComponents.append(contentsOf: [symbolTableComponent, stringTableComponent])
-            }
-            
-            if let dyldInfo = loadCommand as? LCDyldInfo {
+                loadCommand = symbolTableCommand
+            case .dynamicSymbolTable:
+                loadCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
+            case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
+                loadCommand = LCDylib(with: loadCommandType, data: loadCommandData)
+            case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
+                loadCommand = LCMonoString(with: loadCommandType, data: loadCommandData)
+            case .uuid:
+                loadCommand = LCUUID(with: loadCommandType, data: loadCommandData)
+            case .sourceVersion:
+                loadCommand = LCSourceVersion(with: loadCommandType, data: loadCommandData)
+            case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
+                let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
+                if linkedITData.dataSize.isNotZero {
+                    self.machoComponents.append(self.machoComponent(from: linkedITData, functionStartBaseVirtualAddress: baseRelativeVirtualAddress))
+                }
+                loadCommand = linkedITData
+            case .main:
+                loadCommand = LCMain(with: loadCommandType, data: loadCommandData)
+            case .dyldInfo, .dyldInfoOnly:
+                let dyldInfo = LCDyldInfo(with: loadCommandType, data: loadCommandData)
                 let dyldInfoComponents = self.dyldInfoComponents(from: dyldInfo)
                 self.machoComponents.append(contentsOf: dyldInfoComponents)
+                loadCommand = dyldInfo
+            case .encryptionInfo64,. encryptionInfo:
+                loadCommand = LCEncryptionInfo(with: loadCommandType, data: loadCommandData)
+            case .buildVersion:
+                loadCommand = LCBuildVersion(with: loadCommandType, data: loadCommandData)
+            default:
+                Log.warning("Unknown load command \(loadCommandType.name). Debug me.")
+                loadCommand = LoadCommand(with: loadCommandType, data: loadCommandData)
             }
+            self.loadCommands.append(loadCommand)
+            self.machoComponents.append(loadCommand)
         }
         
         // sort
         self.machoComponents.sort { $0.fileOffsetInMacho < $1.fileOffsetInMacho }
     }
 }
-
-// MARK: MachoComponent Generation
 
 extension Macho {
     fileprivate func relocationComponent(from sectionHeader: SectionHeader) -> MachoComponent? {
@@ -285,6 +302,8 @@ extension Macho {
                 switch sectionHeader.section {
                 case "__text":
                     interpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+                case "__ustring":
+                    interpreter = UStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
                 default:
                     interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
                 }
@@ -309,7 +328,9 @@ extension Macho {
         case .dataInCode:
             interpreter = LazyModelBasedInterpreter<DataInCodeModel>(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         case .codeSignature:
-            interpreter = CodeSignatureInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
+            // FIXME: better parsing
+            interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         case .functionStarts:
             let functionStartsInterpreter = FunctionStartsInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             functionStartsInterpreter.functionStartBaseVirtualAddress = functionStartBaseVirtualAddress

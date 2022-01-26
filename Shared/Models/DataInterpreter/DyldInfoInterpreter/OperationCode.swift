@@ -53,14 +53,14 @@ class OperationCode<Code: OperationCodeProtocol> {
         translationItems.append(contentsOf: lebValues.map { ulebValue in
             TranslationItem(sourceDataRange: ulebValue.absoluteRange,
                             content: TranslationItemContent(description: "LEB Value",
-                                                            explanation: ulebValue.isSigned ? "\(Int(bitPattern: UInt(ulebValue.raw)))" : "\(ulebValue.raw)"))
+                                                            explanation: ulebValue.isSigned ? "\(Int(bitPattern: UInt(ulebValue.raw)))" : "\(ulebValue.raw)",
+                                                            hasDivider: cstringData == nil))
         })
         
         if let cstringData = cstringData {
             let cstring = cstringData.utf8String ?? "🙅‍♂️ Invalid CString"
             translationItems.append(TranslationItem(sourceDataRange: byteIndexNextOfOperationCode..<(byteIndexNextOfOperationCode+cstringData.count),
-                                                    content: TranslationItemContent(description: "String",
-                                                                                    explanation: cstring)))
+                                                    content: TranslationItemContent(description: "String", explanation: cstring, hasDivider: true)))
         }
         
         return translationItems

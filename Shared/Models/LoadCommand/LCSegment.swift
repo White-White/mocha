@@ -7,6 +7,32 @@
 
 import Foundation
 
+struct VMProtection {
+    
+    let raw: UInt32
+    let readable: Bool
+    let writable: Bool
+    let executable: Bool
+    
+    init(raw: UInt32) {
+        self.raw = raw
+        self.readable = raw & 0x01 != 0
+        self.writable = raw & 0x02 != 0
+        self.executable = raw & 0x04 != 0
+    }
+    
+    var explanation: String {
+        if readable && writable && executable { return "VM_PROT_ALL" }
+        if readable && writable { return "VM_PROT_DEFAULT" }
+        var ret: [String] = []
+        if readable { ret.append("VM_PROT_READ") }
+        if writable { ret.append("VM_PROT_WRITE") }
+        if executable { ret.append("VM_PROT_EXECUTE") }
+        if ret.isEmpty { ret.append("VM_PROT_NONE") }
+        return ret.joined(separator: ",")
+    }
+}
+
 class LCSegment: LoadCommand {
     
     let is64Bit: Bool
@@ -35,27 +61,27 @@ class LCSegment: LoadCommand {
         
         self.vmaddr = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "vmaddr", explanation: value.hex) })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Segment Virtual Address", explanation: value.hex) })
         
         self.vmsize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "vmsize", explanation: value.hex) })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Segment Virtual Size", explanation: value.hex) })
         
         self.segmentFileOff = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                          dataInterpreter: { $0.UInt64 },
-                                                         itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
+                                                         itemContentGenerator: { value in TranslationItemContent(description: "Segment File Offset", explanation: value.hex) })
         
         self.segmentSize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Amount to map", explanation: value.hex) })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Size to Map", explanation: value.hex) })
         
         self.maxprot = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
-                                               itemContentGenerator: { value in TranslationItemContent(description: "maxprot", explanation: "\(value)") })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Maximum VM Protection", explanation: VMProtection(raw: value).explanation) })
         
         self.initprot = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
-                                               itemContentGenerator: { value in TranslationItemContent(description: "initprot", explanation: "\(value)") })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Initial VM Protection", explanation: VMProtection(raw: value).explanation) })
         
         self.numberOfSections = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,
@@ -64,7 +90,8 @@ class LCSegment: LoadCommand {
         self.flags = translationStore.translate(next: .doubleWords,
                                               dataInterpreter: { $0.UInt32 },
                                               itemContentGenerator: { flags in TranslationItemContent(description: "Flags",
-                                                                                                      explanation: LCSegment.flags(for: flags)) })
+                                                                                                      explanation: LCSegment.flags(for: flags),
+                                                                                                      hasDivider: true) })
         
         var sectionHeaders: [SectionHeader] = []
         for index in 0..<Int(numberOfSections) {

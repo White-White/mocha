@@ -35,7 +35,7 @@ class LCDyldInfo: LoadCommand {
         self.rebaseSize =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Rebase Info Size", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Rebase Info Size", explanation: value.hex) })
         
         self.bindOffset =
         translationStore.translate(next: .doubleWords,
@@ -45,7 +45,7 @@ class LCDyldInfo: LoadCommand {
         self.bindSize =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Binding Info Size", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Binding Info Size", explanation: value.hex) })
         
         self.weakBindOffset =
         translationStore.translate(next: .doubleWords,
@@ -55,7 +55,7 @@ class LCDyldInfo: LoadCommand {
         self.weakBindSize =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Weak Binding Info Size", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Weak Binding Info Size", explanation: value.hex) })
         
         self.lazyBindOffset =
         translationStore.translate(next: .doubleWords,
@@ -65,7 +65,7 @@ class LCDyldInfo: LoadCommand {
         self.lazyBindSize =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Lazy Binding Info Size", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Lazy Binding Info Size", explanation: value.hex) })
         
         self.exportOffset =
         translationStore.translate(next: .doubleWords,
@@ -75,7 +75,7 @@ class LCDyldInfo: LoadCommand {
         self.exportSize =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Export Info Size", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Export Info Size", explanation: value.hex) })
         
         super.init(with: type, data: data, translationStore: translationStore)
     }

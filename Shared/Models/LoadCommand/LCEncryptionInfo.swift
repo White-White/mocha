@@ -34,7 +34,7 @@ class LCEncryptionInfo: LoadCommand {
         
         self.cryptoSize =
         translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32) { size in TranslationItemContent(description: "Crypto File Size", explanation: "\(size)") }
+                                   dataInterpreter: DataInterpreterPreset.UInt32) { size in TranslationItemContent(description: "Crypto File Size", explanation: size.hex) }
         
         self.cryptoID =
         translationStore.translate(next: .doubleWords,

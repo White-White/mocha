@@ -13,16 +13,11 @@ struct CStringPosition {
     let length: Int
 }
 
-
 class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
     
     override var shouldPreload: Bool { true }
     var demanglingCString: Bool = false
     var componentStartVMAddr: Swift.UInt64 = 0
-    
-    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
-        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
-    }
     
     override func generatePayload() -> [CStringPosition] {
         let rawData = self.data.raw
