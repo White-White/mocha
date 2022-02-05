@@ -114,7 +114,7 @@ struct SectionHeader {
         self.addr =
         translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                  dataInterpreter: { $0.UInt64 },
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Relative Virtual Address", explanation: value.hex) })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Virtual Address", explanation: value.hex) })
         
         self.size =
         translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),

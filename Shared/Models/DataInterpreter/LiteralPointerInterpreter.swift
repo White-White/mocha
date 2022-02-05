@@ -16,7 +16,7 @@ class LiteralPointerInterpreter: BaseInterpreter<[LiteralPointer]> {
     
     let pointerLength: Int
     
-    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         self.pointerLength = is64Bit ? 8 : 4
         super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
@@ -46,7 +46,7 @@ class LiteralPointerInterpreter: BaseInterpreter<[LiteralPointer]> {
             fatalError()
         }
         return TranslationItem(sourceDataRange: self.data.absoluteRange(pointer.relativeDataOffset, self.pointerLength),
-                               content: TranslationItemContent(description: "Pointer Value (Relative Virtual Address)",
+                               content: TranslationItemContent(description: "Pointer Value (Virtual Address)",
                                                                explanation: pointer.pointerValue.hex,
                                                                extraDescription: "Referenced String Symbol",
                                                                extraExplanation: searchedString,

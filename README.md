@@ -113,7 +113,16 @@ This project is still in development.
 | S_THREAD_LOCAL_INIT_FUNCTION_POINTERS | ⏳ |
 | S_INIT_FUNC_OFFSETS  | ⏳ |
 
+| Swift Section | Supported |
+|  ----  | ----  |
+| \_\_TEXT,\_\_swift5_reflstr  | ✅ |
+
+<!--| Objective-C Section | Supported |-->
+<!--|  ----  | ----  |-->
+<!--| \_\_TEXT,\_\_ustring  | ✅ |-->
+
 | Other Section | Supported |
+|  ----  | ----  |
 | \_\_TEXT,\_\_ustring  | ✅ |
 
 
@@ -126,4 +135,5 @@ This project is still in development.
 | Export Info  | ✅ |
 | String Table  | ✅ |
 | Symbol Table  | ✅ 🔨 |
+| Indirect Symbol Table  | ✅ |
 | Code Signature  | ✅ |

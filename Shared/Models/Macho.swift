@@ -180,7 +180,7 @@ class Macho: Equatable {
         self.header = header
         self.machoComponents.append(header)
         
-        var baseRelativeVirtualAddress: UInt64 = 0
+        var textSegmentVirtualStartAddress: UInt64!
         
         var nextLoadCommandStartOffset = header.size
         for _ in 0..<header.numberOfLoadCommands {
@@ -207,8 +207,8 @@ class Macho: Equatable {
                 self.sectionHeaders.append(contentsOf: segmentSectionHeaders)
                 self.machoComponents.append(contentsOf: segmentSectionHeaders.compactMap({ self.machoComponent(from: $0) }))
                 self.machoComponents.append(contentsOf: segmentSectionHeaders.compactMap({ self.relocationComponent(from: $0) }))
-                if segment.segmentFileOff == 0 && segment.segmentSize != 0 {
-                    baseRelativeVirtualAddress = segment.vmaddr
+                if segment.segmentFileOff == 0 && segment.segmentSize != 0 /* first non-zero segment */ {
+                    textSegmentVirtualStartAddress = segment.vmaddr
                 }
                 loadCommand = segment
             case .symbolTable:
@@ -220,7 +220,14 @@ class Macho: Equatable {
                 self.machoComponents.append(contentsOf: [symbolTableComponent, stringTableComponent])
                 loadCommand = symbolTableCommand
             case .dynamicSymbolTable:
-                loadCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
+                guard self.symbolTableInterpreter != nil else {
+                    fatalError()
+                    /* symtab_command must be present when this load command is present */
+                    /* also we assume symtab_command locates before dysymtab_command */
+                }
+                let dynamicSymbolTableCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
+                self.machoComponents.append(self.indirectSymbolTable(from: dynamicSymbolTableCommand))
+                loadCommand = dynamicSymbolTableCommand
             case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
                 loadCommand = LCDylib(with: loadCommandType, data: loadCommandData)
             case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
@@ -232,7 +239,9 @@ class Macho: Equatable {
             case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
                 let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
                 if linkedITData.dataSize.isNotZero {
-                    self.machoComponents.append(self.machoComponent(from: linkedITData, functionStartBaseVirtualAddress: baseRelativeVirtualAddress))
+                    // segment command is before linkedit data sections,
+                    // so the textSegmentVirtualStartAddress must not be nil, unless something goes wrong
+                    self.machoComponents.append(self.machoComponent(from: linkedITData, textSegmentVirtualStartAddress: textSegmentVirtualStartAddress))
                 }
                 loadCommand = linkedITData
             case .main:
@@ -285,35 +294,60 @@ extension Macho {
         guard sectionHeader.size > 0 else { return nil }
         
         let dataSlice = data.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
-        let interpreter: Interpreter
         
-        switch sectionHeader.sectionType {
-        case .S_CSTRING_LITERALS:
-            let cStringInterpreter = CStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            cStringInterpreter.componentStartVMAddr = sectionHeader.addr
-            cStringInterpreter.demanglingCString = true
+        /* recognize section by section type */
+        if sectionHeader.sectionType == .S_CSTRING_LITERALS {
+            let cStringInterpreter = CStringInterpreter(dataSlice, is64Bit: is64Bit,
+                                                        machoSearchSource: self,
+                                                        sectionVirtualAddress: sectionHeader.addr,
+                                                        demanglingCString: true)
             self.allCStringInterpreters.append(cStringInterpreter)
-            interpreter = cStringInterpreter
-        case .S_LITERAL_POINTERS:
-            interpreter = LiteralPointerInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-        default:
-            switch sectionHeader.segment {
-            case "__TEXT":
-                switch sectionHeader.section {
-                case "__text":
-                    interpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-                case "__ustring":
-                    interpreter = UStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-                default:
-                    interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-                }
-//            case "__DATA":
-//                break
+            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: cStringInterpreter, title: "Section",
+                                                  subTitle: sectionHeader.segment + "," + sectionHeader.section)
+        }
+        
+        if sectionHeader.sectionType == .S_LITERAL_POINTERS {
+            let literalPointerInterpreter = LiteralPointerInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: literalPointerInterpreter, title: "Section",
+                                                  subTitle: sectionHeader.segment + "," + sectionHeader.section)
+        }
+        
+        if sectionHeader.sectionType == .S_SYMBOL_STUBS {
+            // for symbol stubs section, reverved2 filed is the size of the stub
+            let stubInterpreter = SymbolStubInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self, stubSize: Int(sectionHeader.reserved2))
+            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: stubInterpreter, title: "Section",
+                                                  subTitle: sectionHeader.segment + "," + sectionHeader.section)
+        }
+        
+        if sectionHeader.sectionType == .S_LAZY_SYMBOL_POINTERS || sectionHeader.sectionType == .S_NON_LAZY_SYMBOL_POINTERS {
+            let symbolPtrInterpreter = SymbolPointerInterpreter(dataSlice, is64Bit: is64Bit,
+                                                                machoSearchSource: self, sectionType: sectionHeader.sectionType)
+            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: symbolPtrInterpreter, title: "Section",
+                                                  subTitle: sectionHeader.segment + "," + sectionHeader.section)
+        }
+        
+        /* recognize section by section name */
+        let interpreter: Interpreter
+        switch sectionHeader.segment {
+        case "__TEXT":
+            switch sectionHeader.section {
+            case "__text":
+                interpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            case "__ustring":
+                interpreter = UStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            case "__swift5_reflstr":
+                // https://knight.sc/reverse%20engineering/2019/07/17/swift-metadata.html
+                // a great article on introducing swift metadata sections
+                interpreter = CStringInterpreter(dataSlice, is64Bit: is64Bit,
+                                                 machoSearchSource: self,
+                                                 sectionVirtualAddress: sectionHeader.addr,
+                                                 demanglingCString: false)
             default:
                 interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             }
+        default:
+            interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         }
-        
         return MachoInterpreterBasedComponent(dataSlice,
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
@@ -321,7 +355,7 @@ extension Macho {
                                               subTitle: sectionHeader.segment + "," + sectionHeader.section)
     }
     
-    fileprivate func machoComponent(from linkedITData: LCLinkedITData, functionStartBaseVirtualAddress: UInt64) -> MachoComponent {
+    fileprivate func machoComponent(from linkedITData: LCLinkedITData, textSegmentVirtualStartAddress: UInt64) -> MachoComponent {
         let dataSlice = data.truncated(from: Int(linkedITData.fileOffset), length: Int(linkedITData.dataSize))
         let interpreter: Interpreter
         switch linkedITData.type {
@@ -333,7 +367,7 @@ extension Macho {
             interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         case .functionStarts:
             let functionStartsInterpreter = FunctionStartsInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            functionStartsInterpreter.functionStartBaseVirtualAddress = functionStartBaseVirtualAddress
+            functionStartsInterpreter.textSegmentVirtualStartAddress = textSegmentVirtualStartAddress
             interpreter = functionStartsInterpreter
         case .dyldExportsTrie:
             interpreter = ExportInfoInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
@@ -365,13 +399,28 @@ extension Macho {
         let stringTableStartOffset = Int(symbolTableCommand.stringTableOffset)
         let stringTableSize = Int(symbolTableCommand.sizeOfStringTable)
         let stringTableData = data.truncated(from: stringTableStartOffset, length: stringTableSize)
-        let interpreter = CStringInterpreter(stringTableData, is64Bit: is64Bit, machoSearchSource: self)
+        let interpreter = CStringInterpreter(stringTableData, is64Bit: is64Bit,
+                                             machoSearchSource: self,
+                                             sectionVirtualAddress: 0,
+                                             demanglingCString: false)
         allCStringInterpreters.append(interpreter)
         
         return MachoInterpreterBasedComponent(stringTableData,
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
                                               title: "String Table",
+                                              subTitle: "__LINKEDIT")
+    }
+    
+    fileprivate func indirectSymbolTable(from dynamicSymbolCommand: LCDynamicSymbolTable) -> MachoInterpreterBasedComponent {
+        let indirectSymbolTableStartOffset = Int(dynamicSymbolCommand.indirectsymoff)
+        let indirectSymbolTableSize = Int(dynamicSymbolCommand.nindirectsyms * 4)
+        let indirectSymbolTableData = data.truncated(from: indirectSymbolTableStartOffset, length: indirectSymbolTableSize)
+        let interpreter = IndirectSymbolInterpreter(indirectSymbolTableData, is64Bit: is64Bit, machoSearchSource: self)
+        return MachoInterpreterBasedComponent(indirectSymbolTableData,
+                                              is64Bit: is64Bit,
+                                              interpreter: interpreter,
+                                              title: "Indirect Symbol Table",
                                               subTitle: "__LINKEDIT")
     }
     
@@ -454,11 +503,13 @@ protocol MachoSearchSource: AnyObject {
     
     func stringInStringTable(at offset: Int) -> String?
     
-    func searchString(by relativeVirtualAddress: UInt64) -> String?
+    func searchString(by virtualAddress: UInt64) -> String?
     
     func sectionName(at ordinal: Int) -> String
     
-    func searchSymbolTable(withRelativeVirtualAddress relativeVirtualAddress: UInt64) -> SymbolTableEntry?
+    func symbolInSymbolTable(by virtualAddress: UInt64) -> SymbolTableEntry?
+    
+    func symbolInSymbolTable(with index: Int) -> SymbolTableEntry?
 }
 
 extension Macho: MachoSearchSource {
@@ -467,11 +518,11 @@ extension Macho: MachoSearchSource {
         return self.stringTableInterpreter?.findString(at: offset)
     }
     
-    func searchString(by relativeVirtualAddress: UInt64) -> String? {
+    func searchString(by virtualAddress: UInt64) -> String? {
         for cStringInterpreter in self.allCStringInterpreters {
-            if relativeVirtualAddress >= cStringInterpreter.componentStartVMAddr
-                && relativeVirtualAddress < (cStringInterpreter.componentStartVMAddr + UInt64(cStringInterpreter.data.count)) {
-                return cStringInterpreter.findString(with: relativeVirtualAddress)
+            if virtualAddress >= cStringInterpreter.sectionVirtualAddress
+                && virtualAddress < (cStringInterpreter.sectionVirtualAddress + UInt64(cStringInterpreter.data.count)) {
+                return cStringInterpreter.findString(with: virtualAddress)
             }
         }
         return nil
@@ -486,7 +537,11 @@ extension Macho: MachoSearchSource {
         return sectionHeader.segment + "," + sectionHeader.section
     }
     
-    func searchSymbolTable(withRelativeVirtualAddress relativeVirtualAddress: UInt64) -> SymbolTableEntry? {
-        return self.symbolTableInterpreter?.searchSymbol(withRelativeVirtualAddress: relativeVirtualAddress)
+    func symbolInSymbolTable(by virtualAddress: UInt64) -> SymbolTableEntry? {
+        return self.symbolTableInterpreter?.searchSymbol(by: virtualAddress)
+    }
+    
+    func symbolInSymbolTable(with index: Int) -> SymbolTableEntry? {
+        return self.symbolTableInterpreter?.searchSymbol(withIndex: index)
     }
 }

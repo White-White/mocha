@@ -49,7 +49,7 @@ class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Mod
     
     override var payload: [Model] { fatalError() }
     
-    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         let modelSize = Model.modelSize(is64Bit: is64Bit)
         let numberOfModels = data.count / modelSize
         self.numberOfAllTranslationItems = numberOfModels * Model.numberOfTranslationItems()
@@ -77,13 +77,17 @@ class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Mod
 
 extension ModelBasedInterpreter where Model == SymbolTableEntry {
     
-    func searchSymbol(withRelativeVirtualAddress relativeVirtualAddress: Swift.UInt64) -> SymbolTableEntry? {
+    func searchSymbol(by virtualAddress: Swift.UInt64) -> SymbolTableEntry? {
         for symbolEntry in self.payload {
-            if symbolEntry.nValue == relativeVirtualAddress {
+            if symbolEntry.nValue == virtualAddress {
                 return symbolEntry
             }
         }
         return nil
     }
     
+    func searchSymbol(withIndex index: Int) -> SymbolTableEntry? {
+        guard index < self.payload.count else { return nil }
+        return self.payload[index]
+    }
 }

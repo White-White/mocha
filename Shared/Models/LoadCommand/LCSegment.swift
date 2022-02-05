@@ -61,19 +61,19 @@ class LCSegment: LoadCommand {
         
         self.vmaddr = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Segment Virtual Address", explanation: value.hex) })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Virtual Memory Start Address", explanation: value.hex) })
         
         self.vmsize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Segment Virtual Size", explanation: value.hex) })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Virtual Memory Size", explanation: value.hex) })
         
         self.segmentFileOff = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                          dataInterpreter: { $0.UInt64 },
-                                                         itemContentGenerator: { value in TranslationItemContent(description: "Segment File Offset", explanation: value.hex) })
+                                                         itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
         
         self.segmentSize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
                                                dataInterpreter: { $0.UInt64 },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Size to Map", explanation: value.hex) })
+                                               itemContentGenerator: { value in TranslationItemContent(description: "Size to Map into Memory", explanation: value.hex) })
         
         self.maxprot = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,

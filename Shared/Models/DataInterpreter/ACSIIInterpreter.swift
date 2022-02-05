@@ -11,7 +11,7 @@ class ASCIIInterpreter: BaseInterpreter<[String]> {
     
     private let numberOfASCIILines: Int
     
-    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         var numberOfASCIILines = data.count / HexLineStore.NumberOfBytesPerLine
         if data.count % HexLineStore.NumberOfBytesPerLine != 0 { numberOfASCIILines += 1 }
         self.numberOfASCIILines = numberOfASCIILines

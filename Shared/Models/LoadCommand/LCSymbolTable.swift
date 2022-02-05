@@ -71,32 +71,35 @@ class LCDynamicSymbolTable: LoadCommand {
         self.ilocalsym =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "index to local symbols ", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Start Index of Local Symbols ",
+                                                                                         explanation: "\(value)") })
         
         self.nlocalsym =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of local symbols ", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Number of Local Symbols ", explanation: "\(value)") })
         
         self.iextdefsym =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "index to externally defined symbols ", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Start Index of External Defined Symbols ",
+                                                                                         explanation: "\(value)") })
         
         self.nextdefsym =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of externally defined symbols ", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Number of External Defined Symbols ", explanation: "\(value)") })
         
         self.iundefsym =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "index to undefined symbols ", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Start Index of Undefined Symbols ",
+                                                                                         explanation: "\(value)") })
         
         self.nundefsym =
         translationStore.translate(next: .doubleWords,
                                  dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of undefined symbols ", explanation: "\(value)") })
+                                 itemContentGenerator: { value in TranslationItemContent(description: "Number of Undefined Symbols ", explanation: "\(value)") })
         
         self.tocoff =
         translationStore.translate(next: .doubleWords,

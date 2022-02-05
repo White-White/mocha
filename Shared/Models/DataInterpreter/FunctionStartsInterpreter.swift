@@ -13,9 +13,12 @@ struct FunctionStart {
     let rawValue: Swift.UInt64
 }
 
+// a great description for function start section data format
+// https://stackoverflow.com/questions/9602438/mach-o-file-lc-function-starts-load-command
+
 class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
     
-    var functionStartBaseVirtualAddress: Swift.UInt64 = 0
+    var textSegmentVirtualStartAddress: Swift.UInt64 = 0
     
     override func generatePayload() -> [FunctionStart] {
         let rawData = self.data.raw
@@ -52,7 +55,7 @@ class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
         let functionStart = self.payload[index]
         
         var symbolName: String?
-        if let functionSymbol = self.machoSearchSource.searchSymbolTable(withRelativeVirtualAddress: functionStart.rawValue + functionStartBaseVirtualAddress),
+        if let functionSymbol = self.machoSearchSource.symbolInSymbolTable(by: functionStart.rawValue + textSegmentVirtualStartAddress),
            let _symbolName = self.machoSearchSource.stringInStringTable(at: Int(functionSymbol.indexInStringTable)) {
             symbolName = _symbolName
         }

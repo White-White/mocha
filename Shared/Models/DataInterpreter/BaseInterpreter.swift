@@ -8,7 +8,6 @@
 import Foundation
 
 protocol Interpreter {
-    init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource)
     var numberOfTranslationItems: Int { get }
     func translationItem(at index: Int) -> TranslationItem
 }
@@ -39,7 +38,7 @@ class BaseInterpreter<Payload>: Interpreter {
         return ret
     }
     
-    required init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         self.data = data
         self.is64Bit = is64Bit
         self.machoSearchSource = machoSearchSource
