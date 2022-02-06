@@ -74,20 +74,3 @@ class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Mod
         return model
     }
 }
-
-extension ModelBasedInterpreter where Model == SymbolTableEntry {
-    
-    func searchSymbol(by virtualAddress: Swift.UInt64) -> SymbolTableEntry? {
-        for symbolEntry in self.payload {
-            if symbolEntry.nValue == virtualAddress {
-                return symbolEntry
-            }
-        }
-        return nil
-    }
-    
-    func searchSymbol(withIndex index: Int) -> SymbolTableEntry? {
-        guard index < self.payload.count else { return nil }
-        return self.payload[index]
-    }
-}

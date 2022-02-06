@@ -166,6 +166,7 @@ class Macho: Equatable {
     var allCStringInterpreters: [CStringInterpreter] = []
     var stringTableInterpreter: CStringInterpreter?
     var symbolTableInterpreter: ModelBasedInterpreter<SymbolTableEntry>?
+    var indirectSymbolTableInterpreter: ModelBasedInterpreter<IndirectSymbolTableEntry>?
     
     let dynamicSymbolTable: LCDynamicSymbolTable? = nil //FIXME:
     
@@ -226,7 +227,7 @@ class Macho: Equatable {
                     /* also we assume symtab_command locates before dysymtab_command */
                 }
                 let dynamicSymbolTableCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
-                self.machoComponents.append(self.indirectSymbolTable(from: dynamicSymbolTableCommand))
+                self.machoComponents.append(self.indirectSymbolTableComponent(from: dynamicSymbolTableCommand))
                 loadCommand = dynamicSymbolTableCommand
             case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
                 loadCommand = LCDylib(with: loadCommandType, data: loadCommandData)
@@ -321,7 +322,9 @@ extension Macho {
         
         if sectionHeader.sectionType == .S_LAZY_SYMBOL_POINTERS || sectionHeader.sectionType == .S_NON_LAZY_SYMBOL_POINTERS {
             let symbolPtrInterpreter = SymbolPointerInterpreter(dataSlice, is64Bit: is64Bit,
-                                                                machoSearchSource: self, sectionType: sectionHeader.sectionType)
+                                                                machoSearchSource: self,
+                                                                sectionType: sectionHeader.sectionType,
+                                                                startIndexInIndirectSymbolTable: Int(sectionHeader.reserved1))
             return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: symbolPtrInterpreter, title: "Section",
                                                   subTitle: sectionHeader.segment + "," + sectionHeader.section)
         }
@@ -404,7 +407,6 @@ extension Macho {
                                              sectionVirtualAddress: 0,
                                              demanglingCString: false)
         allCStringInterpreters.append(interpreter)
-        
         return MachoInterpreterBasedComponent(stringTableData,
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
@@ -412,11 +414,12 @@ extension Macho {
                                               subTitle: "__LINKEDIT")
     }
     
-    fileprivate func indirectSymbolTable(from dynamicSymbolCommand: LCDynamicSymbolTable) -> MachoInterpreterBasedComponent {
+    fileprivate func indirectSymbolTableComponent(from dynamicSymbolCommand: LCDynamicSymbolTable) -> MachoInterpreterBasedComponent {
         let indirectSymbolTableStartOffset = Int(dynamicSymbolCommand.indirectsymoff)
         let indirectSymbolTableSize = Int(dynamicSymbolCommand.nindirectsyms * 4)
         let indirectSymbolTableData = data.truncated(from: indirectSymbolTableStartOffset, length: indirectSymbolTableSize)
-        let interpreter = IndirectSymbolInterpreter(indirectSymbolTableData, is64Bit: is64Bit, machoSearchSource: self)
+        let interpreter = ModelBasedInterpreter<IndirectSymbolTableEntry>.init(indirectSymbolTableData, is64Bit: is64Bit, machoSearchSource: self)
+        self.indirectSymbolTableInterpreter = interpreter
         return MachoInterpreterBasedComponent(indirectSymbolTableData,
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
@@ -501,15 +504,19 @@ extension Macho {
 
 protocol MachoSearchSource: AnyObject {
     
+    // search string
     func stringInStringTable(at offset: Int) -> String?
-    
     func searchString(by virtualAddress: UInt64) -> String?
     
+    // section name
     func sectionName(at ordinal: Int) -> String
     
+    // search in symbol table
     func symbolInSymbolTable(by virtualAddress: UInt64) -> SymbolTableEntry?
+    func symbolInSymbolTable(at index: Int) -> SymbolTableEntry?
     
-    func symbolInSymbolTable(with index: Int) -> SymbolTableEntry?
+    // search in indirect symbol table
+    func entryInIndirectSymbolTable(at index: Int) -> IndirectSymbolTableEntry?
 }
 
 extension Macho: MachoSearchSource {
@@ -538,10 +545,28 @@ extension Macho: MachoSearchSource {
     }
     
     func symbolInSymbolTable(by virtualAddress: UInt64) -> SymbolTableEntry? {
-        return self.symbolTableInterpreter?.searchSymbol(by: virtualAddress)
+        if let symbolTableInterpreter = self.symbolTableInterpreter {
+            for symbolEntry in symbolTableInterpreter.payload {
+                if symbolEntry.nValue == virtualAddress {
+                    return symbolEntry
+                }
+            }
+        }
+        return nil
     }
     
-    func symbolInSymbolTable(with index: Int) -> SymbolTableEntry? {
-        return self.symbolTableInterpreter?.searchSymbol(withIndex: index)
+    func symbolInSymbolTable(at index: Int) -> SymbolTableEntry? {
+        if let symbolTableInterpreter = self.symbolTableInterpreter {
+            guard index < symbolTableInterpreter.payload.count else { return nil }
+            return symbolTableInterpreter.payload[index]
+        }
+        return nil
+    }
+    
+    func entryInIndirectSymbolTable(at index: Int) -> IndirectSymbolTableEntry? {
+        if let indirectSymbolTableInterpreter = self.indirectSymbolTableInterpreter {
+            return indirectSymbolTableInterpreter.payload[index]
+        }
+        return nil
     }
 }

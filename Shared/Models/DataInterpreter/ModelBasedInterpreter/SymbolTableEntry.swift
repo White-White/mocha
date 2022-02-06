@@ -390,7 +390,3 @@ struct SymbolTableEntry: InterpretableModel {
         return 6
     }
 }
-
-struct DynamicSymbolTableEntry {
-    
-}

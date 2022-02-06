@@ -15,7 +15,7 @@
 		1F40ED2E27A13D3A00D93824 /* UStringInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2D27A13D3A00D93824 /* UStringInterpreter.swift */; };
 		1F40ED3027AA456400D93824 /* SymbolStubInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2F27AA456400D93824 /* SymbolStubInterpreter.swift */; };
 		1F40ED3227AB88A800D93824 /* SymbolPointerInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */; };
-		1F40ED3427AEC19400D93824 /* IndirectSymbolInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3327AEC19400D93824 /* IndirectSymbolInterpreter.swift */; };
+		1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */; };
 		1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */; };
 		1F6212E527967438009A9154 /* LCMonoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E427967438009A9154 /* LCMonoString.swift */; };
 		1F6212E72796744F009A9154 /* LCUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E62796744F009A9154 /* LCUUID.swift */; };
@@ -77,7 +77,7 @@
 		1F40ED2D27A13D3A00D93824 /* UStringInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED2F27AA456400D93824 /* SymbolStubInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolStubInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPointerInterpreter.swift; sourceTree = "<group>"; };
-		1F40ED3327AEC19400D93824 /* IndirectSymbolInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndirectSymbolInterpreter.swift; sourceTree = "<group>"; };
+		1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndirectSymbolTableEntry.swift; sourceTree = "<group>"; };
 		1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCEncryptionInfo.swift; sourceTree = "<group>"; };
 		1F6212E427967438009A9154 /* LCMonoString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCMonoString.swift; sourceTree = "<group>"; };
 		1F6212E62796744F009A9154 /* LCUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCUUID.swift; sourceTree = "<group>"; };
@@ -285,6 +285,7 @@
 				1FFCA6DF2780C20700634B79 /* ModelBasedInterpreter.swift */,
 				1FFE55F627802FA300ECD395 /* DataInCodeModel.swift */,
 				1F184B272769EBB700CA286A /* SymbolTableEntry.swift */,
+				1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */,
 				1F683259276C49AB002609C5 /* RelocationEntry.swift */,
 			);
 			path = ModelBasedInterpreter;
@@ -302,7 +303,6 @@
 				1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */,
 				1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */,
 				1F40ED2F27AA456400D93824 /* SymbolStubInterpreter.swift */,
-				1F40ED3327AEC19400D93824 /* IndirectSymbolInterpreter.swift */,
 				1FFE55F527802E9900ECD395 /* ModelBasedInterpreter */,
 				1FB6504627904933004327BB /* DyldInfoInterpreter */,
 			);
@@ -432,11 +432,11 @@
 				1F6EB9FC278AE46500590729 /* LCDyldInfo.swift in Sources */,
 				1F73C6DA275A320D0020E581 /* HexView.swift in Sources */,
 				1F73C6EA275A32120020E581 /* File.swift in Sources */,
-				1F40ED3427AEC19400D93824 /* IndirectSymbolInterpreter.swift in Sources */,
 				1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */,
 				1FFCA6EC278487D300634B79 /* ACSIIInterpreter.swift in Sources */,
 				1FFE55FD278030F100ECD395 /* LCSegment.swift in Sources */,
 				1F40ED3027AA456400D93824 /* SymbolStubInterpreter.swift in Sources */,
+				1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */,
 				1F73C6CD275A31F00020E581 /* SectionHeader.swift in Sources */,
 				1F73C6FC275A322C0020E581 /* FileView.swift in Sources */,
 				1FC11B0A277B10F3008D42D9 /* HexLineStore.swift in Sources */,
