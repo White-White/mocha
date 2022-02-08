@@ -315,7 +315,7 @@ extension Macho {
         
         if sectionHeader.sectionType == .S_SYMBOL_STUBS {
             // for symbol stubs section, reverved2 filed is the size of the stub
-            let stubInterpreter = SymbolStubInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self, stubSize: Int(sectionHeader.reserved2))
+            let stubInterpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: stubInterpreter, title: "Section",
                                                   subTitle: sectionHeader.segment + "," + sectionHeader.section)
         }
@@ -504,6 +504,10 @@ extension Macho {
 
 protocol MachoSearchSource: AnyObject {
     
+    // cpu info
+    var cpuType: CPUType { get }
+    var cpuSubType: CPUSubtype { get }
+    
     // search string
     func stringInStringTable(at offset: Int) -> String?
     func searchString(by virtualAddress: UInt64) -> String?
@@ -520,6 +524,9 @@ protocol MachoSearchSource: AnyObject {
 }
 
 extension Macho: MachoSearchSource {
+    
+    var cpuType: CPUType { header.cpuType }
+    var cpuSubType: CPUSubtype { header.cpuSubtype }
     
     func stringInStringTable(at offset: Int) -> String? {
         return self.stringTableInterpreter?.findString(at: offset)

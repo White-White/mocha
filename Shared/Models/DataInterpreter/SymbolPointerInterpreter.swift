@@ -35,16 +35,25 @@ class SymbolPointerInterpreter: BaseInterpreter<[DummySymbolPointer]> {
     override func translationItem(at index: Int) -> TranslationItem {
         let pointerRawValue = data.truncated(from: index * pointerSize, length: pointerSize).raw.UInt64
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
+        
         var symbolName: String?
         if let indirectSymbolTableEntry = machoSearchSource.entryInIndirectSymbolTable(at: indirectSymbolTableIndex),
            let symbolTableEntry = machoSearchSource.symbolInSymbolTable(at: indirectSymbolTableEntry.symbolTableIndex),
            let _symbolName = machoSearchSource.stringInStringTable(at: Int(symbolTableEntry.indexInStringTable)) {
             symbolName = _symbolName
         }
+        
+        var description = "Pointer Raw Value"
+        if sectionType == .S_LAZY_SYMBOL_POINTERS {
+            description += " (Stub offset)"
+        } else if sectionType == .S_NON_LAZY_SYMBOL_POINTERS {
+            description += " (To be fixed by dyld)"
+        }
+        
         return TranslationItem(sourceDataRange: data.absoluteRange(index * pointerSize, pointerSize),
-                               content: TranslationItemContent(description: "Pointer",
+                               content: TranslationItemContent(description: description,
                                                                explanation: pointerRawValue.hex,
-                                                               extraDescription: "Target Symbol for This Pointer",
+                                                               extraDescription: "Symbol Name of the Corresponding Indirect Symbol Table Entry",
                                                                extraExplanation: symbolName))
     }
 }

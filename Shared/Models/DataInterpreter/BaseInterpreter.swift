@@ -94,8 +94,3 @@ class AnonymousInterpreter: BaseInterpreter<AnonymousInterpreter.Dummy> {
                                content: TranslationItemContent(description: description, explanation: explanation))
     }
 }
-
-class CodeInterpreter: AnonymousInterpreter {
-    override var description: String { "Code" }
-    override var explanation: String { "This part of the macho file is your machine code. Hopper.app is a better tool for viewing it." }
-}

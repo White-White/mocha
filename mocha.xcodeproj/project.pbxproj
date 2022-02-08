@@ -13,9 +13,10 @@
 		1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F184B272769EBB700CA286A /* SymbolTableEntry.swift */; };
 		1F40ED2C279FF57700D93824 /* FunctionStartsInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2B279FF57700D93824 /* FunctionStartsInterpreter.swift */; };
 		1F40ED2E27A13D3A00D93824 /* UStringInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2D27A13D3A00D93824 /* UStringInterpreter.swift */; };
-		1F40ED3027AA456400D93824 /* SymbolStubInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2F27AA456400D93824 /* SymbolStubInterpreter.swift */; };
 		1F40ED3227AB88A800D93824 /* SymbolPointerInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */; };
 		1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */; };
+		1F40ED8627B110AD00D93824 /* CodeInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8527B110AD00D93824 /* CodeInterpreter.swift */; };
+		1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8927B1120400D93824 /* CapStoneHelper.m */; };
 		1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */; };
 		1F6212E527967438009A9154 /* LCMonoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E427967438009A9154 /* LCMonoString.swift */; };
 		1F6212E72796744F009A9154 /* LCUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E62796744F009A9154 /* LCUUID.swift */; };
@@ -41,6 +42,7 @@
 		1F73C70C275C872D0020E581 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C70B275C872D0020E581 /* ContentView.swift */; };
 		1F75F8B8275A3151001A4E29 /* mochaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A7275A314F001A4E29 /* mochaApp.swift */; };
 		1F75F8BC275A3151001A4E29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F75F8A9275A3151001A4E29 /* Assets.xcassets */; };
+		1F844CB327B2434700ED0246 /* libcapstone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F844C7E27B2429100ED0246 /* libcapstone.a */; };
 		1FB6504827904971004327BB /* OperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504727904971004327BB /* OperationCode.swift */; };
 		1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */; };
 		1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504D279051FF004327BB /* BindOperationCode.swift */; };
@@ -68,6 +70,135 @@
 		1FFE5604278032D200ECD395 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFE5603278032D200ECD395 /* Log.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1F844C7D27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DCFE23BD19DDCC2D00EF8EA9;
+			remoteInfo = CapstoneStatic;
+		};
+		1F844C7F27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DCFE23CD19DDCC9500EF8EA9;
+			remoteInfo = CapstoneDynamic;
+		};
+		1F844C8127B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474F6819DE6F3B00BCA449;
+			remoteInfo = CapstoneFramework;
+		};
+		1F844C8327B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474E6419DDEA5F00BCA449;
+			remoteInfo = test_basic;
+		};
+		1F844C8527B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474E8619DDEAA200BCA449;
+			remoteInfo = test_arm;
+		};
+		1F844C8727B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474EEA19DDEAE400BCA449;
+			remoteInfo = test_arm64;
+		};
+		1F844C8927B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC3A28DB1AF29BEB00FC9913;
+			remoteInfo = test_customized_mnem;
+		};
+		1F844C8B27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474E9119DDEAA700BCA449;
+			remoteInfo = test_detail;
+		};
+		1F844C8D27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC5BFF4019EE544E008CA585;
+			remoteInfo = test_iter;
+		};
+		1F844C8F27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DCA357961BC2C0930094BB3F;
+			remoteInfo = test_m68k;
+		};
+		1F844C9127B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474E9C19DDEAAC00BCA449;
+			remoteInfo = test_mips;
+		};
+		1F844C9327B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474EA719DDEAB000BCA449;
+			remoteInfo = test_ppc;
+		};
+		1F844C9527B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474EB219DDEAB700BCA449;
+			remoteInfo = test_skipdata;
+		};
+		1F844C9727B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474EBD19DDEABC00BCA449;
+			remoteInfo = test_sparc;
+		};
+		1F844C9927B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474EC819DDEAC100BCA449;
+			remoteInfo = test_systemz;
+		};
+		1F844C9B27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474ED319DDEAC600BCA449;
+			remoteInfo = test_x86;
+		};
+		1F844C9D27B2429100ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DC474EDE19DDEACC00BCA449;
+			remoteInfo = test_xcore;
+		};
+		1F844CB127B242EC00ED0246 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = DCFE23BC19DDCC2D00EF8EA9;
+			remoteInfo = CapstoneStatic;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		1F0133FD2775FE1900EB600A /* DataSlice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSlice.swift; sourceTree = "<group>"; };
 		1F16F2202785FFBE0094E720 /* Demangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demangle.swift; sourceTree = "<group>"; };
@@ -75,9 +206,12 @@
 		1F184B272769EBB700CA286A /* SymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTableEntry.swift; sourceTree = "<group>"; };
 		1F40ED2B279FF57700D93824 /* FunctionStartsInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionStartsInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED2D27A13D3A00D93824 /* UStringInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringInterpreter.swift; sourceTree = "<group>"; };
-		1F40ED2F27AA456400D93824 /* SymbolStubInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolStubInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPointerInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndirectSymbolTableEntry.swift; sourceTree = "<group>"; };
+		1F40ED8527B110AD00D93824 /* CodeInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeInterpreter.swift; sourceTree = "<group>"; };
+		1F40ED8727B1120400D93824 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
+		1F40ED8827B1120400D93824 /* CapStoneHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CapStoneHelper.h; sourceTree = "<group>"; };
+		1F40ED8927B1120400D93824 /* CapStoneHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CapStoneHelper.m; sourceTree = "<group>"; };
 		1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCEncryptionInfo.swift; sourceTree = "<group>"; };
 		1F6212E427967438009A9154 /* LCMonoString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCMonoString.swift; sourceTree = "<group>"; };
 		1F6212E62796744F009A9154 /* LCUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCUUID.swift; sourceTree = "<group>"; };
@@ -106,6 +240,8 @@
 		1F75F8B4275A3151001A4E29 /* mocha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mocha.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F75F8B6275A3151001A4E29 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
 		1F75F8C5275A3161001A4E29 /* mocha (iOS).entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "mocha (iOS).entitlements"; sourceTree = "<group>"; };
+		1F8447B927B11D7000ED0246 /* libcapstone.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcapstone.a; path = capstone/libcapstone.a; sourceTree = "<group>"; };
+		1F844C6927B2429100ED0246 /* Capstone.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Capstone.xcodeproj; path = capstone/xcode/Capstone.xcodeproj; sourceTree = "<group>"; };
 		1FB650452790445C004327BB /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1FB6504727904971004327BB /* OperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationCode.swift; sourceTree = "<group>"; };
 		1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RebaseOperationCode.swift; sourceTree = "<group>"; };
@@ -138,6 +274,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F844CB327B2434700ED0246 /* libcapstone.a in Frameworks */,
 				1FFE55EB277DCFE300ECD395 /* Introspect in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -196,17 +333,20 @@
 		1F75F8A1275A314F001A4E29 = {
 			isa = PBXGroup;
 			children = (
+				1F844C6927B2429100ED0246 /* Capstone.xcodeproj */,
 				1FB650452790445C004327BB /* README.md */,
 				1F75F8C5275A3161001A4E29 /* mocha (iOS).entitlements */,
 				1F75F8A6275A314F001A4E29 /* Shared */,
 				1F75F8B5275A3151001A4E29 /* macOS */,
 				1F75F8AF275A3151001A4E29 /* Products */,
+				1F8447B827B11D7000ED0246 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		1F75F8A6275A314F001A4E29 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				1F40ED8727B1120400D93824 /* Bridging-Header.h */,
 				1F75F8A7275A314F001A4E29 /* mochaApp.swift */,
 				1F73C70B275C872D0020E581 /* ContentView.swift */,
 				1F75F8A9275A3151001A4E29 /* Assets.xcassets */,
@@ -232,6 +372,38 @@
 				1F75F8B6275A3151001A4E29 /* macOS.entitlements */,
 			);
 			path = macOS;
+			sourceTree = "<group>";
+		};
+		1F8447B827B11D7000ED0246 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1F8447B927B11D7000ED0246 /* libcapstone.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1F844C6A27B2429100ED0246 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1F844C7E27B2429100ED0246 /* libcapstone.a */,
+				1F844C8027B2429100ED0246 /* libcapstone.dylib */,
+				1F844C8227B2429100ED0246 /* Capstone.framework */,
+				1F844C8427B2429100ED0246 /* test */,
+				1F844C8627B2429100ED0246 /* test_arm */,
+				1F844C8827B2429100ED0246 /* test_arm64 */,
+				1F844C8A27B2429100ED0246 /* test_customized_mnem */,
+				1F844C8C27B2429100ED0246 /* test_detail */,
+				1F844C8E27B2429100ED0246 /* test_iter */,
+				1F844C9027B2429100ED0246 /* test_m68k */,
+				1F844C9227B2429100ED0246 /* test_mips */,
+				1F844C9427B2429100ED0246 /* test_ppc */,
+				1F844C9627B2429100ED0246 /* test_skipdata */,
+				1F844C9827B2429100ED0246 /* test_sparc */,
+				1F844C9A27B2429100ED0246 /* test_systemz */,
+				1F844C9C27B2429100ED0246 /* test_x86 */,
+				1F844C9E27B2429100ED0246 /* test_xcore */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		1FB6504627904933004327BB /* DyldInfoInterpreter */ = {
@@ -302,7 +474,9 @@
 				1FFCA6EB278487D300634B79 /* ACSIIInterpreter.swift */,
 				1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */,
 				1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */,
-				1F40ED2F27AA456400D93824 /* SymbolStubInterpreter.swift */,
+				1F40ED8527B110AD00D93824 /* CodeInterpreter.swift */,
+				1F40ED8827B1120400D93824 /* CapStoneHelper.h */,
+				1F40ED8927B1120400D93824 /* CapStoneHelper.m */,
 				1FFE55F527802E9900ECD395 /* ModelBasedInterpreter */,
 				1FB6504627904933004327BB /* DyldInfoInterpreter */,
 			);
@@ -323,6 +497,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				1F844CB227B242EC00ED0246 /* PBXTargetDependency */,
 			);
 			name = "mocha (macOS)";
 			packageProductDependencies = (
@@ -344,6 +519,7 @@
 				TargetAttributes = {
 					1F75F8B3275A3151001A4E29 = {
 						CreatedOnToolsVersion = 13.1;
+						LastSwiftMigration = 1310;
 					};
 				};
 			};
@@ -361,12 +537,141 @@
 			);
 			productRefGroup = 1F75F8AF275A3151001A4E29 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 1F844C6A27B2429100ED0246 /* Products */;
+					ProjectRef = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				1F75F8B3275A3151001A4E29 /* mocha (macOS) */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1F844C7E27B2429100ED0246 /* libcapstone.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcapstone.a;
+			remoteRef = 1F844C7D27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8027B2429100ED0246 /* libcapstone.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = libcapstone.dylib;
+			remoteRef = 1F844C7F27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8227B2429100ED0246 /* Capstone.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = Capstone.framework;
+			remoteRef = 1F844C8127B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8427B2429100ED0246 /* test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			name = test;
+			path = test_basic;
+			remoteRef = 1F844C8327B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8627B2429100ED0246 /* test_arm */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_arm;
+			remoteRef = 1F844C8527B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8827B2429100ED0246 /* test_arm64 */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_arm64;
+			remoteRef = 1F844C8727B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8A27B2429100ED0246 /* test_customized_mnem */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_customized_mnem;
+			remoteRef = 1F844C8927B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8C27B2429100ED0246 /* test_detail */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_detail;
+			remoteRef = 1F844C8B27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C8E27B2429100ED0246 /* test_iter */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_iter;
+			remoteRef = 1F844C8D27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9027B2429100ED0246 /* test_m68k */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_m68k;
+			remoteRef = 1F844C8F27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9227B2429100ED0246 /* test_mips */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_mips;
+			remoteRef = 1F844C9127B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9427B2429100ED0246 /* test_ppc */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_ppc;
+			remoteRef = 1F844C9327B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9627B2429100ED0246 /* test_skipdata */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_skipdata;
+			remoteRef = 1F844C9527B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9827B2429100ED0246 /* test_sparc */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_sparc;
+			remoteRef = 1F844C9727B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9A27B2429100ED0246 /* test_systemz */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_systemz;
+			remoteRef = 1F844C9927B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9C27B2429100ED0246 /* test_x86 */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_x86;
+			remoteRef = 1F844C9B27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1F844C9E27B2429100ED0246 /* test_xcore */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = test_xcore;
+			remoteRef = 1F844C9D27B2429100ED0246 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		1F75F8B2275A3151001A4E29 /* Resources */ = {
@@ -402,11 +707,13 @@
 				1F40ED2E27A13D3A00D93824 /* UStringInterpreter.swift in Sources */,
 				1FFE5604278032D200ECD395 /* Log.swift in Sources */,
 				1FEF55DA278B3C170037098B /* TranslationStore.swift in Sources */,
+				1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */,
 				1F6212E72796744F009A9154 /* LCUUID.swift in Sources */,
 				1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */,
 				1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */,
 				1F16F22C278813E70094E720 /* DataShifter.swift in Sources */,
 				1FEF55DC278B43130037098B /* TranslationDataSource.swift in Sources */,
+				1F40ED8627B110AD00D93824 /* CodeInterpreter.swift in Sources */,
 				1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */,
 				1FFCA6DE2780C1E600634B79 /* BaseInterpreter.swift in Sources */,
 				1FFE55F727802FA300ECD395 /* DataInCodeModel.swift in Sources */,
@@ -435,7 +742,6 @@
 				1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */,
 				1FFCA6EC278487D300634B79 /* ACSIIInterpreter.swift in Sources */,
 				1FFE55FD278030F100ECD395 /* LCSegment.swift in Sources */,
-				1F40ED3027AA456400D93824 /* SymbolStubInterpreter.swift in Sources */,
 				1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */,
 				1F73C6CD275A31F00020E581 /* SectionHeader.swift in Sources */,
 				1F73C6FC275A322C0020E581 /* FileView.swift in Sources */,
@@ -445,6 +751,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1F844CB227B242EC00ED0246 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CapstoneStatic;
+			targetProxy = 1F844CB127B242EC00ED0246 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1F75F8BD275A3151001A4E29 /* Debug */ = {
@@ -563,7 +877,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -571,6 +887,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/capstone/include";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -582,6 +899,8 @@
 				PRODUCT_NAME = mocha;
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Shared/Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -591,7 +910,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -599,6 +920,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "${SRCROOT}/capstone/include";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -610,6 +932,7 @@
 				PRODUCT_NAME = mocha;
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Shared/Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
