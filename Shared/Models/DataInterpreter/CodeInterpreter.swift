@@ -10,6 +10,8 @@ import Foundation
 struct Instruction {
     let mnemonic: String
     let operand: String
+    let startOffset: Int
+    let commandSize: Int
 }
 
 class CodeInterpreter: BaseInterpreter<[Instruction]> {
@@ -40,7 +42,7 @@ class CodeInterpreter: BaseInterpreter<[Instruction]> {
         }
         
         let capStoneInstructions = CapStoneHelper.instructions(from: self.data.raw, startVirtualAddress: 0, arch: capStoneArchType)
-        return capStoneInstructions.map { Instruction(mnemonic: $0.mnemonic, operand: $0.operand) }
+        return capStoneInstructions.map { Instruction(mnemonic: $0.mnemonic, operand: $0.operand, startOffset: $0.startOffset, commandSize: $0.commandSize) }
     }
     
     override var numberOfTranslationItems: Int {
@@ -49,8 +51,11 @@ class CodeInterpreter: BaseInterpreter<[Instruction]> {
     
     override func translationItem(at index: Int) -> TranslationItem {
         let instruction = self.payload[index]
-        return TranslationItem(sourceDataRange: nil,
-                               content: TranslationItemContent(description: nil,
-                                                               explanation: instruction.mnemonic + ", " + instruction.operand))
+        return TranslationItem(sourceDataRange: self.data.absoluteRange(instruction.startOffset, instruction.commandSize),
+                               content: TranslationItemContent(description: "Assembly",
+                                                               explanation: instruction.mnemonic + "    " + instruction.operand))
     }
 }
+
+// ARMv8 (AArch64) Instruction Encoding
+// http://kitoslab-eng.blogspot.com/2012/10/armv8-aarch64-instruction-encoding.html

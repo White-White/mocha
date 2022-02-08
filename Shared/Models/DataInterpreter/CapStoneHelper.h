@@ -21,6 +21,8 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
 
 @property (nonatomic, strong) NSString *mnemonic;
 @property (nonatomic, strong) NSString *operand;
+@property (nonatomic, assign) NSInteger startOffset;
+@property (nonatomic, assign) NSInteger commandSize;
 
 @end
 
