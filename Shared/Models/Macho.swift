@@ -313,10 +313,16 @@ extension Macho {
                                                   subTitle: sectionHeader.segment + "," + sectionHeader.section)
         }
         
-        if sectionHeader.sectionType == .S_SYMBOL_STUBS {
-            // for symbol stubs section, reverved2 filed is the size of the stub
-            let stubInterpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: stubInterpreter, title: "Section",
+        if sectionHeader.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
+            let instructionInterpreter: Interpreter
+            if self.header.cpuType.isARMChip {
+                instructionInterpreter = InstructionInterpreterARM(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            } else if self.header.cpuType.isIntelChip {
+                instructionInterpreter = InstructionInterpreterIntel(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            } else {
+                instructionInterpreter = InstructionInterpreterUnknown(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            }
+            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: instructionInterpreter, title: "Section",
                                                   subTitle: sectionHeader.segment + "," + sectionHeader.section)
         }
         
@@ -334,8 +340,6 @@ extension Macho {
         switch sectionHeader.segment {
         case "__TEXT":
             switch sectionHeader.section {
-            case "__text":
-                interpreter = CodeInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             case "__ustring":
                 interpreter = UStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             case "__swift5_reflstr":

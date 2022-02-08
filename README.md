@@ -97,7 +97,7 @@ This project is still in development.
 | S_LITERAL_POINTERS | ✅ |
 | S_NON_LAZY_SYMBOL_POINTERS | ⏳ |
 | S_LAZY_SYMBOL_POINTERS | ⏳ |
-| S_SYMBOL_STUBS | ⏳ |
+| S_SYMBOL_STUBS | ✅ |
 | S_MOD_INIT_FUNC_POINTERS | ⏳ |
 | S_MOD_TERM_FUNC_POINTERS | ⏳ |
 | S_COALESCED | ⏳ |
@@ -124,6 +124,9 @@ This project is still in development.
 | Other Section | Supported |
 |  ----  | ----  |
 | \_\_TEXT,\_\_ustring  | ✅ |
+| \_\_TEXT,\_\_text  | ✅ |
+| \_\_TEXT,\_\_stubs  | ✅ |
+| \_\_TEXT,\_\_stub_helper  | ✅ |
 
 
 | LinkedIT Type   | Supported  |

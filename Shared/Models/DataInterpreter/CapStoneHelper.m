@@ -74,17 +74,13 @@
     disasm_count = cs_disasm(cs_handle, (uint8_t *)[data bytes], (uint32_t)[data length], startVirtualAddress, 0, &cs_insn);
     NSMutableArray <CapStoneInstruction *>* instructions = [NSMutableArray arrayWithCapacity:disasm_count];
     
-    NSInteger startOffset = 0;
     for (size_t i = 0; i < disasm_count; i++) {
         NSString *mnemonic = [NSString stringWithCString:cs_insn[i].mnemonic encoding:NSUTF8StringEncoding];
         NSString *operand = [NSString stringWithCString:cs_insn[i].op_str encoding:NSUTF8StringEncoding];
         CapStoneInstruction *ins = [[CapStoneInstruction alloc] init];
         ins.mnemonic = mnemonic;
         ins.operand = operand;
-        ins.startOffset = startOffset;
-        ins.commandSize = cs_insn[i].size;
         [instructions addObject:ins];
-        startOffset += cs_insn[i].size;
     }
     
     return instructions;

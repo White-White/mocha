@@ -42,22 +42,75 @@ enum SectionType: UInt32 {
     }
 }
 
+enum SectionAttribute {
+    case S_ATTR_PURE_INSTRUCTIONS
+    case S_ATTR_NO_TOC
+    case S_ATTR_STRIP_STATIC_SYMS
+    case S_ATTR_NO_DEAD_STRIP
+    case S_ATTR_LIVE_SUPPORT
+    case S_ATTR_SELF_MODIFYING_CODE
+    case S_ATTR_DEBUG
+    case S_ATTR_SOME_INSTRUCTIONS
+    case S_ATTR_EXT_RELOC
+    case S_ATTR_LOC_RELOC
+    
+    var name: String {
+        switch self {
+        case .S_ATTR_PURE_INSTRUCTIONS:
+            return "S_ATTR_PURE_INSTRUCTIONS"
+        case .S_ATTR_NO_TOC:
+            return "S_ATTR_NO_TOC"
+        case .S_ATTR_STRIP_STATIC_SYMS:
+            return "S_ATTR_STRIP_STATIC_SYMS"
+        case .S_ATTR_NO_DEAD_STRIP:
+            return "S_ATTR_NO_DEAD_STRIP"
+        case .S_ATTR_LIVE_SUPPORT:
+            return "S_ATTR_LIVE_SUPPORT"
+        case .S_ATTR_SELF_MODIFYING_CODE:
+            return "S_ATTR_SELF_MODIFYING_CODE"
+        case .S_ATTR_DEBUG:
+            return "S_ATTR_DEBUG"
+        case .S_ATTR_SOME_INSTRUCTIONS:
+            return "S_ATTR_SOME_INSTRUCTIONS"
+        case .S_ATTR_EXT_RELOC:
+            return "S_ATTR_EXT_RELOC"
+        case .S_ATTR_LOC_RELOC:
+            return "S_ATTR_LOC_RELOC"
+        }
+    }
+}
+
 struct SectionAttributes {
-    let descriptions: [String]
+    
+    let raw: UInt32
+    let attributes: [SectionAttribute]
+    
+    var descriptions: [String] {
+        if attributes.isEmpty {
+            return ["NONE"]
+        } else {
+            return attributes.map({ $0.name })
+        }
+    }
+    
     init(raw: UInt32) {
-        var descriptions: [String] = []
-        if raw.bitAnd(0x80000000) { descriptions.append("S_ATTR_PURE_INSTRUCTIONS") }
-        if raw.bitAnd(0x40000000) { descriptions.append("S_ATTR_NO_TOC") }
-        if raw.bitAnd(0x20000000) { descriptions.append("S_ATTR_STRIP_STATIC_SYMS") }
-        if raw.bitAnd(0x10000000) { descriptions.append("S_ATTR_NO_DEAD_STRIP") }
-        if raw.bitAnd(0x08000000) { descriptions.append("S_ATTR_LIVE_SUPPORT") }
-        if raw.bitAnd(0x04000000) { descriptions.append("S_ATTR_SELF_MODIFYING_CODE") }
-        if raw.bitAnd(0x02000000) { descriptions.append("S_ATTR_DEBUG") }
-        if raw.bitAnd(0x00000400) { descriptions.append("S_ATTR_SOME_INSTRUCTIONS") }
-        if raw.bitAnd(0x00000200) { descriptions.append("S_ATTR_EXT_RELOC") }
-        if raw.bitAnd(0x00000100) { descriptions.append("S_ATTR_LOC_RELOC") }
-        if descriptions.isEmpty { descriptions.append("NONE") }
-        self.descriptions = descriptions
+        self.raw = raw
+        var attributes: [SectionAttribute] = []
+        if raw.bitAnd(0x80000000) { attributes.append(.S_ATTR_PURE_INSTRUCTIONS) }
+        if raw.bitAnd(0x40000000) { attributes.append(.S_ATTR_NO_TOC) }
+        if raw.bitAnd(0x20000000) { attributes.append(.S_ATTR_STRIP_STATIC_SYMS) }
+        if raw.bitAnd(0x10000000) { attributes.append(.S_ATTR_NO_DEAD_STRIP) }
+        if raw.bitAnd(0x08000000) { attributes.append(.S_ATTR_LIVE_SUPPORT) }
+        if raw.bitAnd(0x04000000) { attributes.append(.S_ATTR_SELF_MODIFYING_CODE) }
+        if raw.bitAnd(0x02000000) { attributes.append(.S_ATTR_DEBUG) }
+        if raw.bitAnd(0x00000400) { attributes.append(.S_ATTR_SOME_INSTRUCTIONS) }
+        if raw.bitAnd(0x00000200) { attributes.append(.S_ATTR_EXT_RELOC) }
+        if raw.bitAnd(0x00000100) { attributes.append(.S_ATTR_LOC_RELOC) }
+        self.attributes = attributes
+    }
+    
+    func hasAttribute(_ attri: SectionAttribute) -> Bool {
+        return self.attributes.contains(attri)
     }
 }
 

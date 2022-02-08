@@ -15,7 +15,7 @@
 		1F40ED2E27A13D3A00D93824 /* UStringInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2D27A13D3A00D93824 /* UStringInterpreter.swift */; };
 		1F40ED3227AB88A800D93824 /* SymbolPointerInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */; };
 		1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */; };
-		1F40ED8627B110AD00D93824 /* CodeInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8527B110AD00D93824 /* CodeInterpreter.swift */; };
+		1F40ED8627B110AD00D93824 /* InstructionInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8527B110AD00D93824 /* InstructionInterpreter.swift */; };
 		1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8927B1120400D93824 /* CapStoneHelper.m */; };
 		1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */; };
 		1F6212E527967438009A9154 /* LCMonoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E427967438009A9154 /* LCMonoString.swift */; };
@@ -208,7 +208,7 @@
 		1F40ED2D27A13D3A00D93824 /* UStringInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPointerInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndirectSymbolTableEntry.swift; sourceTree = "<group>"; };
-		1F40ED8527B110AD00D93824 /* CodeInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeInterpreter.swift; sourceTree = "<group>"; };
+		1F40ED8527B110AD00D93824 /* InstructionInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionInterpreter.swift; sourceTree = "<group>"; };
 		1F40ED8727B1120400D93824 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		1F40ED8827B1120400D93824 /* CapStoneHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CapStoneHelper.h; sourceTree = "<group>"; };
 		1F40ED8927B1120400D93824 /* CapStoneHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CapStoneHelper.m; sourceTree = "<group>"; };
@@ -474,7 +474,7 @@
 				1FFCA6EB278487D300634B79 /* ACSIIInterpreter.swift */,
 				1FBB28212799483800E7C53D /* LiteralPointerInterpreter.swift */,
 				1F40ED3127AB88A800D93824 /* SymbolPointerInterpreter.swift */,
-				1F40ED8527B110AD00D93824 /* CodeInterpreter.swift */,
+				1F40ED8527B110AD00D93824 /* InstructionInterpreter.swift */,
 				1F40ED8827B1120400D93824 /* CapStoneHelper.h */,
 				1F40ED8927B1120400D93824 /* CapStoneHelper.m */,
 				1FFE55F527802E9900ECD395 /* ModelBasedInterpreter */,
@@ -713,7 +713,7 @@
 				1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */,
 				1F16F22C278813E70094E720 /* DataShifter.swift in Sources */,
 				1FEF55DC278B43130037098B /* TranslationDataSource.swift in Sources */,
-				1F40ED8627B110AD00D93824 /* CodeInterpreter.swift in Sources */,
+				1F40ED8627B110AD00D93824 /* InstructionInterpreter.swift in Sources */,
 				1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */,
 				1FFCA6DE2780C1E600634B79 /* BaseInterpreter.swift in Sources */,
 				1FFE55F727802FA300ECD395 /* DataInCodeModel.swift in Sources */,

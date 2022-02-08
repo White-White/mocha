@@ -49,6 +49,24 @@ enum CPUType {
             self = .unknown(value)
         }
     }
+    
+    var isARMChip: Bool {
+        switch self {
+        case .arm, .arm64, .arm64_32:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var isIntelChip: Bool {
+        switch self {
+        case .x86, .x86_64:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 //ref: <macho/machine.h>
