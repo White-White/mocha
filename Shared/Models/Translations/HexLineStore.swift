@@ -112,7 +112,7 @@ class HexLineStore: Equatable, LazyHexLineBytesProvider {
         var binaryLines: [LazyHexLine] = []
         for index in 0..<numberOfBinaryLines {
             binaryLines.append(LazyHexLine(offset: index * HexLineStore.NumberOfBytesPerLine,
-                                           baseOffset: data.startIndex,
+                                           baseOffset: data.startOffset,
                                            indexNumOfDigits: hexDigits,
                                            isEvenLine: index & 0x1 == 0,
                                            bytesProvider: self))
@@ -126,8 +126,8 @@ class HexLineStore: Equatable, LazyHexLineBytesProvider {
     }
     
     func targetIndexRange(for selectedBytesRange: Range<Int>) -> ClosedRange<Int> {
-        let startDifference = max(0, selectedBytesRange.lowerBound - data.startIndex)
-        let endDifference = max(0, selectedBytesRange.upperBound - data.startIndex)
+        let startDifference = max(0, selectedBytesRange.lowerBound - data.startOffset)
+        let endDifference = max(0, selectedBytesRange.upperBound - data.startOffset)
         let startIndex = startDifference / HexLineStore.NumberOfBytesPerLine
         var endIndex = endDifference / HexLineStore.NumberOfBytesPerLine
         if endDifference % HexLineStore.NumberOfBytesPerLine == 0 { endIndex -= 1 }

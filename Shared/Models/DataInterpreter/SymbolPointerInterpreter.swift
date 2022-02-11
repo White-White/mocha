@@ -28,11 +28,16 @@ class SymbolPointerInterpreter: BaseInterpreter<[DummySymbolPointer]> {
         super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.numberOfPointers
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         let pointerRawValue = data.truncated(from: index * pointerSize, length: pointerSize).raw.UInt64
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
         

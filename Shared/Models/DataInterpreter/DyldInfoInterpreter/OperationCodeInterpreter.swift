@@ -33,11 +33,16 @@ class OperationCodeInterpreter<Code: OperationCodeProtocol>: BaseInterpreter<Ope
         return OperationCodeInterpreter.operationCodes(from: self.data)
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.payload.numberOfTransItemsTotal
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         for element in self.payload.numberOfAccumulatedTransItems.enumerated() {
             let operationCode = self.payload.operationCodes[element.offset]
             if index < element.element {
@@ -83,20 +88,21 @@ class OperationCodeInterpreter<Code: OperationCodeProtocol>: BaseInterpreter<Ope
                     delta |= signExtendMask << shift
                 }
                 
-                lebValues.append(DyldInfoLEB(absoluteRange:(data.startIndex+ulebStartIndex)..<(data.startIndex+index), raw: delta, isSigned: isSigned))
+                lebValues.append(DyldInfoLEB(absoluteRange:(data.startOffset+ulebStartIndex)..<(data.startOffset+index), raw: delta, isSigned: isSigned))
             }
             
             // trailing string
             var cstringData: Data? = nil
             if operationCode.hasTrailingCString {
                 let cstringStartIndex = index
-                repeat {
+                while (rawData[rawData.startIndex+index] != 0) {
                     index += 1
-                } while (rawData[rawData.startIndex+index] != 0)
+                }
+                index += 1 // the final \0 is a part of the string
                 cstringData = rawData[rawData.startIndex+cstringStartIndex..<rawData.startIndex+index]
             }
             
-            operationCodes.append(OperationCode<Code>(absoluteOffset:data.startIndex+startIndexOfCurrentOperation,
+            operationCodes.append(OperationCode<Code>(absoluteOffset:data.startOffset+startIndexOfCurrentOperation,
                                                       operationCode: operationCode,
                                                       lebValues: lebValues,
                                                       cstringData: cstringData))

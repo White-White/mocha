@@ -18,11 +18,16 @@ class ASCIIInterpreter: BaseInterpreter<[String]> {
         super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return numberOfASCIILines
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         let lineData = self.data.truncated(from: index * HexLineStore.NumberOfBytesPerLine, maxLength: HexLineStore.NumberOfBytesPerLine)
         let chars = lineData.raw.map { char -> Character in
             if char < 32 || char > 126 {

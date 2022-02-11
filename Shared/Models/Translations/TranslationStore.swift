@@ -20,7 +20,7 @@ class TranslationStore {
     func translate<T>(next straddle: Straddle, dataInterpreter: (Data) -> T, itemContentGenerator: (T) -> TranslationItemContent) -> T {
         defer { translated += straddle.raw }
         let rawData = self.machoDataSlice.truncated(from: translated, length: straddle.raw).raw
-        let rawDataAbsoluteRange = machoDataSlice.startIndex+translated..<machoDataSlice.startIndex+translated+straddle.raw
+        let rawDataAbsoluteRange = machoDataSlice.startOffset+translated..<machoDataSlice.startOffset+translated+straddle.raw
         let interpreted: T = dataInterpreter(rawData)
         items.append(TranslationItem(sourceDataRange: rawDataAbsoluteRange, content: itemContentGenerator(interpreted)))
         return interpreted

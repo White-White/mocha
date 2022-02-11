@@ -10,30 +10,32 @@ import Foundation
 struct DataSlice: Equatable {
     
     static func == (lhs: DataSlice, rhs: DataSlice) -> Bool {
-        return lhs.startIndex == rhs.startIndex && lhs.length == rhs.length && lhs.sameSource(with: rhs)
+        return lhs.startOffset == rhs.startOffset && lhs.count == rhs.count && lhs.sameSource(with: rhs)
     }
     
-    private let basedData: Data
-    let startIndex: Int
-    private let length: Int
+    private let machoData: Data
+    
+    let startOffset: Int
+    let count: Int
     
     let preferredNumberOfHexDigits: Int
     
-    var count: Int { length }
-    var raw: Data { basedData[(basedData.startIndex + startIndex)..<(basedData.startIndex + startIndex + length)] }
-    
-    init(_ machoData: Data) {
-        self.init(machoData, startOffsetInMacho: .zero, length: machoData.count)
+    var raw: Data {
+        return machoData[(machoData.startIndex + startOffset)..<(machoData.startIndex + startOffset + count)]
     }
     
-    private init(_ data: Data, startOffsetInMacho: Int, length: Int) {
-        guard (startOffsetInMacho + length) <= data.count else { fatalError() }
+    init(_ machoData: Data) {
+        self.init(machoData, startOffset: .zero, length: machoData.count)
+    }
+    
+    private init(_ machoData: Data, startOffset: Int, length: Int) {
+        guard let magicType = MagicType(machoData), magicType.isMachoFile else { fatalError() }
         
-        self.basedData = data
-        self.startIndex = startOffsetInMacho
-        self.length = length
+        self.machoData = machoData
+        self.startOffset = startOffset
+        self.count = length
         
-        var machoDataSize = data.count
+        var machoDataSize = machoData.count
         var digitCount = 0
         while machoDataSize != 0 {
             digitCount += 1
@@ -43,7 +45,7 @@ struct DataSlice: Equatable {
     }
     
     func truncated(from: Int, maxLength: Int) -> DataSlice {
-        if from + maxLength > self.length {
+        if from + maxLength > self.count {
             return self.truncated(from: from)
         } else {
             return self.truncated(from: from, length: maxLength)
@@ -53,11 +55,11 @@ struct DataSlice: Equatable {
     func truncated(from: Int, length: Int? = nil) -> DataSlice {
         if let length = length {
             guard length > 0 else { fatalError() }
-            guard from + length <= self.length else { fatalError() }
-            return DataSlice(basedData, startOffsetInMacho: startIndex + from, length: length)
+            guard from + length <= self.count else { fatalError() }
+            return DataSlice(machoData, startOffset: startOffset + from, length: length)
         } else {
-            guard from < self.length else { fatalError() }
-            return DataSlice(basedData, startOffsetInMacho: startIndex + from, length: self.length - from)
+            guard from < self.count else { fatalError() }
+            return DataSlice(machoData, startOffset: startOffset + from, length: self.count - from)
         }
     }
     
@@ -66,7 +68,7 @@ struct DataSlice: Equatable {
     }
  
     func sameSource(with anotherSmartData: DataSlice) -> Bool {
-        return self.basedData == anotherSmartData.basedData
+        return self.machoData == anotherSmartData.machoData
     }
     
     static func merged(_ one: DataSlice, another: DataSlice) -> DataSlice {
@@ -74,18 +76,18 @@ struct DataSlice: Equatable {
         
         // to merge one store with another, the data of nextStore must be consectutive with self's data
         // that is, self's data count plus self's lineTagStartIndex must be the nextStore's lineTagStartIndex
-        guard one.startIndex + one.length == another.startIndex else { fatalError() }
+        guard one.startOffset + one.count == another.startOffset else { fatalError() }
         
-        return DataSlice(one.basedData, startOffsetInMacho: one.startIndex, length: one.length + another.length)
+        return DataSlice(one.machoData, startOffset: one.startOffset, length: one.count + another.count)
     }
 }
 
 extension DataSlice {
     func absoluteRange(_ start: Int, _ length: Int) -> Range<Int> {
-        return startIndex+start..<startIndex+start+length
+        return startOffset+start..<startOffset+start+length
     }
     
     func absoluteRange(_ relativeRange: Range<Int>) -> Range<Int> {
-        return startIndex+relativeRange.lowerBound..<startIndex+relativeRange.upperBound
+        return startOffset+relativeRange.lowerBound..<startOffset+relativeRange.upperBound
     }
 }

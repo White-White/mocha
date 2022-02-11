@@ -53,7 +53,6 @@
 		1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */; };
 		1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258CE275F6250008C2826 /* TranslationItem.swift */; };
 		1FEF55DA278B3C170037098B /* TranslationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF55D9278B3C170037098B /* TranslationStore.swift */; };
-		1FEF55DC278B43130037098B /* TranslationDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF55DB278B43130037098B /* TranslationDataSource.swift */; };
 		1FFCA6DE2780C1E600634B79 /* BaseInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6DD2780C1E600634B79 /* BaseInterpreter.swift */; };
 		1FFCA6E02780C20700634B79 /* ModelBasedInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6DF2780C20700634B79 /* ModelBasedInterpreter.swift */; };
 		1FFCA6E22780C22600634B79 /* CStringInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */; };
@@ -253,7 +252,6 @@
 		1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
 		1FC258CE275F6250008C2826 /* TranslationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItem.swift; sourceTree = "<group>"; };
 		1FEF55D9278B3C170037098B /* TranslationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationStore.swift; sourceTree = "<group>"; };
-		1FEF55DB278B43130037098B /* TranslationDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationDataSource.swift; sourceTree = "<group>"; };
 		1FFCA6DD2780C1E600634B79 /* BaseInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseInterpreter.swift; sourceTree = "<group>"; };
 		1FFCA6DF2780C20700634B79 /* ModelBasedInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelBasedInterpreter.swift; sourceTree = "<group>"; };
 		1FFCA6E12780C22600634B79 /* CStringInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CStringInterpreter.swift; sourceTree = "<group>"; };
@@ -285,7 +283,6 @@
 		1F16F22D27882F310094E720 /* Translations */ = {
 			isa = PBXGroup;
 			children = (
-				1FEF55DB278B43130037098B /* TranslationDataSource.swift */,
 				1FC258CE275F6250008C2826 /* TranslationItem.swift */,
 				1FEF55D9278B3C170037098B /* TranslationStore.swift */,
 				1FC11B09277B10F3008D42D9 /* HexLineStore.swift */,
@@ -712,7 +709,6 @@
 				1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */,
 				1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */,
 				1F16F22C278813E70094E720 /* DataShifter.swift in Sources */,
-				1FEF55DC278B43130037098B /* TranslationDataSource.swift in Sources */,
 				1F40ED8627B110AD00D93824 /* InstructionInterpreter.swift in Sources */,
 				1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */,
 				1FFCA6DE2780C1E600634B79 /* BaseInterpreter.swift in Sources */,

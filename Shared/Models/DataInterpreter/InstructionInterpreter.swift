@@ -7,29 +7,12 @@
 
 import Foundation
 
-class InstructionInterpreterUnknown: AnonymousInterpreter {
-    override var description: String { "Code" }
-    override var explanation: String {
-        "This part of the macho file is machine code.\nHopper.app is a better tool for this."
-    }
-}
+class InstructionInterpreter: BaseInterpreter<[CapStoneInstruction]> {
 
-class InstructionInterpreterIntel: AnonymousInterpreter {
-    override var description: String { "Code" }
-    override var explanation: String {
-        "x86's instructions are of variable length, it'll take too much time to decode.\nHopper.app is a better tool for this."
-    }
-}
-
-class InstructionInterpreterARM: BaseInterpreter<[CapStoneInstruction]> {
-    
-    override var payload: [CapStoneInstruction] { fatalError() }
-    
-    let numberOfInstructions: Int
+    override var shouldPreload: Bool { true }
     let capStoneArchType: CapStoneArchType
     
     override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
-        self.numberOfInstructions = data.count / 4
         let capStoneArchType: CapStoneArchType
         let cpuType = machoSearchSource.cpuType
         switch cpuType {
@@ -50,15 +33,21 @@ class InstructionInterpreterARM: BaseInterpreter<[CapStoneInstruction]> {
         super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
     }
     
-    override var numberOfTranslationItems: Int {
-        return self.numberOfInstructions
+    override func generatePayload() -> [CapStoneInstruction] {
+        return CapStoneHelper.instructions(from: self.data.raw, arch: capStoneArchType)
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
-        let instruction = CapStoneHelper.instructions(from: self.data.truncated(from: index * 4, length: 4).raw,
-                                                      startVirtualAddress: 0, // FIXME: startVirtualAddress should be a valid, computed value
-                                                      arch: capStoneArchType).first!
-        return TranslationItem(sourceDataRange: self.data.absoluteRange(index * 4, 4),
+    override func numberOfTranslationSections() -> Int {
+        return self.payload.count
+    }
+    
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let instruction = self.payload[indexPath.section]
+        return TranslationItem(sourceDataRange: self.data.absoluteRange(instruction.startOffset, instruction.length),
                                content: TranslationItemContent(description: "Assembly",
                                                                explanation: instruction.mnemonic + "    " + instruction.operand))
     }

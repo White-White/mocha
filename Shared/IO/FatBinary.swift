@@ -15,12 +15,12 @@ private struct FatArch {
     let objectFileSize: UInt32
     let align: UInt32
     
-    init(with data: DataSlice) {
-        self.cpu = CPUType(data.truncated(from: 0, length: 4).raw.UInt32.bigEndian)
-        self.cpuSub = CPUSubtype(data.truncated(from: 4, length: 4).raw.UInt32.bigEndian, cpuType: self.cpu)
-        self.objectFileOffset = data.truncated(from: 8, length: 4).raw.UInt32.bigEndian
-        self.objectFileSize = data.truncated(from: 12, length: 4).raw.UInt32.bigEndian
-        self.align = data.truncated(from: 16, length: 4).raw.UInt32.bigEndian
+    init(with data: Data) {
+        self.cpu = CPUType(data.select(from: 0, length: 4).UInt32.bigEndian)
+        self.cpuSub = CPUSubtype(data.select(from: 4, length: 4).UInt32.bigEndian, cpuType: self.cpu)
+        self.objectFileOffset = data.select(from: 8, length: 4).UInt32.bigEndian
+        self.objectFileSize = data.select(from: 12, length: 4).UInt32.bigEndian
+        self.align = data.select(from: 16, length: 4).UInt32.bigEndian
     }
     
 }
@@ -46,23 +46,22 @@ struct FatBinary {
     private let fatArchs: [FatArch]
     let machos: [Macho]
     
-    init(with fileData: DataSlice, machoFileName: String) {
+    init(with fileData: Data, machoFileName: String) {
         // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
         // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
-        self.numberOfArchs = fileData.truncated(from: 4, length: 4).raw.UInt32.bigEndian
+        self.numberOfArchs = fileData.select(from: 4, length: 4).UInt32.bigEndian
         
         var fatArchs: [FatArch] = []
         var machos: [Macho] = []
         for index in 0..<Int(self.numberOfArchs) {
             // first 8 bytes are for magic and 'number of archs'
             // struct fat_arch has 20 bytes
-            let fatArchData = fileData.truncated(from: 8 + (index * 20), length: 20)
+            let fatArchData = fileData.select(from: 8 + (index * 20), length: 20)
             let farArch = FatArch(with: fatArchData)
             fatArchs.append(farArch)
             
-            let subFileDataRaw = fileData.truncated(from: Int(farArch.objectFileOffset), length: Int(farArch.objectFileSize)).raw
-            let subFileData = DataSlice(subFileDataRaw)
-            let subMachos = File(with: machoFileName, fileData: subFileData).machos
+            let subFileDataRaw = fileData.select(from: Int(farArch.objectFileOffset), length: Int(farArch.objectFileSize))
+            let subMachos = File(with: machoFileName, fileData: subFileDataRaw).machos
             machos.append(contentsOf: subMachos)
         }
         self.fatArchs = fatArchs

@@ -202,11 +202,16 @@ class ExportInfoInterpreter: BaseInterpreter<ExportInfoContainer> {
         return ExportInfoContainer(nodes: allNodes)
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.payload.numberOfTransItemsTotal
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         for element in self.payload.numberOfAccumulatedTransItems.enumerated() {
             let exportInfo = self.payload.nodes[element.offset]
             if index < element.element {
@@ -262,7 +267,7 @@ class ExportInfoInterpreter: BaseInterpreter<ExportInfoContainer> {
             edges.append(ExportInfoNodeEdge(edgeName: edgeNameString, offset: childNodeOffsetLEB))
         }
         
-        return ExportInfoNode(startOffsetInMacho: self.data.startIndex + startOffset,
+        return ExportInfoNode(startOffsetInMacho: self.data.startOffset + startOffset,
                               accumulatedString: accumulatedString,
                               terminalSize: terminalSizeLEB,
                               flags: retFlags,

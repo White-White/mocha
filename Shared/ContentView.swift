@@ -26,7 +26,7 @@ class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
         
         let fileHandle = FileHandle(forReadingAtPath: url.path)
         if let magicData = try? fileHandle?.read(upToCount: 8),
-            let _ = MagicType(DataSlice(magicData)) {
+            let _ = MagicType(magicData) {
             return true
         }
         

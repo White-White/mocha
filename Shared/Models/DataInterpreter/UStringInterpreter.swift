@@ -39,11 +39,16 @@ class UStringInterpreter: BaseInterpreter<[UStringPosition]> {
         return uStringPositions
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.payload.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         let uStringPosition = self.payload[index]
         let uStringRelativeRange = uStringPosition.relativeStartOffset..<uStringPosition.relativeStartOffset+uStringPosition.length
         let uStringAbsoluteRange = self.data.absoluteRange(uStringRelativeRange)

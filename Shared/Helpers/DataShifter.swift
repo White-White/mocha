@@ -29,12 +29,11 @@ enum Straddle {
 
 struct DataShifter {
     
-    private let data: DataSlice
+    private let data: Data
     private(set) var shifted: Int = .zero
-    
     var shiftable: Bool { data.count > shifted }
     
-    init(_ data: DataSlice) {
+    init(_ data: Data) {
         self.data = data
     }
     
@@ -43,7 +42,7 @@ struct DataShifter {
         guard num > 0 else { fatalError() }
         guard shifted + num <= data.count else { fatalError() }
         defer { if (updateIndex) { shifted += num } }
-        return data.truncated(from: shifted, length: num).raw
+        return data.select(from: shifted, length: num)
     }
     
     mutating func skip(_ straddle: Straddle) {

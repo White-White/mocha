@@ -54,12 +54,16 @@ class MachoHeader: MachoComponent {
     
     override var componentTitle: String { "Macho Header" }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
+        return 1
+    }
+    
+    override func numberOfTranslationItems(at section: Int) -> Int {
         return translationStore.items.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
-        return translationStore.items[index]
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        return translationStore.items[indexPath.item]
     }
     
     init(from machoDataSlice: DataSlice, is64Bit: Bool) {
@@ -170,11 +174,12 @@ class Macho: Equatable {
     
     let dynamicSymbolTable: LCDynamicSymbolTable? = nil //FIXME:
     
-    init(with machoData: DataSlice, machoFileName: String) {
+    init(with machoDataRaw: Data, machoFileName: String) {
+        let machoData = DataSlice(machoDataRaw)
         self.data = machoData
         self.machoFileName = machoFileName
         
-        guard let magicType = MagicType(machoData.truncated(from: .zero, length: 4)) else { fatalError() }
+        guard let magicType = MagicType(machoData.raw) else { fatalError() }
         let is64bit = magicType == .macho64
         
         let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
@@ -183,7 +188,7 @@ class Macho: Equatable {
         
         var textSegmentVirtualStartAddress: UInt64!
         
-        var nextLoadCommandStartOffset = header.size
+        var nextLoadCommandStartOffset = header.componentSize
         for _ in 0..<header.numberOfLoadCommands {
             
             let loadCommandTypeRaw = machoData.truncated(from: nextLoadCommandStartOffset, length: 4).raw.UInt32
@@ -239,7 +244,7 @@ class Macho: Equatable {
                 loadCommand = LCSourceVersion(with: loadCommandType, data: loadCommandData)
             case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
                 let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
-                if linkedITData.dataSize.isNotZero {
+                if linkedITData.containedDataSize.isNotZero {
                     // segment command is before linkedit data sections,
                     // so the textSegmentVirtualStartAddress must not be nil, unless something goes wrong
                     self.machoComponents.append(self.machoComponent(from: linkedITData, textSegmentVirtualStartAddress: textSegmentVirtualStartAddress))
@@ -265,7 +270,7 @@ class Macho: Equatable {
         }
         
         // sort
-        self.machoComponents.sort { $0.fileOffsetInMacho < $1.fileOffsetInMacho }
+        self.machoComponents.sort { $0.componentFileOffset < $1.componentFileOffset }
     }
 }
 
@@ -276,7 +281,7 @@ extension Macho {
         
         if relocationOffset != 0 && numberOfRelocEntries != 0 {
             let entriesData = data.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.modelSize(is64Bit: is64Bit))
-            let interpreter = LazyModelBasedInterpreter<RelocationEntry>.init(entriesData, is64Bit: is64Bit, machoSearchSource: self)
+            let interpreter = ModelBasedInterpreter<RelocationEntry>.init(entriesData, is64Bit: is64Bit, machoSearchSource: self)
             return MachoInterpreterBasedComponent.init(entriesData,
                                                        is64Bit: is64Bit,
                                                        interpreter: interpreter,
@@ -313,25 +318,24 @@ extension Macho {
                                                   subTitle: sectionHeader.segment + "," + sectionHeader.section)
         }
         
-        if sectionHeader.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
-            let instructionInterpreter: Interpreter
-            if self.header.cpuType.isARMChip {
-                instructionInterpreter = InstructionInterpreterARM(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            } else if self.header.cpuType.isIntelChip {
-                instructionInterpreter = InstructionInterpreterIntel(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            } else {
-                instructionInterpreter = InstructionInterpreterUnknown(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            }
-            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: instructionInterpreter, title: "Section",
-                                                  subTitle: sectionHeader.segment + "," + sectionHeader.section)
-        }
-        
         if sectionHeader.sectionType == .S_LAZY_SYMBOL_POINTERS || sectionHeader.sectionType == .S_NON_LAZY_SYMBOL_POINTERS {
             let symbolPtrInterpreter = SymbolPointerInterpreter(dataSlice, is64Bit: is64Bit,
                                                                 machoSearchSource: self,
                                                                 sectionType: sectionHeader.sectionType,
                                                                 startIndexInIndirectSymbolTable: Int(sectionHeader.reserved1))
             return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: symbolPtrInterpreter, title: "Section",
+                                                  subTitle: sectionHeader.segment + "," + sectionHeader.section)
+        }
+        
+        if sectionHeader.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
+            let interpreter: Interpreter
+            if (sectionHeader.section == "__text") {
+                interpreter = CowardInterpreter(description: "Code",
+                                                explanation: "This part of the macho is machine code. Hopper.app would be a better choice to parse it.")
+            } else {
+                interpreter = InstructionInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            }
+            return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: interpreter, title: "Section",
                                                   subTitle: sectionHeader.segment + "," + sectionHeader.section)
         }
         
@@ -363,11 +367,12 @@ extension Macho {
     }
     
     fileprivate func machoComponent(from linkedITData: LCLinkedITData, textSegmentVirtualStartAddress: UInt64) -> MachoComponent {
-        let dataSlice = data.truncated(from: Int(linkedITData.fileOffset), length: Int(linkedITData.dataSize))
+        let dataSlice = data.truncated(from: Int(linkedITData.containedDataFileOffset),
+                                       length: Int(linkedITData.containedDataSize))
         let interpreter: Interpreter
         switch linkedITData.type {
         case .dataInCode:
-            interpreter = LazyModelBasedInterpreter<DataInCodeModel>(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
+            interpreter = ModelBasedInterpreter<DataInCodeModel>(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         case .codeSignature:
             // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
             // FIXME: better parsing

@@ -71,3 +71,10 @@ struct TranslationItem {
         self.content = content
     }
 }
+
+struct IndexedTranslationItem {
+    let item: TranslationItem
+    let indexPath: IndexPath
+    var sourceDataRange: Range<Int>? { item.sourceDataRange }
+    var content: TranslationItemContent { item.content }
+}

@@ -35,11 +35,16 @@ class LiteralPointerInterpreter: BaseInterpreter<[LiteralPointer]> {
         return pointers
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.payload.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         let pointer = self.payload[index]
         guard let searchedString = self.machoSearchSource.searchString(by: pointer.pointerValue) else {
             // didn't find string

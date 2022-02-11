@@ -52,11 +52,16 @@ class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
         return cStringPositions
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.payload.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         let cStringPosition = self.payload[index]
         let cStringRelativeRange = cStringPosition.startOffset..<cStringPosition.startOffset+cStringPosition.length
         let cStringAbsoluteRange = self.data.absoluteRange(cStringRelativeRange)

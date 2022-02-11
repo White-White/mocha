@@ -13,9 +13,9 @@ struct MiniMap: View {
     @Binding var selectedMachoComponent: MachoComponent
     
     var indicatorPosition: (startPercent: CGFloat, lengthPercent: CGFloat, start: Int, length: Int) {
-        let lengthPercent = CGFloat(selectedMachoComponent.size) / CGFloat(machoFileSize)
-        let startPercent = CGFloat(selectedMachoComponent.fileOffsetInMacho) / CGFloat(machoFileSize)
-        return (startPercent, lengthPercent, selectedMachoComponent.fileOffsetInMacho, selectedMachoComponent.size)
+        let lengthPercent = CGFloat(selectedMachoComponent.componentSize) / CGFloat(machoFileSize)
+        let startPercent = CGFloat(selectedMachoComponent.componentFileOffset) / CGFloat(machoFileSize)
+        return (startPercent, lengthPercent, selectedMachoComponent.componentFileOffset, selectedMachoComponent.componentSize)
     }
     
     var body: some View {

@@ -7,34 +7,38 @@
 
 import Foundation
 
-class MachoComponent: Equatable, TranslationDataSource {
+class MachoComponent: Equatable {
     
     static func == (lhs: MachoComponent, rhs: MachoComponent) -> Bool {
-        return lhs.machoDataSlice == rhs.machoDataSlice
+        return lhs.dataSlice == rhs.dataSlice
     }
     
-    let machoDataSlice: DataSlice
-    var size: Int { machoDataSlice.count }
-    var fileOffsetInMacho: Int { machoDataSlice.startIndex }
+    let dataSlice: DataSlice
+    var componentFileOffset: Int { dataSlice.startOffset }
+    var componentSize: Int { dataSlice.count }
     
     var componentTitle: String { fatalError() /* to be overriden */ }
     var componentSubTitle: String? { nil }
     var componentDescription: String? { nil }
     
-    init(_ machoDataSlice: DataSlice) {
-        self.machoDataSlice = machoDataSlice
+    init(_ dataSlice: DataSlice) {
+        self.dataSlice = dataSlice
+    }
+    
+    func numberOfTranslationSections() -> Int {
+        return 1
+    }
+    
+    func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        fatalError()
     }
     
     var firstTransItem: TranslationItem {
-        self.translationItem(at: .zero)
-    }
-    
-    var numberOfTranslationItems: Int {
-        return 1 /* default 1 */
-    }
-    
-    func translationItem(at index: Int) -> TranslationItem {
-        fatalError()
+        return self.translationItem(at: .init(item: .zero, section: .zero))
     }
 }
 
@@ -62,11 +66,15 @@ class MachoInterpreterBasedComponent: MachoComponent {
         super.init(machoDataSlice)
     }
     
-    override var numberOfTranslationItems: Int {
-        return interpreter.numberOfTranslationItems
+    override func numberOfTranslationSections() -> Int {
+        return interpreter.numberOfTranslationSections()
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
-        return interpreter.translationItem(at: index)
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return interpreter.numberOfTranslationItems(at: section)
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        return interpreter.translationItem(at: indexPath)
     }
 }

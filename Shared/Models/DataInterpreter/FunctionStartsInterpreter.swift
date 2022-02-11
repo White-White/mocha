@@ -47,11 +47,16 @@ class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
         return functionStarts
     }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
         return self.payload.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        let index = indexPath.section
         let functionStart = self.payload[index]
         
         var symbolName: String?

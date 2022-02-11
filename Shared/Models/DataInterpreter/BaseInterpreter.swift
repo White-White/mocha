@@ -8,8 +8,9 @@
 import Foundation
 
 protocol Interpreter {
-    var numberOfTranslationItems: Int { get }
-    func translationItem(at index: Int) -> TranslationItem
+    func numberOfTranslationSections() -> Int
+    func numberOfTranslationItems(at section: Int) -> Int
+    func translationItem(at indexPath: IndexPath) -> TranslationItem
 }
 
 class BaseInterpreter<Payload>: Interpreter {
@@ -65,31 +66,38 @@ class BaseInterpreter<Payload>: Interpreter {
         fatalError() // must override
     }
     
-    func translationItem(at index: Int) -> TranslationItem {
+    func numberOfTranslationSections() -> Int {
         fatalError()
     }
     
-    var numberOfTranslationItems: Int {
+    func numberOfTranslationItems(at section: Int) -> Int {
+        fatalError()
+    }
+    
+    func translationItem(at indexPath: IndexPath) -> TranslationItem {
         fatalError()
     }
 }
 
-class AnonymousInterpreter: BaseInterpreter<AnonymousInterpreter.Dummy> {
+class CowardInterpreter: Interpreter {
     
-    struct Dummy {}
+    let description: String
+    let explanation: String
     
-    var description: String { "Unknown Data" }
-    var explanation: String { "Don't know how to interprete these bytes yet." }
-    
-    override func generatePayload() -> Dummy {
-        return Dummy()
+    init(description: String, explanation: String) {
+        self.description = description
+        self.explanation = explanation
     }
     
-    override var numberOfTranslationItems: Int {
+    func numberOfTranslationSections() -> Int {
         return 1
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
+    func numberOfTranslationItems(at section: Int) -> Int {
+        return 1
+    }
+    
+    func translationItem(at indexPath: IndexPath) -> TranslationItem {
         return TranslationItem(sourceDataRange: nil,
                                content: TranslationItemContent(description: description, explanation: explanation))
     }

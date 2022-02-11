@@ -21,14 +21,14 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
 
 @property (nonatomic, strong) NSString *mnemonic;
 @property (nonatomic, strong) NSString *operand;
+@property (nonatomic, assign) NSInteger startOffset;
+@property (nonatomic, assign) NSInteger length;
 
 @end
 
 @interface CapStoneHelper : NSObject
 
-+ (NSArray <CapStoneInstruction*>*)instructionsFrom:(NSData *)data
-                                startVirtualAddress:(uint64_t)startVirtualAddress
-                                               arch:(CapStoneArchType)arch;
++ (NSArray <CapStoneInstruction*>*)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch;
 
 @end
 

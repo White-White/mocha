@@ -10,9 +10,8 @@ import SwiftUI
 
 private struct TranslationItemView: View {
     
-    let item: TranslationItem
-    let index: Int
-    var isSelected: Bool { selectedIndexWrapper.selectedIndex == index }
+    let item: IndexedTranslationItem
+    var isSelected: Bool { selectedIndexWrapper.selectedIndexPath == item.indexPath }
     @EnvironmentObject var selectedIndexWrapper: SelectedIndexWrapper
     
     var body: some View {
@@ -47,7 +46,7 @@ private struct TranslationItemView: View {
 }
 
 class SelectedIndexWrapper: ObservableObject {
-    @Published var selectedIndex: Int = 0
+    @Published var selectedIndexPath: IndexPath = .init(item: .zero, section: .zero)
 }
 
 struct TranslationView: View {
@@ -60,8 +59,8 @@ struct TranslationView: View {
         ScrollViewReader { scrollProxy in
             ScrollView(.vertical, showsIndicators: true)  {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(0..<machoComponent.numberOfTranslationItems, id: \.self) { index in
-                        self.translationView(at: index)
+                    ForEach(0..<machoComponent.numberOfTranslationSections(), id: \.self) { section in
+                        self.translationSectionView(at: section)
                     }
                 }
                 .padding(4)
@@ -75,20 +74,28 @@ struct TranslationView: View {
         }
     }
     
-    func translationView(at index: Int) -> some View {
-        let item = machoComponent.translationItem(at: index)
-        return VStack(alignment: .leading, spacing: 0) {
-            TranslationItemView(item: item, index: index)
-                .environmentObject(self.selectedIndexWrapper)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if !item.content.explanationStyle.selectable { return }
-                    self.selectedDataRange = item.sourceDataRange
-                    self.selectedIndexWrapper.selectedIndex = index
-                }
-            if item.content.hasDivider {
-                Divider()
+    func translationSectionView(at section: Int) -> some View {
+        return ForEach(indexedTranslationItems(at: section), id: \.indexPath) { item in
+            VStack(alignment: .leading, spacing: 0) {
+                TranslationItemView(item: item)
+                    .environmentObject(self.selectedIndexWrapper)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if !item.content.explanationStyle.selectable { return }
+                        self.selectedDataRange = item.sourceDataRange
+                        self.selectedIndexWrapper.selectedIndexPath = item.indexPath
+                    }
+                if item.content.hasDivider { Divider() }
             }
+        }
+    }
+    
+    func indexedTranslationItems(at section: Int) -> [IndexedTranslationItem] {
+        let numberOfTranslationItems = machoComponent.numberOfTranslationItems(at: section)
+        return (0..<numberOfTranslationItems).map { itemIndex in
+            let indexPath = IndexPath(item: itemIndex, section: section)
+            let item = machoComponent.translationItem(at: indexPath)
+            return IndexedTranslationItem(item: item, indexPath: indexPath)
         }
     }
     
@@ -97,4 +104,4 @@ struct TranslationView: View {
         _selectedDataRange = sourceDataRangeOfSelecteditem
     }
 }
-    
+

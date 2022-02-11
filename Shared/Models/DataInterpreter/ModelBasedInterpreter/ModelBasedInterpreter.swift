@@ -30,47 +30,16 @@ class ModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]>
         }
         return models
     }
-
-    override var numberOfTranslationItems: Int {
-        return self.payload.count * Model.numberOfTranslationItems()
+    
+    override func numberOfTranslationSections() -> Int {
+        return self.payload.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
-        let numberOfTransItemsPerModel = Model.numberOfTranslationItems()
-        let modelIndex = index / numberOfTransItemsPerModel
-        let modelItemOffset = index % numberOfTransItemsPerModel
-        return self.payload[modelIndex].translationItem(at: modelItemOffset)
-    }
-}
-
-class LazyModelBasedInterpreter<Model: InterpretableModel>: BaseInterpreter<[Model]> {
-    
-    private let numberOfAllTranslationItems: Int
-    
-    override var payload: [Model] { fatalError() }
-    
-    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
-        let modelSize = Model.modelSize(is64Bit: is64Bit)
-        let numberOfModels = data.count / modelSize
-        self.numberOfAllTranslationItems = numberOfModels * Model.numberOfTranslationItems()
-        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        return Model.numberOfTranslationItems()
     }
 
-    override var numberOfTranslationItems: Int {
-        return self.numberOfAllTranslationItems
-    }
-    
-    override func translationItem(at index: Int) -> TranslationItem {
-        let numberOfTransItemsPerModel = Model.numberOfTranslationItems()
-        let modelIndex = index / numberOfTransItemsPerModel
-        let modelItemOffset = index % numberOfTransItemsPerModel
-        return self.model(at: modelIndex).translationItem(at: modelItemOffset)
-    }
-    
-    private func model(at index: Int) -> Model {
-        let modelSize = Model.modelSize(is64Bit: self.is64Bit)
-        let modelData = data.truncated(from: index * modelSize, length: modelSize)
-        let model = Model(with: modelData, is64Bit: self.is64Bit, machoSearchSource: machoSearchSource)
-        return model
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        return self.payload[indexPath.section].translationItem(at: indexPath.item)
     }
 }

@@ -107,18 +107,25 @@ class LCSegment: LoadCommand {
         super.init(with: type, data: data, translationStore: translationStore)
     }
     
-    override var numberOfTranslationItems: Int {
-        return super.numberOfTranslationItems + sectionHeaders.count * SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
+    override func numberOfTranslationSections() -> Int {
+        return super.numberOfTranslationSections() + sectionHeaders.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
-        if index < super.numberOfTranslationItems {
-            return super.translationItem(at: index)
-        } else {
-            let targetIndex = index - super.numberOfTranslationItems
-            let sectionHeaderIndex = targetIndex / SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
-            let sectionHeaderOffset = targetIndex % SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
-            return self.sectionHeaders[sectionHeaderIndex].translationStore.items[sectionHeaderOffset]
+    override func numberOfTranslationItems(at section: Int) -> Int {
+        switch section {
+        case 0:
+            return super.numberOfTranslationItems(at: section)
+        default:
+            return SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
+        }
+    }
+    
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        switch indexPath.section {
+        case 0:
+            return super.translationItem(at: indexPath)
+        default:
+            return self.sectionHeaders[indexPath.section - 1].translationStore.items[indexPath.item]
         }
     }
     

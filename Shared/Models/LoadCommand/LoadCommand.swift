@@ -192,12 +192,16 @@ class LoadCommand: MachoComponent {
     override var componentTitle: String { "Load Command" }
     override var componentSubTitle: String { type.name }
     
-    override var numberOfTranslationItems: Int {
+    override func numberOfTranslationSections() -> Int {
+        return 1
+    }
+    
+    override func numberOfTranslationItems(at section: Int) -> Int {
         return translationStore.items.count
     }
     
-    override func translationItem(at index: Int) -> TranslationItem {
-        return translationStore.items[index]
+    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
+        return translationStore.items[indexPath.item]
     }
     
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {

@@ -16,8 +16,8 @@ import Foundation
 
 class LCLinkedITData: LoadCommand {
     
-    let fileOffset: UInt32
-    let dataSize: UInt32
+    let containedDataFileOffset: UInt32
+    let containedDataSize: UInt32
     
     var dataName: String {
         switch self.type {
@@ -45,12 +45,12 @@ class LCLinkedITData: LoadCommand {
     required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
         let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
         
-        self.fileOffset =
+        self.containedDataFileOffset =
         translationStore.translate(next: .doubleWords,
                                    dataInterpreter: DataInterpreterPreset.UInt32,
                                    itemContentGenerator: { fileOffset in TranslationItemContent(description: "File Offset", explanation: fileOffset.hex) })
         
-        self.dataSize =
+        self.containedDataSize =
         translationStore.translate(next: .doubleWords,
                                    dataInterpreter: DataInterpreterPreset.UInt32,
                                    itemContentGenerator: { dataSize in TranslationItemContent(description: "Size", explanation: dataSize.hex) })
