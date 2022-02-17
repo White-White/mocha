@@ -90,44 +90,53 @@ class LazyHexLine: ObservableObject {
 
 class HexLineStore: Equatable, LazyHexLineBytesProvider {
     
-    static func == (lhs: HexLineStore, rhs: HexLineStore) -> Bool {
-        return lhs.data == rhs.data
-    }
-    
     static let NumberOfBytesPerLine = 24
     
-    private let data: DataSlice
+    static func == (lhs: HexLineStore, rhs: HexLineStore) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    let id = UUID()
+    private let dataSlice: DataSlice
     private let hexDigits: Int
     
     var binaryLines: [LazyHexLine] = []
     private var selectedBytesRange: Range<Int>?
     
-    init(_ data: DataSlice) {
-        self.data = data
-        self.hexDigits = data.preferredNumberOfHexDigits
+    init(_ component: MachoComponent) {
+        let dataSlice = component.dataSlice
+        self.dataSlice = dataSlice
         
-        var numberOfBinaryLines = data.count / HexLineStore.NumberOfBytesPerLine
-        if data.count % HexLineStore.NumberOfBytesPerLine != 0  { numberOfBinaryLines += 1 }
+        var machoDataSize = dataSlice.count
+        var digitCount = 0
+        while machoDataSize != 0 { digitCount += 1; machoDataSize /= 16 }
+        self.hexDigits = digitCount
         
-        var binaryLines: [LazyHexLine] = []
-        for index in 0..<numberOfBinaryLines {
-            binaryLines.append(LazyHexLine(offset: index * HexLineStore.NumberOfBytesPerLine,
-                                           baseOffset: data.startOffset,
-                                           indexNumOfDigits: hexDigits,
-                                           isEvenLine: index & 0x1 == 0,
-                                           bytesProvider: self))
+        if component is MachoZeroFilledComponent {
+            self.binaryLines = []
+        } else {
+            var numberOfBinaryLines = dataSlice.count / HexLineStore.NumberOfBytesPerLine
+            if dataSlice.count % HexLineStore.NumberOfBytesPerLine != 0  { numberOfBinaryLines += 1 }
+            
+            var binaryLines: [LazyHexLine] = []
+            for index in 0..<numberOfBinaryLines {
+                binaryLines.append(LazyHexLine(offset: index * HexLineStore.NumberOfBytesPerLine,
+                                               baseOffset: dataSlice.startOffset,
+                                               indexNumOfDigits: hexDigits,
+                                               isEvenLine: index & 0x1 == 0,
+                                               bytesProvider: self))
+            }
+            self.binaryLines = binaryLines
         }
-        
-        self.binaryLines = binaryLines
     }
     
     func bytes(at offset: Int, length: Int) -> [UInt8] {
-        return [UInt8](data.truncated(from: offset, maxLength: length).raw)
+        return [UInt8](dataSlice.truncated(from: offset, maxLength: length).raw)
     }
     
     func targetIndexRange(for selectedBytesRange: Range<Int>) -> ClosedRange<Int> {
-        let startDifference = max(0, selectedBytesRange.lowerBound - data.startOffset)
-        let endDifference = max(0, selectedBytesRange.upperBound - data.startOffset)
+        let startDifference = max(0, selectedBytesRange.lowerBound - dataSlice.startOffset)
+        let endDifference = max(0, selectedBytesRange.upperBound - dataSlice.startOffset)
         let startIndex = startDifference / HexLineStore.NumberOfBytesPerLine
         var endIndex = endDifference / HexLineStore.NumberOfBytesPerLine
         if endDifference % HexLineStore.NumberOfBytesPerLine == 0 { endIndex -= 1 }

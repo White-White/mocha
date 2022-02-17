@@ -7,18 +7,11 @@
 
 import Foundation
 
-struct DataSlice: Equatable {
-    
-    static func == (lhs: DataSlice, rhs: DataSlice) -> Bool {
-        return lhs.startOffset == rhs.startOffset && lhs.count == rhs.count && lhs.sameSource(with: rhs)
-    }
+struct DataSlice {
     
     private let machoData: Data
-    
     let startOffset: Int
     let count: Int
-    
-    let preferredNumberOfHexDigits: Int
     
     var raw: Data {
         return machoData[(machoData.startIndex + startOffset)..<(machoData.startIndex + startOffset + count)]
@@ -30,18 +23,9 @@ struct DataSlice: Equatable {
     
     private init(_ machoData: Data, startOffset: Int, length: Int) {
         guard let magicType = MagicType(machoData), magicType.isMachoFile else { fatalError() }
-        
         self.machoData = machoData
         self.startOffset = startOffset
         self.count = length
-        
-        var machoDataSize = machoData.count
-        var digitCount = 0
-        while machoDataSize != 0 {
-            digitCount += 1
-            machoDataSize /= 16
-        }
-        self.preferredNumberOfHexDigits = digitCount
     }
     
     func truncated(from: Int, maxLength: Int) -> DataSlice {
@@ -54,7 +38,7 @@ struct DataSlice: Equatable {
     
     func truncated(from: Int, length: Int? = nil) -> DataSlice {
         if let length = length {
-            guard length > 0 else { fatalError() }
+            if length == .zero { Log.warning("Trying to truncate zero-length data. Debug me if needed.") }
             guard from + length <= self.count else { fatalError() }
             return DataSlice(machoData, startOffset: startOffset + from, length: length)
         } else {

@@ -133,21 +133,7 @@ struct SectionHeader {
     let is64Bit: Bool
     let data: DataSlice
     let translationStore: TranslationStore
-    
-    var isZerofilled: Bool {
-        // ref: https://lists.llvm.org/pipermail/llvm-commits/Week-of-Mon-20151207/319108.html
-        // code snipet from llvm
-        
-        /*
-         inline bool isZeroFillSection(SectionType T) {
-         return (T == llvm::MachO::S_ZEROFILL ||
-         T == llvm::MachO::S_THREAD_LOCAL_ZEROFILL);
-         }
-         */
-        
-        return sectionType == .S_ZEROFILL || sectionType == .S_THREAD_LOCAL_ZEROFILL
-    }
-    
+
     init(is64Bit: Bool, data: DataSlice) {
         self.is64Bit = is64Bit
         self.data = data

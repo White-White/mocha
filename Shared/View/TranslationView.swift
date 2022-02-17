@@ -11,7 +11,7 @@ import SwiftUI
 private struct TranslationItemView: View {
     
     let item: IndexedTranslationItem
-    var isSelected: Bool { selectedIndexWrapper.selectedIndexPath == item.indexPath }
+    var isSelected: Bool { selectedIndexWrapper.selectedIndexPath == item.indexPath && item.content.explanationStyle.selectable }
     @EnvironmentObject var selectedIndexWrapper: SelectedIndexWrapper
     
     var body: some View {

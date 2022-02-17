@@ -11,6 +11,7 @@ protocol Interpreter {
     func numberOfTranslationSections() -> Int
     func numberOfTranslationItems(at section: Int) -> Int
     func translationItem(at indexPath: IndexPath) -> TranslationItem
+    func defaultSelectedTranslationItem() -> TranslationItem?
 }
 
 class BaseInterpreter<Payload>: Interpreter {
@@ -77,6 +78,10 @@ class BaseInterpreter<Payload>: Interpreter {
     func translationItem(at indexPath: IndexPath) -> TranslationItem {
         fatalError()
     }
+    
+    func defaultSelectedTranslationItem() -> TranslationItem? {
+        return self.translationItem(at: .init(item: .zero, section: .zero))
+    }
 }
 
 class CowardInterpreter: Interpreter {
@@ -100,5 +105,9 @@ class CowardInterpreter: Interpreter {
     func translationItem(at indexPath: IndexPath) -> TranslationItem {
         return TranslationItem(sourceDataRange: nil,
                                content: TranslationItemContent(description: description, explanation: explanation))
+    }
+    
+    func defaultSelectedTranslationItem() -> TranslationItem? {
+        return nil
     }
 }
