@@ -1,6 +1,4 @@
 ### Mocha
-
-#### Mocha的定义
 Mocha是一款全新的Mach-O文件查看工具。Mocha可以解释Mach-O文件中每一个字节的含义。
 Mocha在左边显示出该Mach-O所有的Section，在中间显示选中的Section的16进制数据，在右边显示这些数据的解释说明。一个Section的数据有很多条解释说明，每一条都对应Macho-O文件中某一段数据。选中一条解释，Mach-O就会高亮对应的二进制数据。
 Mocha在上方有一个Mini Map，显式当前选中的Section在Mach-O文件中的位置。
@@ -15,7 +13,7 @@ Mocha不仅是一个纯Swift项目，同时也是一个纯SwiftUI项目。Mocha�
 Mocha是我个人的开源项目，遵循GPL协议。
 
 
-#### What is Mocha
+### Mocha
 Mocha is yet another Macho-O file viewer. Mocha explains every bit of your Mach-O files.
 Mocha lists all sections of your Mach-O file, shows a hex view for the selected section's raw data, and shows all explanations of the selected section.
 
@@ -24,11 +22,35 @@ Mocha can open big Mach-O files instantly, without waiting for any synchronous p
 For structures likes String Table and Symbol Table that can't be loaded lazily, Mocha uses background threads.
 
 #### Modern
-Mocha is not only a pure Swift project, but also a pure SwiftUI project. Code readability is of highest priority, to make sure anyone insterested in Mach-O can learn about it's format
+Mocha is not only a pure Swift project, but also a pure SwiftUI project. Code readability is of highest priority, to make sure anyone interested in Mach-O can learn about it's format
 with Mocha's source code.
 
 #### Open Sourced
 Mocha is my own side project, and is open sourced under GPL.
+
+### Compare to Other Proejcts
+#### [MachOView](https://sourceforge.net/projects/machoview/)
+MachOView is a great Mach-O file viewer and used to be all iOS devs' 'must have' tool. But it's now deprecated.
+There is a nice compilable fork of MachOView: https://github.com/gdbinit/MachOView
+Mocha is actually greatly inpired by MachOView and the fork above. 
+Specially, Mocha also uses Capstone to parse instructions.
+
+Compare to MachOView, Mocha is faster, newer and less buggy. I'd like Mocha to be the best replacement of MachOView.
+
+#### [LIEF](https://lief-project.github.io/)
+LIEF is a matured cross-platform library to parse all those binary formats. (ELF, PE, Mach-O)
+But it's written in grandpa language and to complicated to be a starter's tool.
+
+#### Hopper
+Hopper is a great tool for reverse engineering for hardly a good tool to view macho files.
+They serve for different purposes. Mocha is just a toy comparing with Hopper.
+
+### Great Mach-O Related Resources
+Aside from above projects, Mocha project owes a lot to these good resources:
+[osx-abi-macho-file-format-reference](https://github.com/aidansteele/osx-abi-macho-file-format-reference)
+[Inside a Hello World executable on OS X](https://adrummond.net/posts/macho)
+[MachO-Kit](https://github.com/DeVaukz/MachO-Kit)
+[Mach-O文件基础](https://www.cnblogs.com/kekec/p/15533060.html)
 
 ### Requirement:
 Xcode: 13.\*, macOS 13.\*
