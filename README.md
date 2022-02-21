@@ -1,26 +1,44 @@
-### Mocha explains every bit of your mach-o files.
+### Mocha
 
-Requirement:
+#### Mocha的定义
+Mocha是一款全新的Mach-O文件查看工具。Mocha可以解释Mach-O文件中每一个字节的含义。
+Mocha在左边显示出该Mach-O所有的Section，在中间显示选中的Section的16进制数据，在右边显示这些数据的解释说明。一个Section的数据有很多条解释说明，每一条都对应Macho-O文件中某一段数据。选中一条解释，Mach-O就会高亮对应的二进制数据。
+Mocha在上方有一个Mini Map，显式当前选中的Section在Mach-O文件中的位置。
+
+#### 高性能
+Mocha可以瞬间打开一个超大Macho-O文件，无需等待任何解析过程，因为Macho对所有的数据解释都尽可能地懒加载。对于Symbol Table和String Table这种必须完全提前解析的数据，Macho用多线程将解析过程放在后台。
+
+#### 现代的
+Mocha不仅是一个纯Swift项目，同时也是一个纯SwiftUI项目。Mocha的代码尽可能地保证可读性，方便任何对Mach-O感兴趣的人，通过阅读Mocha的代码就能理解其文件格式。
+
+#### 开源的
+Mocha是我个人的开源项目，遵循GPL协议。
+
+
+#### What is Mocha
+Mocha is yet another Macho-O file viewer. Mocha explains every bit of your Mach-O files.
+Mocha lists all sections of your Mach-O file, shows a hex view for the selected section's raw data, and shows all explanations of the selected section.
+
+#### High-Performance
+Mocha can open big Mach-O files instantly, without waiting for any synchronous parsing process. All information is loaded lazily.
+For structures likes String Table and Symbol Table that can't be loaded lazily, Mocha uses background threads.
+
+#### Modern
+Mocha is not only a pure Swift project, but also a pure SwiftUI project. Code readability is of highest priority, to make sure anyone insterested in Mach-O can learn about it's format
+with Mocha's source code.
+
+#### Open Sourced
+Mocha is my own side project, and is open sourced under GPL.
+
+### Requirement:
 Xcode: 13.\*, macOS 13.\*
 
-It's written in SwiftUI, so it requires the latest version of Xcode and macOS.
-
-It'll be an alternative of MachOViewer, but newer, better, simpler, and most importantly, compilable.
+### Setup:
+Clone the project, init its git submodules and build&run with Xcode.
 
 ![example](./README_ASSETS/example.jpg)
 
-#### Features:
-- A list showing all load commands, sections and all other parts of the mach-o file
-- A hex view showing the raw bytes of the selected section
-- A readable explanation of the selected section, if possible
-- A mini map showing the position of the selected section
-- Upon selection of an explanation, the hex view will auto scroll to the right position and highlight the coresponding bytes
-
-#### Notes:
-This project is still in development.
-
-
-#### Progress:
+### Progress:
 
 ✅: Done
 ⌛️: Not explained yet
