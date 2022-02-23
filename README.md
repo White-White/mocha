@@ -1,5 +1,7 @@
 ### Mocha
 Mocha是一个可视化的Mach-O文件查看工具，并通过解释Mach-O文件中每一个字节的含义，帮助使用者理解Mach-O。
+如下图:
+![example](./README_ASSETS/example.jpg)
 
 #### 简介的UI
 Mocha的UI是简单直接的。它在左边显示出该Mach-O所有的Section，在中间显示选中的Section的16进制数据，在右边显示这些数据的解释说明。一个Section的数据有很多条解释说明。
@@ -19,6 +21,8 @@ Mocha是我个人的开源项目，遵循GPL协议。
 
 ### Mocha
 Mocha is yet another visual Macho-O file viewer, which helps user to learn about Mach-O by explaining every bit of the Mach-O file.
+Usage:
+![example](./README_ASSETS/example.jpg)
 
 #### Clean Interface
 Mocha's UI is simple and intuitive. It lists all sections of your Mach-O file at the left, shows a hex view for the selected section's raw data in the middle, and shows all explanations of the selected section at the right.
@@ -68,8 +72,6 @@ Xcode: 13.\*, macOS 13.\*
 
 ### Compile:
 Clone the project, init its git submodules, and build & run with Xcode.
-
-![example](./README_ASSETS/example.jpg)
 
 ### Progress:
 
