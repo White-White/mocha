@@ -17,6 +17,7 @@
 		1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */; };
 		1F40ED8627B110AD00D93824 /* InstructionInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8527B110AD00D93824 /* InstructionInterpreter.swift */; };
 		1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8927B1120400D93824 /* CapStoneHelper.m */; };
+		1F436DBA27CE09DA00F4D7FA /* libcapstone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8447B927B11D7000ED0246 /* libcapstone.a */; };
 		1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */; };
 		1F6212E527967438009A9154 /* LCMonoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E427967438009A9154 /* LCMonoString.swift */; };
 		1F6212E72796744F009A9154 /* LCUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212E62796744F009A9154 /* LCUUID.swift */; };
@@ -272,6 +273,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F436DBA27CE09DA00F4D7FA /* libcapstone.a in Frameworks */,
 				1F844CB327B2434700ED0246 /* libcapstone.a in Frameworks */,
 				1FFE55EB277DCFE300ECD395 /* Introspect in Frameworks */,
 			);
@@ -889,6 +891,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/capstone",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = white.presonal.mocha;
@@ -921,6 +927,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/capstone",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0;

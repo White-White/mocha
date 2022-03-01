@@ -1,25 +1,4 @@
 ### Mocha
-Mocha是一个可视化的Mach-O文件查看工具，并通过解释Mach-O文件中每一个字节的含义，帮助使用者理解Mach-O。
-如下图:
-![example](./README_ASSETS/example.jpg)
-
-#### 简介的UI
-Mocha的UI是简单直接的。它在左边显示出该Mach-O所有的Section，在中间显示选中的Section的16进制数据，在右边显示这些数据的解释说明。一个Section的数据有很多条解释说明。
-每一条解释都对应Macho-O文件中某一段数据。选中一条解释，Mach-O就会高亮对应的二进制数据。
-Mocha在上方有一个Mini Map，显式当前选中的Section在Mach-O文件中的位置。
-
-#### 高性能
-Mocha可以瞬间打开一个超大Macho-O文件，无需等待任何解析过程，因为Macho对所有的数据解释都尽可能地懒加载。
-对于Symbol Table和String Table这种必须完全提前解析的数据，Macho用多线程将解析过程放在后台。
-
-#### 现代的
-Mocha不仅是一个纯Swift项目，同时也是一个纯SwiftUI项目。Mocha的代码尽可能地保证可读性，方便任何对Mach-O感兴趣的人，通过阅读Mocha的代码就能理解其文件格式。
-
-#### 开源的
-Mocha是我个人的开源项目，遵循GPL协议。
-
-
-### Mocha
 Mocha is yet another visual Macho-O file viewer, which helps user to learn about Mach-O by explaining every bit of the Mach-O file.
 Usage:
 ![example](./README_ASSETS/example.jpg)
@@ -70,8 +49,38 @@ Aside from projects above, Mocha owes a lot to these good articles:
 ### Requirement:
 Xcode: 13.\*, macOS 13.\*
 
-### Compile:
+### Compile the Project:
+1. Clone the repo with:
+`git clone git@github.com:White-White/mocha.git`
+2. Initialize and update the needed submodules
+`git submodule init; git submodule update`
+3. Open mocha.xcodeproj and build & run
+
 Clone the project, init its git submodules, and build & run with Xcode.
+
+### Issue:
+Should you have any questions about this project, find me at jinhao.zhang@icloud.com .
+Or, raise an issue in this repo if you like.
+
+### Mocha
+Mocha是一个可视化的Mach-O文件查看工具，并通过解释Mach-O文件中每一个字节的含义，帮助使用者理解Mach-O。
+如下图:
+![example](./README_ASSETS/example.jpg)
+
+#### 简介的UI
+Mocha的UI是简单直接的。它在左边显示出该Mach-O所有的Section，在中间显示选中的Section的16进制数据，在右边显示这些数据的解释说明。一个Section的数据有很多条解释说明。
+每一条解释都对应Macho-O文件中某一段数据。选中一条解释，Mach-O就会高亮对应的二进制数据。
+Mocha在上方有一个Mini Map，显式当前选中的Section在Mach-O文件中的位置。
+
+#### 高性能
+Mocha可以瞬间打开一个超大Macho-O文件，无需等待任何解析过程，因为Macho对所有的数据解释都尽可能地懒加载。
+对于Symbol Table和String Table这种必须完全提前解析的数据，Macho用多线程将解析过程放在后台。
+
+#### 现代的
+Mocha不仅是一个纯Swift项目，同时也是一个纯SwiftUI项目。Mocha的代码尽可能地保证可读性，方便任何对Mach-O感兴趣的人，通过阅读Mocha的代码就能理解其文件格式。
+
+#### 开源的
+Mocha是我个人的开源项目，遵循GPL协议。
 
 ### Progress:
 
