@@ -219,7 +219,8 @@ struct SymbolTableEntry: InterpretableModel {
         
         let nSect = data.truncated(from: 5, length: 1).raw.UInt8
         let nDesc = data.truncated(from: 6, length: 2).raw.UInt16
-        let nValue = data.truncated(from: 8, length: is64Bit ? 8 : 4).raw.UInt64
+        let nValueRawData = data.truncated(from: 8, length: is64Bit ? 8 : 4).raw
+        let nValue = is64Bit ? nValueRawData.UInt64 : UInt64(nValueRawData.UInt32)
         self.nSect = nSect
         self.nDesc = nDesc
         self.nValue = nValue

@@ -9,27 +9,16 @@ import Foundation
 import SwiftUI
 
 extension Data {
-    var UInt8: UInt8 {
-        if (self.count != 1) { fatalError() }
-        return self.first!
+    
+    private func cast<T>(to type: T.Type) -> T {
+        guard self.count == MemoryLayout<T>.size else { fatalError() }
+        return self.withUnsafeBytes { $0.bindMemory(to: type).baseAddress!.pointee }
     }
-    var UInt16: UInt16 {
-        if (self.count != 2) { fatalError() }
-        return self.withUnsafeBytes { $0.load(as: Swift.UInt16.self) }
-    }
-    var UInt32: UInt32 {
-        if (self.count != 4) { fatalError() }
-        return self.withUnsafeBytes { $0.load(as: Swift.UInt32.self) }
-    }
-    var UInt64: UInt64 {
-        if self.count == 4 {
-            return Swift.UInt64(self.UInt32)
-        } else if self.count == 8 {
-            return self.withUnsafeBytes { $0.load(as: Swift.UInt64.self) }
-        } else {
-            fatalError()
-        }
-    }
+    
+    var UInt8: Swift.UInt8 { if (self.count == 1) { return self.first! } else { fatalError() } }
+    var UInt16: Swift.UInt16 { cast(to: Swift.UInt16.self) }
+    var UInt32: Swift.UInt32 { cast(to: Swift.UInt32.self) }
+    var UInt64: Swift.UInt64 { cast(to: Swift.UInt64.self) }
     
     func select(from: Data.Index, length: Data.Index) -> Self {
         return self[self.startIndex+from..<self.startIndex+from+length]

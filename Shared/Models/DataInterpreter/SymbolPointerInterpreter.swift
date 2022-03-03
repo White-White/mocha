@@ -22,7 +22,7 @@ class SymbolPointerInterpreter: BaseInterpreter<[DummySymbolPointer]> {
          startIndexInIndirectSymbolTable: Int) {
         let pointerSize = is64Bit ? 8 : 4
         self.pointerSize = pointerSize
-        self.numberOfPointers = data.count / pointerSize // symbol pointer section's entry size is 4
+        self.numberOfPointers = data.count / pointerSize
         self.sectionType = sectionType
         self.startIndexInIndirectSymbolTable = startIndexInIndirectSymbolTable
         super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
@@ -38,7 +38,8 @@ class SymbolPointerInterpreter: BaseInterpreter<[DummySymbolPointer]> {
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
         let index = indexPath.section
-        let pointerRawValue = data.truncated(from: index * pointerSize, length: pointerSize).raw.UInt64
+        let pointerRawData = data.truncated(from: index * pointerSize, length: pointerSize).raw
+        let pointerRawValue = is64Bit ? pointerRawData.UInt64 : UInt64(pointerRawData.UInt32)
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
         
         var symbolName: String?

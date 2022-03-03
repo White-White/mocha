@@ -28,8 +28,9 @@ class LiteralPointerInterpreter: BaseInterpreter<[LiteralPointer]> {
         let numberOfPointers = rawData.count / 8
         for index in 0..<numberOfPointers {
             let relativeDataOffset = index * pointerLength
-            let pointerData = rawData.select(from: relativeDataOffset, length: pointerLength)
-            let pointer = LiteralPointer(relativeDataOffset: relativeDataOffset, pointerValue: pointerData.UInt64)
+            let pointerRawData = rawData.select(from: relativeDataOffset, length: pointerLength)
+            let pointer = LiteralPointer(relativeDataOffset: relativeDataOffset,
+                                         pointerValue: is64Bit ? pointerRawData.UInt64 : UInt64(pointerRawData.UInt32))
             pointers.append(pointer)
         }
         return pointers

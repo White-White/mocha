@@ -152,12 +152,12 @@ struct SectionHeader {
         
         self.addr =
         translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                 dataInterpreter: { $0.UInt64 },
+                                 dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
                                  itemContentGenerator: { value in TranslationItemContent(description: "Virtual Address", explanation: value.hex) })
         
         self.size =
         translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                 dataInterpreter: { $0.UInt64 },
+                                 dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
                                  itemContentGenerator: { value in TranslationItemContent(description: "Section Size", explanation: value.hex) })
         
         self.offset =
