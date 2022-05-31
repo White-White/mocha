@@ -10,7 +10,7 @@ import Foundation
 struct FunctionStart {
     let startOffset: Int
     let byteLength: Int
-    let rawValue: Swift.UInt64
+    let address: Swift.UInt64
 }
 
 // a great description for function start section data format
@@ -45,7 +45,7 @@ class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
                 shift += 7
                 if byte < 0x80 {
                     address += delta
-                    functionStarts.append(FunctionStart(startOffset: startIndex, byteLength: index - startIndex, rawValue: address))
+                    functionStarts.append(FunctionStart(startOffset: startIndex, byteLength: index - startIndex, address: address))
                     more = false
                 }
             } while (more)
@@ -65,15 +65,16 @@ class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
         let index = indexPath.section
         let functionStart = self.payload[index]
         
+        
         var symbolName: String?
-        if let functionSymbol = self.machoSearchSource.symbolInSymbolTable(by: functionStart.rawValue + textSegmentVirtualStartAddress),
+        if let functionSymbol = self.machoSearchSource.symbolInSymbolTable(by: functionStart.address + textSegmentVirtualStartAddress),
            let _symbolName = self.machoSearchSource.stringInStringTable(at: Int(functionSymbol.indexInStringTable)) {
             symbolName = _symbolName
         }
         
         return TranslationItem(sourceDataRange: data.absoluteRange(functionStart.startOffset, functionStart.byteLength),
-                               content: TranslationItemContent(description: "Address", explanation: functionStart.rawValue.hex,
-                                                               extraDescription: "Referred Symbol Name", extraExplanation: symbolName,
+                               content: TranslationItemContent(description: "Vitual Address", explanation: (functionStart.address + textSegmentVirtualStartAddress).hex,
+                                                               extraDescription: symbolName != nil ? "Referred Symbol Name" : nil, extraExplanation: symbolName,
                                                                hasDivider: true))
     }
     
