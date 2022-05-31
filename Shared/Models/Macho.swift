@@ -167,6 +167,10 @@ class Macho: Equatable {
     var is64Bit: Bool { header.is64Bit }
     
     private(set) var sectionHeaders: [SectionHeader] = []
+    
+    private var loadCommandComponents: [MachoComponent] = []
+    private var sectionComponents: [MachoComponent] = []
+    private var linkedItComponents: [MachoComponent] = []
     private(set) var machoComponents: [MachoComponent] = []
     
     var allCStringInterpreters: [CStringInterpreter] = []
@@ -186,13 +190,7 @@ class Macho: Equatable {
         
         let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
         self.header = header
-        self.machoComponents.append(header)
-        
-        var loadCommandComponents: [MachoComponent] = []
-        var sectionComponents: [MachoComponent] = []
-        var linkedItComponents: [MachoComponent] = []
-        
-        var textSegmentVirtualStartAddress: UInt64!
+                
         var nextLoadCommandStartOffset = header.componentSize
         for _ in 0..<header.numberOfLoadCommands {
             
@@ -218,9 +216,6 @@ class Macho: Equatable {
                 self.sectionHeaders.append(contentsOf: segmentSectionHeaders)
                 sectionComponents.append(contentsOf: segmentSectionHeaders.compactMap({ self.machoComponent(from: $0) }))
                 linkedItComponents.append(contentsOf: segmentSectionHeaders.compactMap({ self.relocationComponent(from: $0) }))
-                if segment.segmentFileOff == 0 && segment.segmentSize != 0 /* first non-zero segment */ {
-                    textSegmentVirtualStartAddress = segment.vmaddr
-                }
                 loadCommand = segment
             case .symbolTable:
                 let symbolTableCommand = LCSymbolTable(with: loadCommandType, data: loadCommandData)
@@ -251,10 +246,9 @@ class Macho: Equatable {
                 loadCommand = LCSourceVersion(with: loadCommandType, data: loadCommandData)
             case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
                 let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
+                // In tests, DataInCode section from iOS SDK CoreRepairKit has a zero content size
                 if linkedITData.containedDataSize.isNotZero {
-                    // segment command is before linkedit data sections,
-                    // so the textSegmentVirtualStartAddress must not be nil, unless something goes wrong
-                    linkedItComponents.append(self.machoComponent(from: linkedITData, textSegmentVirtualStartAddress: textSegmentVirtualStartAddress))
+                    linkedItComponents.append(self.machoComponent(from: linkedITData))
                 }
                 loadCommand = linkedITData
             case .main:
@@ -277,9 +271,7 @@ class Macho: Equatable {
         
         // sort linkedItComponents
         linkedItComponents.sort { $0.componentFileOffset < $1.componentFileOffset }
-        self.machoComponents += loadCommandComponents
-        self.machoComponents += sectionComponents
-        self.machoComponents += linkedItComponents
+        self.machoComponents = [header] + loadCommandComponents + sectionComponents + linkedItComponents
     }
 }
 
@@ -295,7 +287,7 @@ extension Macho {
                                                        is64Bit: is64Bit,
                                                        interpreter: interpreter,
                                                        title: "Relocation Table",
-                                                       subTitle: "__LINKEDIT" + "," + sectionHeader.section)
+                                                       subTitle: Constants.segmentNameLINKEDIT + "," + sectionHeader.section)
         } else {
             return nil
         }
@@ -348,7 +340,7 @@ extension Macho {
         if sectionHeader.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
             let dataSlice = data.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
             let interpreter: Interpreter
-            if (sectionHeader.section == "__text") {
+            if (sectionHeader.section == Constants.sectionNameTEXT) {
                 interpreter = CowardInterpreter(description: "Code",
                                                 explanation: "This part of the macho is machine code. Hopper.app would be a better choice to parse it.")
             } else {
@@ -361,9 +353,9 @@ extension Macho {
         let dataSlice = data.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
         let interpreter: Interpreter
         switch sectionHeader.segment {
-        case "__TEXT":
+        case Constants.sectionNameTEXT:
             switch sectionHeader.section {
-            case "__ustring":
+            case Constants.sectionNameUString:
                 interpreter = UStringInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
             case "__swift5_reflstr":
                 // https://knight.sc/reverse%20engineering/2019/07/17/swift-metadata.html
@@ -386,9 +378,8 @@ extension Macho {
         return MachoInterpreterBasedComponent(dataSlice, is64Bit: is64Bit, interpreter: interpreter, title: componentTitle, subTitle: componentSubTitle)
     }
     
-    fileprivate func machoComponent(from linkedITData: LCLinkedITData, textSegmentVirtualStartAddress: UInt64) -> MachoComponent {
-        let dataSlice = data.truncated(from: Int(linkedITData.containedDataFileOffset),
-                                       length: Int(linkedITData.containedDataSize))
+    fileprivate func machoComponent(from linkedITData: LCLinkedITData) -> MachoComponent {
+        let dataSlice = data.truncated(from: Int(linkedITData.containedDataFileOffset), length: Int(linkedITData.containedDataSize))
         let interpreter: Interpreter
         switch linkedITData.type {
         case .dataInCode:
@@ -398,9 +389,7 @@ extension Macho {
             // FIXME: better parsing
             interpreter = ASCIIInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         case .functionStarts:
-            let functionStartsInterpreter = FunctionStartsInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
-            functionStartsInterpreter.textSegmentVirtualStartAddress = textSegmentVirtualStartAddress
-            interpreter = functionStartsInterpreter
+            interpreter = FunctionStartsInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         case .dyldExportsTrie:
             interpreter = ExportInfoInterpreter(dataSlice, is64Bit: is64Bit, machoSearchSource: self)
         default:
@@ -411,7 +400,7 @@ extension Macho {
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
                                               title: linkedITData.dataName,
-                                              subTitle: "__LINKEDIT")
+                                              subTitle: Constants.segmentNameLINKEDIT)
     }
     
     fileprivate func symbolTableComponent(from symbolTableCommand: LCSymbolTable) -> MachoInterpreterBasedComponent {
@@ -424,7 +413,7 @@ extension Macho {
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
                                               title: "Symbol Table",
-                                              subTitle: "__LINKEDIT")
+                                              subTitle: Constants.segmentNameLINKEDIT)
     }
     
     fileprivate func stringTableComponent(from symbolTableCommand: LCSymbolTable) -> MachoInterpreterBasedComponent {
@@ -440,7 +429,7 @@ extension Macho {
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
                                               title: "String Table",
-                                              subTitle: "__LINKEDIT")
+                                              subTitle: Constants.segmentNameLINKEDIT)
     }
     
     fileprivate func indirectSymbolTableComponent(from dynamicSymbolCommand: LCDynamicSymbolTable) -> MachoInterpreterBasedComponent? {
@@ -454,7 +443,7 @@ extension Macho {
                                               is64Bit: is64Bit,
                                               interpreter: interpreter,
                                               title: "Indirect Symbol Table",
-                                              subTitle: "__LINKEDIT")
+                                              subTitle: Constants.segmentNameLINKEDIT)
     }
     
     fileprivate func dyldInfoComponents(from dyldInfoCommand: LCDyldInfo) -> [MachoComponent] {
@@ -469,7 +458,7 @@ extension Macho {
                                                                      is64Bit: is64Bit,
                                                                      interpreter: interpreter,
                                                                      title: "Rebase Opcode",
-                                                                     subTitle: "__LINKEDIT")
+                                                                     subTitle: Constants.segmentNameLINKEDIT)
             components.append(rebaseInfoComponent)
         }
         
@@ -483,7 +472,7 @@ extension Macho {
                                                                       is64Bit: is64Bit,
                                                                       interpreter: interpreter,
                                                                       title: "Binding Opcode",
-                                                                      subTitle: "__LINKEDIT")
+                                                                      subTitle: Constants.segmentNameLINKEDIT)
             components.append(bindingInfoComponent)
         }
         
@@ -496,7 +485,7 @@ extension Macho {
                                                                           is64Bit: is64Bit,
                                                                           interpreter: interpreter,
                                                                           title: "Weak Binding Opcode",
-                                                                          subTitle: "__LINKEDIT")
+                                                                          subTitle: Constants.segmentNameLINKEDIT)
             components.append(weakBindingInfoComponent)
         }
         
@@ -509,7 +498,7 @@ extension Macho {
                                                                           is64Bit: is64Bit,
                                                                           interpreter: interpreter,
                                                                           title: "Lazy Binding Opcode",
-                                                                          subTitle: "__LINKEDIT")
+                                                                          subTitle: Constants.segmentNameLINKEDIT)
             components.append(lazyBindingInfoComponent)
         }
         
@@ -522,7 +511,7 @@ extension Macho {
                                                                      is64Bit: is64Bit,
                                                                      interpreter: interpreter,
                                                                      title: "Export Info",
-                                                                     subTitle: "__LINKEDIT")
+                                                                     subTitle: Constants.segmentNameLINKEDIT)
             components.append(exportInfoComponent)
         }
         
@@ -551,6 +540,9 @@ protocol MachoSearchSource: AnyObject {
     
     // search in indirect symbol table
     func entryInIndirectSymbolTable(at index: Int) -> IndirectSymbolTableEntry?
+    
+    // query segment command
+    func segmentCommand(withName segmentName: String) -> LCSegment?
 }
 
 extension Macho: MachoSearchSource {
@@ -605,5 +597,9 @@ extension Macho: MachoSearchSource {
             return indirectSymbolTableInterpreter.payload[index]
         }
         return nil
+    }
+    
+    func segmentCommand(withName segmentName: String) -> LCSegment? {
+        return (self.loadCommandComponents.filter { ($0 as? LCSegment)?.segmentName == segmentName }).first as? LCSegment
     }
 }

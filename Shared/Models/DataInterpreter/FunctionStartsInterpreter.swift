@@ -18,7 +18,13 @@ struct FunctionStart {
 
 class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
     
-    var textSegmentVirtualStartAddress: Swift.UInt64 = 0
+    let textSegmentVirtualStartAddress: Swift.UInt64
+    
+    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+        guard let textSegment = machoSearchSource.segmentCommand(withName: Constants.segmentNameTEXT) else { fatalError() /* unlikely */ }
+        self.textSegmentVirtualStartAddress = textSegment.vmaddr
+        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
+    }
     
     override func generatePayload() -> [FunctionStart] {
         let rawData = self.data.raw

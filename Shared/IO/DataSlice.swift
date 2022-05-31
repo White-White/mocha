@@ -38,7 +38,9 @@ struct DataSlice {
     
     func truncated(from: Int, length: Int? = nil) -> DataSlice {
         if let length = length {
-            if length == .zero { Log.warning("Trying to truncate zero-length data. Debug me if needed.") }
+            if length == .zero {
+                Log.error("Trying to fetch zero-length data. Crash is around the corner.")
+            }
             guard from + length <= self.count else { fatalError() }
             return DataSlice(machoData, startOffset: startOffset + from, length: length)
         } else {

@@ -18,7 +18,9 @@ class BaseInterpreter<Payload>: Interpreter {
     
     let data: DataSlice
     let is64Bit: Bool
-    weak var machoSearchSource: MachoSearchSource!
+    weak var machoSearchSourceInside: MachoSearchSource!
+    var machoSearchSource: MachoSearchSource { machoSearchSourceInside! }
+    
     var shouldPreload: Bool { false }
     
     private let preloadingLock = NSRecursiveLock()
@@ -43,7 +45,7 @@ class BaseInterpreter<Payload>: Interpreter {
     init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
         self.data = data
         self.is64Bit = is64Bit
-        self.machoSearchSource = machoSearchSource
+        self.machoSearchSourceInside = machoSearchSource
         self.preloadIfNeeded()
     }
     
