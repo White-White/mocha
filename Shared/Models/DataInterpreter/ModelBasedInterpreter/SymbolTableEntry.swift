@@ -93,7 +93,7 @@ enum StabType: UInt8 {
     }
 }
 
-enum SymbolType {
+enum SymbolType: Equatable {
     case stab(StabType?)
     case undefined
     case absolute

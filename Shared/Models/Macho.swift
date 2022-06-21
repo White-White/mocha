@@ -575,11 +575,7 @@ extension Macho: MachoSearchSource {
     
     func symbolInSymbolTable(by virtualAddress: UInt64) -> SymbolTableEntry? {
         if let symbolTableInterpreter = self.symbolTableInterpreter {
-            for symbolEntry in symbolTableInterpreter.payload {
-                if symbolEntry.nValue == virtualAddress {
-                    return symbolEntry
-                }
-            }
+            return symbolTableInterpreter.payload.first { $0.nValue == virtualAddress && $0.symbolType == .section }
         }
         return nil
     }
