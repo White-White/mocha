@@ -12,18 +12,18 @@ struct IndirectSymbolTableEntry: InterpretableModel {
     
     let entryRange: Range<Int>
     let symbolTableIndex: Int
-    let machoSearchSource: MachoSearchSource
+    weak var macho: Macho?
     
-    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
         self.entryRange = data.absoluteRange(.zero, 4)
         self.symbolTableIndex = Int(data.raw.UInt32)
-        self.machoSearchSource = machoSearchSource
+        self.macho = macho
     }
     
     func translationItem(at index: Int) -> TranslationItem {
         var symbolName: String?
-        if let symbolTableEntry = machoSearchSource.symbolInSymbolTable(at: symbolTableIndex),
-           let _symbolName = machoSearchSource.stringInStringTable(at: Int(symbolTableEntry.indexInStringTable)) {
+        if let symbolTableEntry = macho?.symbolInSymbolTable(at: symbolTableIndex),
+           let _symbolName = macho?.stringInStringTable(at: Int(symbolTableEntry.indexInStringTable)) {
             symbolName = _symbolName
         }
         return TranslationItem(sourceDataRange: entryRange,

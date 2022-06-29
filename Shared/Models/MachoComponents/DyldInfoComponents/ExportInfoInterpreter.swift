@@ -191,12 +191,12 @@ struct ExportInfoContainer {
     }
 }
 
-class ExportInfoInterpreter: BaseInterpreter<ExportInfoContainer> {
+class ExportInfoComponent: MachoLazyComponent<ExportInfoContainer> {
     
     override var shouldPreload: Bool { true }
     
     override func generatePayload() -> ExportInfoContainer {
-        let rawData = self.data.raw
+        let rawData = self.dataSlice.raw
         let root = generateNode(from: rawData, for: nil, parentNode: nil)
         let allNodes = allNodes(from: root, in: rawData).sorted { $0.startOffsetInMacho < $1.startOffsetInMacho }
         return ExportInfoContainer(nodes: allNodes)
@@ -267,7 +267,7 @@ class ExportInfoInterpreter: BaseInterpreter<ExportInfoContainer> {
             edges.append(ExportInfoNodeEdge(edgeName: edgeNameString, offset: childNodeOffsetLEB))
         }
         
-        return ExportInfoNode(startOffsetInMacho: self.data.startOffset + startOffset,
+        return ExportInfoNode(startOffsetInMacho: self.dataSlice.startOffset + startOffset,
                               accumulatedString: accumulatedString,
                               terminalSize: terminalSizeLEB,
                               flags: retFlags,

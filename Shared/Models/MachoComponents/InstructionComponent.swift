@@ -1,5 +1,5 @@
 //
-//  InstructionInterpreter.swift
+//  InstructionComponent.swift
 //  mocha (macOS)
 //
 //  Created by white on 2022/2/7.
@@ -7,14 +7,14 @@
 
 import Foundation
 
-class InstructionInterpreter: BaseInterpreter<[CapStoneInstruction]> {
+class InstructionComponent: MachoLazyComponent<[CapStoneInstruction]> {
 
     override var shouldPreload: Bool { true }
     let capStoneArchType: CapStoneArchType
     
-    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
         let capStoneArchType: CapStoneArchType
-        let cpuType = machoSearchSource.cpuType
+        let cpuType = macho.cpuType
         switch cpuType {
         case .x86:
             capStoneArchType = .I386
@@ -30,11 +30,11 @@ class InstructionInterpreter: BaseInterpreter<[CapStoneInstruction]> {
             fatalError() /* unknown code */
         }
         self.capStoneArchType = capStoneArchType
-        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
+        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [CapStoneInstruction] {
-        return CapStoneHelper.instructions(from: self.data.raw, arch: capStoneArchType)
+        return CapStoneHelper.instructions(from: dataSlice.raw, arch: capStoneArchType)
     }
     
     override func numberOfTranslationSections() -> Int {
@@ -47,7 +47,7 @@ class InstructionInterpreter: BaseInterpreter<[CapStoneInstruction]> {
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
         let instruction = self.payload[indexPath.section]
-        return TranslationItem(sourceDataRange: self.data.absoluteRange(instruction.startOffset, instruction.length),
+        return TranslationItem(sourceDataRange: self.dataSlice.absoluteRange(instruction.startOffset, instruction.length),
                                content: TranslationItemContent(description: "Assembly",
                                                                explanation: instruction.mnemonic + "    " + instruction.operand))
     }

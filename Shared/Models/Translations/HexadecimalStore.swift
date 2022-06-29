@@ -8,27 +8,22 @@
 import Foundation
 import SwiftUI
 
-protocol LazyHexLineBytesProvider: AnyObject {
-    func bytes(at offset: Int, length: Int) -> [UInt8]
-}
-
 class LazyHexLine: ObservableObject {
     
     static let lineHeight: CGFloat = 14
     
     lazy var bytes: [UInt8] = {
-        self.bytesProvider.bytes(at: self.offset, length: HexLineStore.NumberOfBytesPerLine)
+        self.store!.bytes(at: self.offset, length: HexadecimalStore.NumberOfBytesPerLine)
     }()
     
-    let bytesProvider: LazyHexLineBytesProvider
+    fileprivate weak var store: HexadecimalStore?
     let offset: Int
     let fileOffset: Int
     let indexNumOfDigits: Int
     let isEvenLine: Bool
     @Published var selectedByteRange: Range<Int>?
     
-    init(offset: Int, baseOffset: Int, indexNumOfDigits: Int, isEvenLine: Bool, bytesProvider: LazyHexLineBytesProvider) {
-        self.bytesProvider = bytesProvider
+    fileprivate init(offset: Int, baseOffset: Int, indexNumOfDigits: Int, isEvenLine: Bool) {
         self.offset = offset
         self.fileOffset = offset + baseOffset
         self.indexNumOfDigits = indexNumOfDigits
@@ -42,9 +37,9 @@ class LazyHexLine: ObservableObject {
     var dataHexString: AttributedString {
         
         let string: String
-        if bytes.count < HexLineStore.NumberOfBytesPerLine {
+        if bytes.count < HexadecimalStore.NumberOfBytesPerLine {
             var tmpString = (bytes.map { String(format: "%02X", $0) }).joined(separator: "")
-            let paddingLength = (HexLineStore.NumberOfBytesPerLine - bytes.count) * 2
+            let paddingLength = (HexadecimalStore.NumberOfBytesPerLine - bytes.count) * 2
             tmpString.append(contentsOf: [Character](repeating: " ", count: paddingLength))
             string = tmpString
         } else {
@@ -67,7 +62,7 @@ class LazyHexLine: ObservableObject {
         
         attriString.setAttributes(container)
         
-        for index in 1..<(HexLineStore.NumberOfBytesPerLine / 4) {
+        for index in 1..<(HexadecimalStore.NumberOfBytesPerLine / 4) {
             if let lowerBound = attriString.characters.index(attriString.startIndex, offsetBy: index * 8 - 1, limitedBy: attriString.endIndex),
                let upperBound = attriString.characters.index(attriString.startIndex, offsetBy: index * 8, limitedBy: attriString.endIndex) {
                 if upperBound != attriString.endIndex {
@@ -88,11 +83,11 @@ class LazyHexLine: ObservableObject {
     }
 }
 
-class HexLineStore: Equatable, LazyHexLineBytesProvider {
+class HexadecimalStore: Equatable {
     
     static let NumberOfBytesPerLine = 24
     
-    static func == (lhs: HexLineStore, rhs: HexLineStore) -> Bool {
+    static func == (lhs: HexadecimalStore, rhs: HexadecimalStore) -> Bool {
         return lhs.id == rhs.id
     }
     
@@ -100,65 +95,61 @@ class HexLineStore: Equatable, LazyHexLineBytesProvider {
     private let dataSlice: DataSlice
     private let hexDigits: Int
     
-    var binaryLines: [LazyHexLine] = []
+    private(set) var binaryLines: [LazyHexLine]
     private var selectedBytesRange: Range<Int>?
     
-    init(_ component: MachoComponent) {
+    init(_ component: MachoComponent, hexDigits: Int) {
         let dataSlice = component.dataSlice
         self.dataSlice = dataSlice
-        
-        var machoDataSize = dataSlice.count
-        var digitCount = 0
-        while machoDataSize != 0 { digitCount += 1; machoDataSize /= 16 }
-        self.hexDigits = digitCount
+        self.hexDigits = hexDigits
         
         if component is MachoZeroFilledComponent {
             self.binaryLines = []
         } else {
-            var numberOfBinaryLines = dataSlice.count / HexLineStore.NumberOfBytesPerLine
-            if dataSlice.count % HexLineStore.NumberOfBytesPerLine != 0  { numberOfBinaryLines += 1 }
+            var numberOfBinaryLines = dataSlice.count / HexadecimalStore.NumberOfBytesPerLine
+            if dataSlice.count % HexadecimalStore.NumberOfBytesPerLine != 0  { numberOfBinaryLines += 1 }
             
             var binaryLines: [LazyHexLine] = []
             for index in 0..<numberOfBinaryLines {
-                binaryLines.append(LazyHexLine(offset: index * HexLineStore.NumberOfBytesPerLine,
+                binaryLines.append(LazyHexLine(offset: index * HexadecimalStore.NumberOfBytesPerLine,
                                                baseOffset: dataSlice.startOffset,
                                                indexNumOfDigits: hexDigits,
-                                               isEvenLine: index & 0x1 == 0,
-                                               bytesProvider: self))
+                                               isEvenLine: index & 0x1 == 0))
             }
             self.binaryLines = binaryLines
         }
+        self.binaryLines.forEach { $0.store = self }
     }
     
-    func bytes(at offset: Int, length: Int) -> [UInt8] {
+    fileprivate func bytes(at offset: Int, length: Int) -> [UInt8] {
         return [UInt8](dataSlice.truncated(from: offset, maxLength: length).raw)
     }
     
-    func targetIndexRange(for selectedBytesRange: Range<Int>) -> ClosedRange<Int> {
-        let startDifference = max(0, selectedBytesRange.lowerBound - dataSlice.startOffset)
-        let endDifference = max(0, selectedBytesRange.upperBound - dataSlice.startOffset)
-        let startIndex = startDifference / HexLineStore.NumberOfBytesPerLine
-        var endIndex = endDifference / HexLineStore.NumberOfBytesPerLine
-        if endDifference % HexLineStore.NumberOfBytesPerLine == 0 { endIndex -= 1 }
+    func targetLineIndexRange(for highLightedDataRange: Range<Int>) -> ClosedRange<Int> {
+        let startDifference = max(0, highLightedDataRange.lowerBound - dataSlice.startOffset)
+        let endDifference = max(0, highLightedDataRange.upperBound - dataSlice.startOffset)
+        let startIndex = startDifference / HexadecimalStore.NumberOfBytesPerLine
+        var endIndex = endDifference / HexadecimalStore.NumberOfBytesPerLine
+        if endDifference != 0 && endDifference % HexadecimalStore.NumberOfBytesPerLine == 0 { endIndex -= 1 }
         return startIndex...endIndex
     }
     
     func updateLinesWith(selectedBytesRange: Range<Int>?) {
         if let previoutsSelectedBytesRange = self.selectedBytesRange {
-            for index in targetIndexRange(for: previoutsSelectedBytesRange) {
+            for index in targetLineIndexRange(for: previoutsSelectedBytesRange) {
                 binaryLines[index].selectedByteRange = nil
             }
         }
         
         if let selectedBytesRange = selectedBytesRange {
-            for index in targetIndexRange(for: selectedBytesRange) {
+            for index in targetLineIndexRange(for: selectedBytesRange) {
                 let startDifference = max(0, (selectedBytesRange.lowerBound - binaryLines[index].fileOffset) * 2)
                 var endDifference = max(0, (selectedBytesRange.upperBound - binaryLines[index].fileOffset) * 2)
-                endDifference = min(HexLineStore.NumberOfBytesPerLine * 2, endDifference)
+                endDifference = min(HexadecimalStore.NumberOfBytesPerLine * 2, endDifference)
                 
-                let targetRangeLower = startDifference % (HexLineStore.NumberOfBytesPerLine * 2)
-                var targetRangeHigher = endDifference % (HexLineStore.NumberOfBytesPerLine * 2)
-                if targetRangeHigher == 0 { targetRangeHigher = HexLineStore.NumberOfBytesPerLine * 2 }
+                let targetRangeLower = startDifference % (HexadecimalStore.NumberOfBytesPerLine * 2)
+                var targetRangeHigher = endDifference % (HexadecimalStore.NumberOfBytesPerLine * 2)
+                if targetRangeHigher == 0 { targetRangeHigher = HexadecimalStore.NumberOfBytesPerLine * 2 }
                 
                 binaryLines[index].selectedByteRange = targetRangeLower..<targetRangeHigher
             }

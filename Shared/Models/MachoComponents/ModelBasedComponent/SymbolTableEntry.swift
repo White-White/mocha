@@ -145,7 +145,7 @@ enum SymbolType: Equatable {
 
 struct SymbolTableEntry: InterpretableModel {
     
-    let machoSearchSource: MachoSearchSource
+    weak var macho: Macho?
     
     let indexInStringTableRange: Range<Int>
     let indexInStringTable: UInt32
@@ -181,9 +181,9 @@ struct SymbolTableEntry: InterpretableModel {
     
     let translaitonItems: [TranslationItem]
     
-    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
         
-        self.machoSearchSource = machoSearchSource
+        self.macho = macho
         
         var translaitonItems: [TranslationItem] = []
         
@@ -245,12 +245,12 @@ struct SymbolTableEntry: InterpretableModel {
         case .absolute:
             nSectExplanation = "0 (NO_SECT)"
         case .section:
-            symbolTypeExplanation += (machoSearchSource.sectionName(at: Int(nSect)) + " (N_SECT)")
+            symbolTypeExplanation += (self.macho!.sectionName(at: Int(nSect)) + " (N_SECT)")
         case .indirect:
             nValueDesp = "String table offset"
             nValueExplanation = nValue.hex
             nValueExtraDesp = "Referred string"
-            nValueExtraExplanation = machoSearchSource.stringInStringTable(at: Int(nValue))
+            nValueExtraExplanation = self.macho!.stringInStringTable(at: Int(nValue))
         default:
             break
         }
@@ -369,7 +369,7 @@ struct SymbolTableEntry: InterpretableModel {
             if indexInStringTable == 0 {
                 symbolName = "" // if zero, means empty string
             } else {
-                guard let symbolStringFromStringTable = machoSearchSource.stringInStringTable(at: Int(indexInStringTable)) else {
+                guard let symbolStringFromStringTable = macho?.stringInStringTable(at: Int(indexInStringTable)) else {
                     fatalError() /* didn't find symbol string. unexpected */
                 }
                 symbolName = symbolStringFromStringTable

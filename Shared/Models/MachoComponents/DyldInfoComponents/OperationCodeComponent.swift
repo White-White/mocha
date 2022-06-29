@@ -1,5 +1,5 @@
 //
-//  RebaseInfoInterpreter.swift
+//  OperationCodeComponent.swift
 //  mocha (macOS)
 //
 //  Created by white on 2022/1/9.
@@ -25,12 +25,12 @@ struct OperationCodeContainer<Code: OperationCodeProtocol> {
     }
 }
 
-class OperationCodeInterpreter<Code: OperationCodeProtocol>: BaseInterpreter<OperationCodeContainer<Code>> {
+class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<OperationCodeContainer<Code>> {
     
     override var shouldPreload: Bool { true }
     
     override func generatePayload() -> OperationCodeContainer<Code> {
-        return OperationCodeInterpreter.operationCodes(from: self.data)
+        return OperationCodeComponent.operationCodes(from: self.dataSlice)
     }
     
     override func numberOfTranslationSections() -> Int {

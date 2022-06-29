@@ -13,20 +13,20 @@ struct CStringPosition {
     let length: Int
 }
 
-class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
+class CStringComponent: MachoLazyComponent<[CStringPosition]> {
     
     override var shouldPreload: Bool { true }
     let demanglingCString: Bool
     let sectionVirtualAddress: UInt64
     
-    init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource, sectionVirtualAddress: UInt64, demanglingCString: Bool) {
+    init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?, sectionVirtualAddress: UInt64, demanglingCString: Bool) {
         self.demanglingCString = demanglingCString
         self.sectionVirtualAddress = sectionVirtualAddress
-        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
+        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [CStringPosition] {
-        let rawData = self.data.raw
+        let rawData = self.dataSlice.raw
         var cStringPositions: [CStringPosition] = []
         var indexOfLastNull: Int? // index of last null char ( "\0" )
         
@@ -64,8 +64,8 @@ class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
         let index = indexPath.section
         let cStringPosition = self.payload[index]
         let cStringRelativeRange = cStringPosition.startOffset..<cStringPosition.startOffset+cStringPosition.length
-        let cStringAbsoluteRange = self.data.absoluteRange(cStringRelativeRange)
-        let cStringRaw = self.data.truncated(from: cStringPosition.startOffset, length: cStringPosition.length).raw
+        let cStringAbsoluteRange = self.dataSlice.absoluteRange(cStringRelativeRange)
+        let cStringRaw = self.dataSlice.truncated(from: cStringPosition.startOffset, length: cStringPosition.length).raw
         if let string = cStringRaw.utf8String {
             let explanation: String = string.replacingOccurrences(of: "\n", with: "\\n")
             let demangledCString: String? = self.demanglingCString ? swift_demangle(explanation) : nil
@@ -80,15 +80,15 @@ class CStringInterpreter: BaseInterpreter<[CStringPosition]> {
 
 // MARK: Search In String Table
 
-extension CStringInterpreter {
+extension CStringComponent {
     
     func findString(at offset: Int) -> String? {
-        let rawData = self.data.raw
+        let rawData = self.dataSlice.raw
         for index in offset..<rawData.count {
             let byte = rawData[rawData.startIndex+index]
             if byte != 0 { continue }
             let length = index - offset + 1
-            return self.data.truncated(from: offset, length: length).raw.utf8String
+            return self.dataSlice.truncated(from: offset, length: length).raw.utf8String
         }
         return nil
     }
@@ -96,7 +96,7 @@ extension CStringInterpreter {
     func findString(with virtualAddress: Swift.UInt64) -> String? {
         for cStringPosition in self.payload {
             if cStringPosition.virtualAddress == virtualAddress {
-                return self.data.truncated(from: cStringPosition.startOffset, length: cStringPosition.length).raw.utf8String
+                return self.dataSlice.truncated(from: cStringPosition.startOffset, length: cStringPosition.length).raw.utf8String
             }
         }
         return nil

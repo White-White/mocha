@@ -1,5 +1,5 @@
 //
-//  FunctionStartsInterpreter.swift
+//  FunctionStartsComponent.swift
 //  mocha (macOS)
 //
 //  Created by white on 2022/1/25.
@@ -16,18 +16,18 @@ struct FunctionStart {
 // a great description for function start section data format
 // https://stackoverflow.com/questions/9602438/mach-o-file-lc-function-starts-load-command
 
-class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
+class FunctionStartsComponent: MachoLazyComponent<[FunctionStart]> {
     
     let textSegmentVirtualStartAddress: Swift.UInt64
     
-    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
-        guard let textSegment = machoSearchSource.segmentCommand(withName: Constants.segmentNameTEXT) else { fatalError() /* unlikely */ }
+    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+        guard let textSegment = macho.segmentCommand(withName: Constants.segmentNameTEXT) else { fatalError() /* unlikely */ }
         self.textSegmentVirtualStartAddress = textSegment.vmaddr
-        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
+        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [FunctionStart] {
-        let rawData = self.data.raw
+        let rawData = self.dataSlice.raw
         // ref: https://opensource.apple.com/source/ld64/ld64-127.2/src/other/dyldinfo.cpp in function printFunctionStartsInfo
         // The code below decode (unsigned) LEB128 data into integers
         var functionStarts: [FunctionStart] = []
@@ -65,14 +65,13 @@ class FunctionStartsInterpreter: BaseInterpreter<[FunctionStart]> {
         let index = indexPath.section
         let functionStart = self.payload[index]
         
-        
         var symbolName: String?
-        if let functionSymbol = self.machoSearchSource.symbolInSymbolTable(by: functionStart.address + textSegmentVirtualStartAddress),
-           let _symbolName = self.machoSearchSource.stringInStringTable(at: Int(functionSymbol.indexInStringTable)) {
+        if let functionSymbol = self.macho.symbolInSymbolTable(by: functionStart.address + textSegmentVirtualStartAddress),
+           let _symbolName = self.macho.stringInStringTable(at: Int(functionSymbol.indexInStringTable)) {
             symbolName = _symbolName
         }
         
-        return TranslationItem(sourceDataRange: data.absoluteRange(functionStart.startOffset, functionStart.byteLength),
+        return TranslationItem(sourceDataRange: dataSlice.absoluteRange(functionStart.startOffset, functionStart.byteLength),
                                content: TranslationItemContent(description: "Vitual Address", explanation: (functionStart.address + textSegmentVirtualStartAddress).hex,
                                                                extraDescription: symbolName != nil ? "Referred Symbol Name" : nil, extraExplanation: symbolName,
                                                                hasDivider: true))

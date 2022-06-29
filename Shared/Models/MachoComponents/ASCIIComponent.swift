@@ -1,5 +1,5 @@
 //
-//  ACSIIInterpreter.swift
+//  ASCIIComponent.swift
 //  mocha (macOS)
 //
 //  Created by white on 2022/1/4.
@@ -7,15 +7,15 @@
 
 import Foundation
 
-class ASCIIInterpreter: BaseInterpreter<[String]> {
+class ASCIIComponent: MachoLazyComponent<[String]> {
     
     private let numberOfASCIILines: Int
     
-    override init(_ data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
-        var numberOfASCIILines = data.count / HexLineStore.NumberOfBytesPerLine
-        if data.count % HexLineStore.NumberOfBytesPerLine != 0 { numberOfASCIILines += 1 }
+    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+        var numberOfASCIILines = dataSlice.count / HexadecimalStore.NumberOfBytesPerLine
+        if dataSlice.count % HexadecimalStore.NumberOfBytesPerLine != 0 { numberOfASCIILines += 1 }
         self.numberOfASCIILines = numberOfASCIILines
-        super.init(data, is64Bit: is64Bit, machoSearchSource: machoSearchSource)
+        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func numberOfTranslationSections() -> Int {
@@ -28,7 +28,7 @@ class ASCIIInterpreter: BaseInterpreter<[String]> {
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
         let index = indexPath.section
-        let lineData = self.data.truncated(from: index * HexLineStore.NumberOfBytesPerLine, maxLength: HexLineStore.NumberOfBytesPerLine)
+        let lineData = dataSlice.truncated(from: index * HexadecimalStore.NumberOfBytesPerLine, maxLength: HexadecimalStore.NumberOfBytesPerLine)
         let chars = lineData.raw.map { char -> Character in
             if char < 32 || char > 126 {
                 return "."
@@ -36,7 +36,7 @@ class ASCIIInterpreter: BaseInterpreter<[String]> {
             return Character(UnicodeScalar(char))
         }
         let string = String(chars)
-        return TranslationItem(sourceDataRange: data.absoluteRange(index * HexLineStore.NumberOfBytesPerLine, HexLineStore.NumberOfBytesPerLine),
+        return TranslationItem(sourceDataRange: dataSlice.absoluteRange(index * HexadecimalStore.NumberOfBytesPerLine, HexadecimalStore.NumberOfBytesPerLine),
                                content: TranslationItemContent(description: nil, explanation: string, monoSpaced: true))
     }
 }

@@ -29,7 +29,7 @@ struct RelocationEntry: InterpretableModel {
     
     let translationStore: TranslationStore
     
-    init(with data: DataSlice, is64Bit: Bool, machoSearchSource: MachoSearchSource) {
+    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
         
         let translationStore = TranslationStore(machoDataSlice: data)
         

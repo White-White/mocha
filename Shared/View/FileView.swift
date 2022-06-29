@@ -57,17 +57,20 @@ struct FileView: View {
         HStack(alignment: .top, spacing: 0) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(0..<file.machos.count) { index in
+                    ForEach(file.machos.indices, id: \.self) { index in
                         FileViewCell(file.machos[index], isSelected: index == self.selectedIndex) .onTapGesture {
                             self.selectedIndex = index
                             self.selectedMacho = file.machos[index]
+                            self.selectedMacho.initialize()
                         }
                     }
                 }
             }
             .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
             .fixedSize(horizontal: true, vertical: false)
+            
             Divider()
+            
             MachoView($selectedMacho)
         }
     }
@@ -76,6 +79,7 @@ struct FileView: View {
         self.file = file
         _selectedIndex = State(initialValue: 0)
         let firstMacho = file.machos.first!
+        firstMacho.initialize()
         _selectedMacho = State(initialValue: firstMacho)
     }
 }

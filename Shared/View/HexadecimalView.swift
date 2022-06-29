@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import Introspect
 
-struct HexLineView: View {
+struct HexadecimalLineView: View {
     
     @ObservedObject var binaryLine: LazyHexLine
     
@@ -29,15 +29,16 @@ struct HexLineView: View {
     }
 }
 
-class HexViewHelper {
+fileprivate class HexViewHelper {
     var rawScrollView: NSScrollView?
 }
 
-struct HexView: View {
+struct HexadecimalView: View {
     
-    @Binding var store: HexLineStore
-    @Binding var selectedDataRange: Range<Int>?
-    let helper = HexViewHelper()
+    fileprivate let helper = HexViewHelper()
+    
+    @Binding var store: HexadecimalStore
+    @Binding var highLightedDataRange: Range<Int>?
     
     var body: some View {
         HStack(alignment: .top, spacing: 4) {
@@ -45,7 +46,7 @@ struct HexView: View {
                 ScrollView(.vertical, showsIndicators: true)  {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(store.binaryLines.indices, id: \.self) { index in
-                            HexLineView(binaryLine: store.binaryLines[index])
+                            HexadecimalLineView(binaryLine: store.binaryLines[index])
                         }
                     }
                 }
@@ -53,10 +54,10 @@ struct HexView: View {
                 .onChange(of: store, perform: { newValue in
                     scrollProxy.scrollTo(0, anchor: .top)
                 })
-                .onChange(of: selectedDataRange) { newValue in
-                    store.updateLinesWith(selectedBytesRange: selectedDataRange)
-                    if let selectedDataRange = selectedDataRange {
-                        let targetElementIndexRange = store.targetIndexRange(for: selectedDataRange)
+                .onChange(of: highLightedDataRange) { newValue in
+                    store.updateLinesWith(selectedBytesRange: highLightedDataRange)
+                    if let highLightedDataRange = highLightedDataRange {
+                        let targetElementIndexRange = store.targetLineIndexRange(for: highLightedDataRange)
                         let targetElementIndex = (targetElementIndexRange.lowerBound + targetElementIndexRange.upperBound) / 2
                         if let visibleRect = helper.rawScrollView?.documentView?.visibleRect {
                             let beginIndex = Int(visibleRect.origin.y / (LazyHexLine.lineHeight))

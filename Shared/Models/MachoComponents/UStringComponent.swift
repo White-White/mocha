@@ -1,5 +1,5 @@
 //
-//  UStringInterpreter.swift
+//  UStringComponent.swift
 //  mocha (macOS)
 //
 //  Created by white on 2022/1/26.
@@ -12,12 +12,12 @@ struct UStringPosition {
     let length: Int
 }
 
-class UStringInterpreter: BaseInterpreter<[UStringPosition]> {
+class UStringComponent: MachoLazyComponent<[UStringPosition]> {
     
     override var shouldPreload: Bool { true }
     
     override func generatePayload() -> [UStringPosition] {
-        let rawData = self.data.raw
+        let rawData = self.dataSlice.raw
         let dataLength = rawData.count
         let utf16UnitCount = dataLength / 2
         var uStringPositions: [UStringPosition] = []
@@ -51,8 +51,8 @@ class UStringInterpreter: BaseInterpreter<[UStringPosition]> {
         let index = indexPath.section
         let uStringPosition = self.payload[index]
         let uStringRelativeRange = uStringPosition.relativeStartOffset..<uStringPosition.relativeStartOffset+uStringPosition.length
-        let uStringAbsoluteRange = self.data.absoluteRange(uStringRelativeRange)
-        let uStringRaw = self.data.truncated(from: uStringPosition.relativeStartOffset, length: uStringPosition.length).raw
+        let uStringAbsoluteRange = self.dataSlice.absoluteRange(uStringRelativeRange)
+        let uStringRaw = self.dataSlice.truncated(from: uStringPosition.relativeStartOffset, length: uStringPosition.length).raw
         
         if let string = String(data: uStringRaw, encoding: .utf16LittleEndian) {
             return TranslationItem(sourceDataRange: uStringAbsoluteRange,
