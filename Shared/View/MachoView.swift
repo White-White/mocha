@@ -15,27 +15,32 @@ struct MachoView: View {
     @State var selectedCellModel: MachoViewCellModel
     
     var body: some View {
-        HStack(spacing: 0) {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(cellModels) { cellModel in
-                        MachoComponentCellView(cellModel: cellModel, machoFileSize: macho.fileSize, hexDigits: macho.hexDigits)
-                            .onTapGesture {
-                                if self.selectedCellModel.machoComponent == cellModel.machoComponent { return }
-                                cellModel.isSelected.toggle()
-                                self.selectedCellModel.isSelected.toggle()
-                                self.selectedCellModel = cellModel
-                                self.selectedMachoComponent = cellModel.machoComponent
-                            }
+        ScrollViewReader { scrollViewProxy in
+            HStack(spacing: 0) {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 4) {
+                        ForEach(cellModels) { cellModel in
+                            MachoComponentCellView(cellModel: cellModel, machoFileSize: macho.fileSize, hexDigits: macho.hexDigits)
+                                .onTapGesture {
+                                    if self.selectedCellModel.machoComponent == cellModel.machoComponent { return }
+                                    cellModel.isSelected.toggle()
+                                    self.selectedCellModel.isSelected.toggle()
+                                    self.selectedCellModel = cellModel
+                                    self.selectedMachoComponent = cellModel.machoComponent
+                                }
+                        }
+                    }
+                    .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                .onChange(of: macho) { newValue in
+                    if let id = cellModels.first?.id {
+                        scrollViewProxy.scrollTo(id, anchor: .top)
                     }
                 }
-                .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+                Divider()
+                MachoComponentView(with: $selectedMachoComponent, hexDigits: macho.hexDigits)
             }
-            .fixedSize(horizontal: true, vertical: false)
-            
-            Divider()
-            
-            MachoComponentView(with: $selectedMachoComponent, hexDigits: macho.hexDigits)
         }
         .onChange(of: macho) { newValue in
             let cellModels = newValue.machoComponents.map { MachoViewCellModel.init($0) }
