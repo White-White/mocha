@@ -18,6 +18,7 @@ class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver, Equa
     let hexDigits: Int
     let machoComponent: MachoComponent
     
+    var visiableDataRange: Range<Int>
     var highlightedLineViewModels: [HexadecimalLineViewModel] = []
     @Published var visiableHighlightedLineIndex: Int?
     @Published var linesViewModels: [HexadecimalLineViewModel]
@@ -25,6 +26,7 @@ class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver, Equa
     init(_ machoComponent: MachoComponent, translationViewModel:TranslationViewModel, hexDigits: Int) {
         self.hexDigits = hexDigits
         self.machoComponent = machoComponent
+        self.visiableDataRange = translationViewModel.visiableDataRange
         
         let lines = HexadecimalViewModel.hexadecimalLines(from: machoComponent, dataRange: translationViewModel.visiableDataRange)
         self.linesViewModels = HexadecimalLineViewModel.viewModels(from: lines, hexDigits: hexDigits)
@@ -36,6 +38,7 @@ class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver, Equa
     }
     
     func onChange(visiableDataRange: Range<Int>) {
+        if self.visiableDataRange == visiableDataRange { return }
         let lines = HexadecimalViewModel.hexadecimalLines(from: machoComponent, dataRange: visiableDataRange)
         self.linesViewModels = HexadecimalLineViewModel.viewModels(from: lines, hexDigits: hexDigits)
     }

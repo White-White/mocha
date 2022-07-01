@@ -33,7 +33,7 @@ struct PageControlView: View {
             .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 4))
             Spacer()
         }
-        .padding(EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 0))
+        .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
     
     func gotoNextPage() {

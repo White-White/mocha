@@ -15,12 +15,12 @@ struct MachoComponentView: View {
     @State var translationViewModel: TranslationViewModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .center, spacing: 0) {
-                HexadecimalView(viewModel: hexadecimalViewModel)
+        HStack(alignment: .center, spacing: 0) {
+            HexadecimalView(viewModel: hexadecimalViewModel)
+            VStack {
                 TranslationView(translationViewModel: translationViewModel)
+                PageControlView(translationViewModel: translationViewModel)
             }
-            PageControlView(translationViewModel: translationViewModel)
         }
         .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
         .onChange(of: machoComponent) { newValue in

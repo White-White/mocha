@@ -33,10 +33,6 @@ class TranslationViewModel: ObservableObject, Equatable {
     }
     
     var visiableDataRange: Range<Int> {
-        if let lowerBound = self.translationItemViewModels.first?.first?.item.sourceDataRange?.lowerBound,
-           let upperBound = self.translationItemViewModels.last?.last?.item.sourceDataRange?.upperBound {
-            return lowerBound..<upperBound
-        }
         return machoComponent.dataSlice.startOffset..<(machoComponent.dataSlice.startOffset+machoComponent.dataSlice.count)
     }
     
