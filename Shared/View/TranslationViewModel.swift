@@ -18,8 +18,8 @@ class TranslationViewModel: ObservableObject, Equatable {
     }
     
     static let NumberOfSectionsInPage = 128
-    static let MinPage: Int = 0
     
+    let minPage: Int
     let maxPage: Int
     var lastPage: Int?
     
@@ -50,13 +50,13 @@ class TranslationViewModel: ObservableObject, Equatable {
     }
     @Published var translationItemViewModels: [[TranslationItemViewModel]]
     
-    init(_ machoComponent: MachoComponent) {
+    init(_ machoComponent: MachoComponent, minPage: Int = 0) {
+        self.minPage = minPage
         self.maxPage = machoComponent.numberOfTranslationSections() / TranslationViewModel.NumberOfSectionsInPage
+        self.currentPage = minPage
         self.machoComponent = machoComponent
-        let initialPage = TranslationViewModel.MinPage
-        self.currentPage = initialPage
         
-        let viewModels = TranslationViewModel.translationItems(machoComponent: machoComponent, at: initialPage)
+        let viewModels = TranslationViewModel.translationItems(machoComponent: machoComponent, at: minPage)
         self.translationItemViewModels = viewModels
         self.didSelect(viewModels.first?.first)
     }
