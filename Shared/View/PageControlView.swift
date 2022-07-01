@@ -11,7 +11,7 @@ struct PageControlView: View {
     
     @ObservedObject var translationViewModel: TranslationViewModel
     
-    var minPage: Int { TranslationViewModel.MinPage }
+    var minPage: Int { translationViewModel.minPage }
     var maxPage: Int { translationViewModel.maxPage }
     var lastPage: Int? { translationViewModel.lastPage }
     var currentPage: Int { translationViewModel.currentPage }

@@ -36,8 +36,5 @@ class MachoZeroFilledComponent: MachoComponent {
                                                                                      explanation: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)",
                                                                                      explanationStyle: ExplanationStyle.extraDetail))
     }
-    
-    override var firstTransItem: TranslationItem? {
-        return nil
-    }
+
 }

@@ -27,6 +27,10 @@ struct HexadecimalView: View {
                         }
                     }
                 })
+                .onChange(of: viewModel) { newValue in
+                    if let firstLienOffsetInMacho = newValue.linesViewModels.first?.line.offsetInMacho {
+                        scrollProxy.scrollTo(firstLienOffsetInMacho, anchor: .top)
+                }
             }
         }
         .padding(4)

@@ -37,10 +37,7 @@ class MachoComponent: Equatable, Identifiable {
     func translationItem(at indexPath: IndexPath) -> TranslationItem {
         fatalError()
     }
-    
-    var firstTransItem: TranslationItem? {
-        return self.translationItem(at: .init(item: .zero, section: .zero))
-    }
+
 }
 
 class MachoUnknownCodeComponent: MachoComponent {
@@ -70,4 +67,5 @@ class MachoUnknownCodeComponent: MachoComponent {
                                content: TranslationItemContent(description: "Code",
                                                                explanation: "This part of the macho is machine code. Hopper.app would be a better choice to parse it."))
     }
+    
 }

@@ -7,14 +7,18 @@
 
 import Foundation
 
-class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver {
+class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver, Equatable {
+    
+    static func == (lhs: HexadecimalViewModel, rhs: HexadecimalViewModel) -> Bool {
+        return lhs.machoComponent == rhs.machoComponent
+    }
     
     static let LineBytesCount = 24
     
     let hexDigits: Int
     let machoComponent: MachoComponent
     
-    var highlightedLinesIndexSet: Set<Int> = []
+    var highlightedLineViewModels: [HexadecimalLineViewModel] = []
     @Published var visiableHighlightedLineIndex: Int?
     @Published var linesViewModels: [HexadecimalLineViewModel]
     
@@ -43,25 +47,24 @@ class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver {
     }
     
     func updateViewModels(with selectedTranslationItem: TranslationItem) {
-        highlightedLinesIndexSet.forEach { linesViewModels[$0].highlightedDataRange = nil }
-        highlightedLinesIndexSet.removeAll()
+        highlightedLineViewModels.forEach { $0.highlightedDataRange = nil }
+        highlightedLineViewModels.removeAll(keepingCapacity: true)
         guard let selectedItemRange = selectedTranslationItem.sourceDataRange else { return }
         
-        var lineViewModelsToUpdate: [HexadecimalLineViewModel] = []
+        var highlightedLineViewModelIndexSet = Set<Int>()
+        
         for (index, viewModel) in linesViewModels.enumerated() {
             if (viewModel.line.offsetInMacho..<(viewModel.line.offsetInMacho + HexadecimalLine.LineBytesCount)).overlaps(selectedItemRange) {
-                highlightedLinesIndexSet.insert(index)
-                lineViewModelsToUpdate.append(viewModel)
+                let highlightRangeLowerBound = max(selectedItemRange.lowerBound - viewModel.line.offsetInMacho, 0)
+                let highlightRangeUpperBound = min(selectedItemRange.upperBound - viewModel.line.offsetInMacho, HexadecimalLine.LineBytesCount)
+                viewModel.highlightedDataRange = highlightRangeLowerBound..<highlightRangeUpperBound
+                
+                highlightedLineViewModelIndexSet.insert(index)
+                highlightedLineViewModels.append(viewModel)
             }
         }
         
-        lineViewModelsToUpdate.forEach { viewModel in
-            let highlightRangeLowerBound = max(selectedItemRange.lowerBound - viewModel.line.offsetInMacho, 0)
-            let highlightRangeUpperBound = min(selectedItemRange.upperBound - viewModel.line.offsetInMacho, HexadecimalLine.LineBytesCount)
-            viewModel.highlightedDataRange = highlightRangeLowerBound..<highlightRangeUpperBound
-        }
-        
-        self.visiableHighlightedLineIndex = highlightedLinesIndexSet.min()
+        self.visiableHighlightedLineIndex = highlightedLineViewModelIndexSet.min()
     }
     
     static func hexadecimalLines(from machoComponent: MachoComponent, dataRange: Range<Int>) -> [HexadecimalLine] {

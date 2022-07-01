@@ -11,10 +11,13 @@ struct HexadecimalLine {
     
     static let LineBytesCount = 24
     
-    let offsetInMacho: Int
-    let hexadecimalString: String
+    let dataSlice: DataSlice
     
-    init(dataSlice: DataSlice) {
+    var offsetInMacho: Int {
+        dataSlice.startOffset
+    }
+    
+    var hexadecimalString: String {
         let bytes = [UInt8](dataSlice.raw)
         var hexadecimalStringData = [UInt8].init(repeating: 0x20, count: HexadecimalViewModel.LineBytesCount * 2)
         let hexArray: [UInt8] = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46] // 0-9, A-F
@@ -24,10 +27,9 @@ struct HexadecimalLine {
             let lower4 = byte & 0x0F
             hexadecimalStringData[index * 2 + 1] = hexArray[Int(lower4)]
         }
-        
-        self.hexadecimalString = String(hexadecimalStringData.map { Character(UnicodeScalar($0)) })
-        self.offsetInMacho = dataSlice.startOffset
+        return String(hexadecimalStringData.map { Character(UnicodeScalar($0)) })
     }
+
 }
 
 class HexadecimalLineViewModel: ObservableObject {
