@@ -12,8 +12,8 @@ class LCLinkerOption: LoadCommand {
     let numberOfOptions: Int
     let options: [String]
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         self.numberOfOptions = translationStore.translate(next: .doubleWords,
                                                         dataInterpreter: { Int($0.UInt32) },

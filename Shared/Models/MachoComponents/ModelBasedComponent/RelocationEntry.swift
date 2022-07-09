@@ -29,9 +29,9 @@ struct RelocationEntry: InterpretableModel {
     
     let translationStore: TranslationStore
     
-    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
+    init(with data: Data, is64Bit: Bool, macho: Macho) {
         
-        let translationStore = TranslationStore(machoDataSlice: data)
+        let translationStore = TranslationStore(data: data)
         
         self.address = translationStore.translate(next: .doubleWords,
                                                 dataInterpreter: DataInterpreterPreset.UInt32,
@@ -42,7 +42,7 @@ struct RelocationEntry: InterpretableModel {
                                                   itemContentGenerator: { value in TranslationItemContent(description: "symbolNum", explanation: "\(value)") })
         
         let rangeOfLastByte = data.absoluteRange(7, 1)
-        let lastByte = data.truncated(from: 7, length: 1).raw.UInt8
+        let lastByte = data.subSequence(from: 7, count: 1).UInt8
         
         let pcRelocated = (lastByte & 0b10000000) != 0
         self.pcRelocated = pcRelocated

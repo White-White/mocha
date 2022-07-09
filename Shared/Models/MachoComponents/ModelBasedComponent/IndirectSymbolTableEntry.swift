@@ -14,9 +14,9 @@ struct IndirectSymbolTableEntry: InterpretableModel {
     let symbolTableIndex: Int
     weak var macho: Macho?
     
-    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
+    init(with data: Data, is64Bit: Bool, macho: Macho) {
         self.entryRange = data.absoluteRange(.zero, 4)
-        self.symbolTableIndex = Int(data.raw.UInt32)
+        self.symbolTableIndex = Int(data.UInt32)
         self.macho = macho
     }
     

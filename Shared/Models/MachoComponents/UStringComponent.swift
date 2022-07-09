@@ -17,7 +17,7 @@ class UStringComponent: MachoLazyComponent<[UStringPosition]> {
     override var shouldPreload: Bool { true }
     
     override func generatePayload() -> [UStringPosition] {
-        let rawData = self.dataSlice.raw
+        let rawData = self.data
         let dataLength = rawData.count
         let utf16UnitCount = dataLength / 2
         var uStringPositions: [UStringPosition] = []
@@ -51,8 +51,8 @@ class UStringComponent: MachoLazyComponent<[UStringPosition]> {
         let index = indexPath.section
         let uStringPosition = self.payload[index]
         let uStringRelativeRange = uStringPosition.relativeStartOffset..<uStringPosition.relativeStartOffset+uStringPosition.length
-        let uStringAbsoluteRange = self.dataSlice.absoluteRange(uStringRelativeRange)
-        let uStringRaw = self.dataSlice.truncated(from: uStringPosition.relativeStartOffset, length: uStringPosition.length).raw
+        let uStringAbsoluteRange = self.data.absoluteRange(uStringRelativeRange)
+        let uStringRaw = self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length)
         
         if let string = String(data: uStringRaw, encoding: .utf16LittleEndian) {
             return TranslationItem(sourceDataRange: uStringAbsoluteRange,

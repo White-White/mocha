@@ -12,8 +12,8 @@ class LCMonoString: LoadCommand {
     let stringOffset: UInt32
     let string: String
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         let stringOffset =  translationStore.translate(next: .doubleWords,
                                                      dataInterpreter: DataInterpreterPreset.UInt32,
                                                      itemContentGenerator: { stringOffset in TranslationItemContent(description: "String Offset", explanation: stringOffset.hex) })

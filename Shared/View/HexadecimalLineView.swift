@@ -13,7 +13,7 @@ struct HexadecimalLineView: View {
     
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
-            Text(viewModel.offsetInMachoString)
+            Text(viewModel.offsetString)
                 .background(Color(.sRGB, red: 228/255, green: 228/255, blue: 228/255, opacity: 1))
                 .font(.system(size: 14).monospaced())
                 .foregroundColor(.secondary)

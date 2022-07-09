@@ -131,14 +131,14 @@ struct SectionHeader {
     let reserved3: UInt32? // exists only for 64 bit
     
     let is64Bit: Bool
-    let data: DataSlice
+    let data: Data
     let translationStore: TranslationStore
 
-    init(is64Bit: Bool, data: DataSlice) {
+    init(is64Bit: Bool, data: Data) {
         self.is64Bit = is64Bit
         self.data = data
         
-        let translationStore = TranslationStore(machoDataSlice: data)
+        let translationStore = TranslationStore(data: data)
         
         self.section =
         translationStore.translate(next: .rawNumber(16),
@@ -178,7 +178,7 @@ struct SectionHeader {
         self.numberOfRelocatioEntries = relocValues.1
         
         // parse flags
-        let flags = data.truncated(from: translationStore.translated, length: 4).raw.UInt32
+        let flags = data.subSequence(from: translationStore.translated, count: 4).UInt32
         let rangeOfNextDWords = data.absoluteRange(translationStore.translated, 4)
         
         let sectionTypeRawValue = flags & 0x000000ff

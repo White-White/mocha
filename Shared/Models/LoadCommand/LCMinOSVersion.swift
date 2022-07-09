@@ -12,8 +12,8 @@ class LCMinOSVersion: LoadCommand {
     let osVersion: String
     let sdkVersion: String
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         self.osVersion = translationStore.translate(next: .doubleWords,
                                                   dataInterpreter: { LCMinOSVersion.version(for: $0.UInt32) },

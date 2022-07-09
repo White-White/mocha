@@ -25,12 +25,12 @@ class MachoLazyComponent<Payload>: MachoComponent {
     private let title: String
     private let subTitle: String?
     
-    init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+    init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
         self.title = title
         self.subTitle = subTitle
         self.is64Bit = is64Bit
         self.machoInside = macho
-        super.init(dataSlice)
+        super.init(data)
         self.preloadIfNeeded()
     }
     

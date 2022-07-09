@@ -204,9 +204,9 @@ class LoadCommand: MachoComponent {
         return translationStore.items[indexPath.item]
     }
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
         self.type = type
-        let translationStore = translationStore ?? TranslationStore(machoDataSlice: data.truncated(from: 0, length: 8))
+        let translationStore = translationStore ?? TranslationStore(data: data.subSequence(from: 0, count: 8))
         translationStore.insert(TranslationItemContent(description: "Load Command Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
         translationStore.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
         self.translationStore = translationStore

@@ -40,12 +40,9 @@
 		1F73C6DA275A320D0020E581 /* HexadecimalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D5275A320D0020E581 /* HexadecimalView.swift */; };
 		1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D7275A320D0020E581 /* MachoView.swift */; };
 		1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6E3275A32120020E581 /* UnixArchive.swift */; };
-		1F73C6EA275A32120020E581 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6E4275A32120020E581 /* File.swift */; };
-		1F73C6FC275A322C0020E581 /* FileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EE275A322C0020E581 /* FileView.swift */; };
 		1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EF275A322C0020E581 /* Extensions.swift */; };
 		1F73C706275A322C0020E581 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6F3275A322C0020E581 /* Theme.swift */; };
 		1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C709275A5C6D0020E581 /* FatBinary.swift */; };
-		1F73C70C275C872D0020E581 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C70B275C872D0020E581 /* ContentView.swift */; };
 		1F75F8B8275A3151001A4E29 /* mochaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A7275A314F001A4E29 /* mochaApp.swift */; };
 		1F75F8BC275A3151001A4E29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F75F8A9275A3151001A4E29 /* Assets.xcassets */; };
 		1F844CB327B2434700ED0246 /* libcapstone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F844C7E27B2429100ED0246 /* libcapstone.a */; };
@@ -57,6 +54,8 @@
 		1FBB28222799483800E7C53D /* LiteralPointerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB28212799483800E7C53D /* LiteralPointerComponent.swift */; };
 		1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */; };
 		1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258CE275F6250008C2826 /* TranslationItem.swift */; };
+		1FC5CD97287824D700F9A09F /* MochaDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC5CD96287824D700F9A09F /* MochaDocument.swift */; };
+		1FC5CDAC287842FC00F9A09F /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC5CDAB287842FC00F9A09F /* MainView.swift */; };
 		1FD02A662845C7570036715E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD02A652845C7570036715E /* Constants.swift */; };
 		1FE35B94286B1F5C00FE37AC /* MachoLazyComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE35B93286B1F5C00FE37AC /* MachoLazyComponent.swift */; };
 		1FE35B96286B1F7900FE37AC /* MachoZeroFilledComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE35B95286B1F7900FE37AC /* MachoZeroFilledComponent.swift */; };
@@ -241,12 +240,9 @@
 		1F73C6D5275A320D0020E581 /* HexadecimalView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HexadecimalView.swift; sourceTree = "<group>"; };
 		1F73C6D7275A320D0020E581 /* MachoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachoView.swift; sourceTree = "<group>"; };
 		1F73C6E3275A32120020E581 /* UnixArchive.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnixArchive.swift; sourceTree = "<group>"; };
-		1F73C6E4275A32120020E581 /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
-		1F73C6EE275A322C0020E581 /* FileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileView.swift; sourceTree = "<group>"; };
 		1F73C6EF275A322C0020E581 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		1F73C6F3275A322C0020E581 /* Theme.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1F73C709275A5C6D0020E581 /* FatBinary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatBinary.swift; sourceTree = "<group>"; };
-		1F73C70B275C872D0020E581 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1F75F8A7275A314F001A4E29 /* mochaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mochaApp.swift; sourceTree = "<group>"; };
 		1F75F8A9275A3151001A4E29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1F75F8B4275A3151001A4E29 /* mocha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mocha.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -263,6 +259,8 @@
 		1FBB28212799483800E7C53D /* LiteralPointerComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteralPointerComponent.swift; sourceTree = "<group>"; };
 		1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
 		1FC258CE275F6250008C2826 /* TranslationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItem.swift; sourceTree = "<group>"; };
+		1FC5CD96287824D700F9A09F /* MochaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MochaDocument.swift; sourceTree = "<group>"; };
+		1FC5CDAB287842FC00F9A09F /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		1FD02A652845C7570036715E /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		1FE35B93286B1F5C00FE37AC /* MachoLazyComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoLazyComponent.swift; sourceTree = "<group>"; };
 		1FE35B95286B1F7900FE37AC /* MachoZeroFilledComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoZeroFilledComponent.swift; sourceTree = "<group>"; };
@@ -332,7 +330,7 @@
 				1FE35B99286B393500FE37AC /* MachoComponentView.swift */,
 				1FE35B9B286B3AEE00FE37AC /* MachoComponentCellView.swift */,
 				1F73C6D7275A320D0020E581 /* MachoView.swift */,
-				1F73C6EE275A322C0020E581 /* FileView.swift */,
+				1FC5CDAB287842FC00F9A09F /* MainView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -343,7 +341,7 @@
 				1F0133FD2775FE1900EB600A /* DataSlice.swift */,
 				1F73C709275A5C6D0020E581 /* FatBinary.swift */,
 				1F73C6E3275A32120020E581 /* UnixArchive.swift */,
-				1F73C6E4275A32120020E581 /* File.swift */,
+				1FC5CD96287824D700F9A09F /* MochaDocument.swift */,
 			);
 			path = IO;
 			sourceTree = "<group>";
@@ -366,7 +364,6 @@
 			children = (
 				1F40ED8727B1120400D93824 /* Bridging-Header.h */,
 				1F75F8A7275A314F001A4E29 /* mochaApp.swift */,
-				1F73C70B275C872D0020E581 /* ContentView.swift */,
 				1F75F8A9275A3151001A4E29 /* Assets.xcassets */,
 				1FC258C7275C90C4008C2826 /* Helpers */,
 				1F73C6E1275A32120020E581 /* IO */,
@@ -720,7 +717,6 @@
 				1FFE56022780325D00ECD395 /* LCDylib.swift in Sources */,
 				1F6212ED279693BE009A9154 /* LCBuildVersion.swift in Sources */,
 				1FB6505227918F85004327BB /* InterpreterUtils.swift in Sources */,
-				1F73C70C275C872D0020E581 /* ContentView.swift in Sources */,
 				1F6212EB2796747C009A9154 /* LCMain.swift in Sources */,
 				1F6EB9FE278AECB000590729 /* OperationCodeComponent.swift in Sources */,
 				1FFCA6E22780C22600634B79 /* CStringComponent.swift in Sources */,
@@ -734,12 +730,14 @@
 				1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */,
 				1FE35B96286B1F7900FE37AC /* MachoZeroFilledComponent.swift in Sources */,
 				1F3C85A6286DC9850042EEA6 /* TranslationViewModel.swift in Sources */,
+				1FC5CD97287824D700F9A09F /* MochaDocument.swift in Sources */,
 				1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */,
 				1F16F22C278813E70094E720 /* DataShifter.swift in Sources */,
 				1F40ED8627B110AD00D93824 /* InstructionComponent.swift in Sources */,
 				1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */,
 				1FFE55F727802FA300ECD395 /* DataInCodeModel.swift in Sources */,
 				1FFE55FF2780312B00ECD395 /* LCSymbolTable.swift in Sources */,
+				1FC5CDAC287842FC00F9A09F /* MainView.swift in Sources */,
 				1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */,
 				1F40ED3227AB88A800D93824 /* SymbolPointerComponent.swift in Sources */,
 				1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */,
@@ -763,13 +761,11 @@
 				1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */,
 				1F6EB9FC278AE46500590729 /* LCDyldInfo.swift in Sources */,
 				1F73C6DA275A320D0020E581 /* HexadecimalView.swift in Sources */,
-				1F73C6EA275A32120020E581 /* File.swift in Sources */,
 				1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */,
 				1FFCA6EC278487D300634B79 /* ASCIIComponent.swift in Sources */,
 				1FFE55FD278030F100ECD395 /* LCSegment.swift in Sources */,
 				1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */,
 				1F73C6CD275A31F00020E581 /* SectionHeader.swift in Sources */,
-				1F73C6FC275A322C0020E581 /* FileView.swift in Sources */,
 				1F3C859E286D9DB00042EEA6 /* PageControlView.swift in Sources */,
 				1F73C6C9275A31F00020E581 /* LoadCommand.swift in Sources */,
 				1FE35B9A286B393500FE37AC /* MachoComponentView.swift in Sources */,

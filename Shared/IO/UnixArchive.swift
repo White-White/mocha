@@ -56,16 +56,18 @@ struct UnixArchiveFileHeader {
 
 struct UnixArchive {
     
-    let fileHeaders: [UnixArchiveFileHeader]
-    let machos: [Macho]
+    struct UnixArchiveError: Error {  }
     
-    init(with fileData: Data) {
-        var fileHeaders: [UnixArchiveFileHeader] = []
-        var machos: [Macho] = []
+    let machoMetaDatas: [MachoMetaData]
+    
+    init(with fileData: Data) throws {
         
-        var dataShifter = DataShifter(fileData)
-        dataShifter.skip(.quadWords) // throw away magic
+        // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
+        // "!<arch>\n"
+        guard fileData.starts(with: [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]) else { throw UnixArchiveError() }
         
+        var machoMetaDatas: [MachoMetaData] = []
+        var dataShifter = DataShifter(fileData); dataShifter.skip(.quadWords) // throw away magic
         while dataShifter.shiftable {
             let fileHeader = UnixArchiveFileHeader(with: &dataShifter)
             
@@ -78,15 +80,11 @@ struct UnixArchive {
                 continue
             }
             
-            fileHeaders.append(fileHeader)
-            
-            let machoData = fileData.select(from: dataShifter.shifted,
-                                            length: fileHeader.contentSize - fileHeader.extFileIDLengthInt)
-            machos.append(Macho(with: machoData, machoFileName: fileHeader.fileID))
-            dataShifter.skip(.rawNumber(fileHeader.contentSize - fileHeader.extFileIDLengthInt))
+            let machoDataSize = fileHeader.contentSize - fileHeader.extFileIDLengthInt
+            let machoData = dataShifter.shift(.rawNumber(machoDataSize))
+            machoMetaDatas.append(try MachoMetaData(fileName: fileHeader.fileID, machoData: Data(machoData)))
         }
-        
-        self.fileHeaders = fileHeaders
-        self.machos = machos
+        self.machoMetaDatas = machoMetaDatas
     }
+    
 }

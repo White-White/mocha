@@ -33,7 +33,7 @@ class TranslationViewModel: ObservableObject, Equatable {
     }
     
     var visiableDataRange: Range<Int> {
-        return machoComponent.dataSlice.startOffset..<(machoComponent.dataSlice.startOffset+machoComponent.dataSlice.count)
+        return machoComponent.data.startIndex..<(machoComponent.data.startIndex+machoComponent.data.count)
     }
     
     let machoComponent: MachoComponent

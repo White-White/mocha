@@ -11,8 +11,8 @@ class LCUUID: LoadCommand {
     
     let uuid: UUID
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         self.uuid = translationStore.translate(next: .rawNumber(16),
                                              dataInterpreter: { uuidData in LCUUID.uuid(from: [UInt8](uuidData)) },
                                              itemContentGenerator: { uuid in TranslationItemContent(description: "UUID", explanation: uuid.uuidString) })

@@ -9,18 +9,18 @@ import Foundation
 
 class TranslationStore {
 
-    let machoDataSlice: DataSlice
+    let data: Data
     private(set) var translated: Int = 0
     private(set) var items: [TranslationItem] = []
-
-    init(machoDataSlice: DataSlice) {
-        self.machoDataSlice = machoDataSlice
+    
+    init(data: Data) {
+        self.data = data
     }
 
     func translate<T>(next straddle: Straddle, dataInterpreter: (Data) -> T, itemContentGenerator: (T) -> TranslationItemContent) -> T {
         defer { translated += straddle.raw }
-        let rawData = self.machoDataSlice.truncated(from: translated, length: straddle.raw).raw
-        let rawDataAbsoluteRange = machoDataSlice.startOffset+translated..<machoDataSlice.startOffset+translated+straddle.raw
+        let rawData = self.data.subSequence(from: translated, count: straddle.raw)
+        let rawDataAbsoluteRange = self.data.startIndex+translated..<self.data.startIndex+translated+straddle.raw
         let interpreted: T = dataInterpreter(rawData)
         items.append(TranslationItem(sourceDataRange: rawDataAbsoluteRange, content: itemContentGenerator(interpreted)))
         return interpreted

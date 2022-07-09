@@ -19,14 +19,14 @@ class CStringComponent: MachoLazyComponent<[CStringPosition]> {
     let demanglingCString: Bool
     let sectionVirtualAddress: UInt64
     
-    init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?, sectionVirtualAddress: UInt64, demanglingCString: Bool) {
+    init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?, sectionVirtualAddress: UInt64, demanglingCString: Bool) {
         self.demanglingCString = demanglingCString
         self.sectionVirtualAddress = sectionVirtualAddress
-        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [CStringPosition] {
-        let rawData = self.dataSlice.raw
+        let rawData = self.data
         var cStringPositions: [CStringPosition] = []
         var indexOfLastNull: Int? // index of last null char ( "\0" )
         
@@ -64,8 +64,8 @@ class CStringComponent: MachoLazyComponent<[CStringPosition]> {
         let index = indexPath.section
         let cStringPosition = self.payload[index]
         let cStringRelativeRange = cStringPosition.startOffset..<cStringPosition.startOffset+cStringPosition.length
-        let cStringAbsoluteRange = self.dataSlice.absoluteRange(cStringRelativeRange)
-        let cStringRaw = self.dataSlice.truncated(from: cStringPosition.startOffset, length: cStringPosition.length).raw
+        let cStringAbsoluteRange = self.data.absoluteRange(cStringRelativeRange)
+        let cStringRaw = self.data.subSequence(from: cStringPosition.startOffset, count: cStringPosition.length)
         if let string = cStringRaw.utf8String {
             let explanation: String = string.replacingOccurrences(of: "\n", with: "\\n")
             let demangledCString: String? = self.demanglingCString ? swift_demangle(explanation) : nil
@@ -83,12 +83,12 @@ class CStringComponent: MachoLazyComponent<[CStringPosition]> {
 extension CStringComponent {
     
     func findString(at offset: Int) -> String? {
-        let rawData = self.dataSlice.raw
+        let rawData = self.data
         for index in offset..<rawData.count {
             let byte = rawData[rawData.startIndex+index]
             if byte != 0 { continue }
             let length = index - offset + 1
-            return self.dataSlice.truncated(from: offset, length: length).raw.utf8String
+            return self.data.subSequence(from: offset, count: length).utf8String
         }
         return nil
     }
@@ -96,7 +96,7 @@ extension CStringComponent {
     func findString(with virtualAddress: Swift.UInt64) -> String? {
         for cStringPosition in self.payload {
             if cStringPosition.virtualAddress == virtualAddress {
-                return self.dataSlice.truncated(from: cStringPosition.startOffset, length: cStringPosition.length).raw.utf8String
+                return self.data.subSequence(from: cStringPosition.startOffset, count: cStringPosition.length).utf8String
             }
         }
         return nil

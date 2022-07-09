@@ -20,7 +20,7 @@ class MachoZeroFilledComponent: MachoComponent {
         self.runtimeSize = runtimeSize
         self.title = title
         self.subTitle = subTitle
-        super.init(DataSlice(Data([0xcf, 0xfa, 0xed, 0xfe])) /* dummy data */ )
+        super.init(Data() /* dummy data */ )
     }
     
     override func numberOfTranslationSections() -> Int {

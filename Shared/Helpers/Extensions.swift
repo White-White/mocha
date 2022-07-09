@@ -27,6 +27,35 @@ extension Data {
     var utf8String: String? {
         return String(data: self, encoding: .utf8)
     }
+    
+    func subSequence(from: Int, maxCount: Int) -> Data {
+        if from + maxCount > self.count {
+            return self.subSequence(from: from)
+        } else {
+            return self.subSequence(from: from, count: maxCount)
+        }
+    }
+    
+    func subSequence(from: Int, count: Int? = nil) -> Data {
+        if let count = count {
+            if count == .zero {
+                Log.error("Trying to fetch zero-length data. Crash is around the corner.")
+            }
+            guard from + count <= self.count else { fatalError() }
+            return self[self.startIndex+from..<self.startIndex+from+count]
+        } else {
+            guard from < self.count else { fatalError() }
+            return self[self.startIndex+from..<self.endIndex]
+        }
+    }
+    
+    func absoluteRange(_ start: Int, _ length: Int) -> Range<Int> {
+        return self.startIndex+start..<self.startIndex+start+length
+    }
+    
+    func absoluteRange(_ relativeRange: Range<Int>) -> Range<Int> {
+        return self.startIndex+relativeRange.lowerBound..<self.startIndex+relativeRange.upperBound
+    }
 }
 
 extension String {

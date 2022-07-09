@@ -11,11 +11,11 @@ class ASCIIComponent: MachoLazyComponent<[String]> {
     
     private let numberOfASCIILines: Int
     
-    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
-        var numberOfASCIILines = dataSlice.count / HexadecimalViewModel.LineBytesCount
-        if dataSlice.count % HexadecimalViewModel.LineBytesCount != 0 { numberOfASCIILines += 1 }
+    override init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+        var numberOfASCIILines = data.count / HexadecimalViewModel.LineBytesCount
+        if data.count % HexadecimalViewModel.LineBytesCount != 0 { numberOfASCIILines += 1 }
         self.numberOfASCIILines = numberOfASCIILines
-        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func numberOfTranslationSections() -> Int {
@@ -28,15 +28,15 @@ class ASCIIComponent: MachoLazyComponent<[String]> {
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
         let index = indexPath.section
-        let lineData = dataSlice.truncated(from: index * HexadecimalViewModel.LineBytesCount, maxLength: HexadecimalViewModel.LineBytesCount)
-        let chars = lineData.raw.map { char -> Character in
+        let lineData = data.subSequence(from: index * HexadecimalViewModel.LineBytesCount, maxCount: HexadecimalViewModel.LineBytesCount)
+        let chars = lineData.map { char -> Character in
             if char < 32 || char > 126 {
                 return "."
             }
             return Character(UnicodeScalar(char))
         }
         let string = String(chars)
-        return TranslationItem(sourceDataRange: dataSlice.absoluteRange(index * HexadecimalViewModel.LineBytesCount, HexadecimalViewModel.LineBytesCount),
+        return TranslationItem(sourceDataRange: data.absoluteRange(index * HexadecimalViewModel.LineBytesCount, HexadecimalViewModel.LineBytesCount),
                                content: TranslationItemContent(description: nil, explanation: string, monoSpaced: true))
     }
 }

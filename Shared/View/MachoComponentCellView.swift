@@ -14,11 +14,11 @@ struct MachoComponentCellView: View {
     let hexDigits: Int
     
     var startPercent: CGFloat {
-        CGFloat(cellModel.machoComponent.componentFileOffset) / CGFloat(machoFileSize) * 100
+        CGFloat(cellModel.machoComponent.fileOffset) / CGFloat(machoFileSize) * 100
     }
     
     var endPercent: CGFloat {
-        startPercent + CGFloat(cellModel.machoComponent.componentSize) / CGFloat(machoFileSize) * 100
+        startPercent + CGFloat(cellModel.machoComponent.dataSize) / CGFloat(machoFileSize) * 100
     }
 
     var body: some View {
@@ -35,7 +35,7 @@ struct MachoComponentCellView: View {
                         .padding(.bottom, 2)
                 }
                 Text(String(format: "Range: 0x%0\(hexDigits)X - 0x%0\(hexDigits)X",
-                            cellModel.machoComponent.componentFileOffset, cellModel.machoComponent.componentFileOffset + cellModel.machoComponent.componentSize))
+                            cellModel.machoComponent.fileOffset, cellModel.machoComponent.fileOffset + cellModel.machoComponent.dataSize))
                     .font(.system(size: 12))
                     .foregroundColor(cellModel.isSelected ? .white : .secondary)
                 

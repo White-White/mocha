@@ -11,8 +11,8 @@ class LCSourceVersion: LoadCommand {
     
     let version: String
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         self.version = translationStore.translate(next: .quadWords,
                                                 dataInterpreter: { LCSourceVersion.versionString(from: $0.UInt64) },

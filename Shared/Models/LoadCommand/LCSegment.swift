@@ -49,8 +49,8 @@ class LCSegment: LoadCommand {
     
     override var componentSubTitle: String { type.name + " (\(segmentName))" }
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         let is64Bit = type == LoadCommandType.segment64
         self.is64Bit = is64Bit
@@ -98,7 +98,7 @@ class LCSegment: LoadCommand {
             // section header data length for 32-bit is 68, and 64-bit 80
             let sectionHeaderLength = is64Bit ? 80 : 68
             let segmentCommandSize = is64Bit ? 72 : 56
-            let sectionHeaderData = data.truncated(from: segmentCommandSize + index * sectionHeaderLength, length: sectionHeaderLength)
+            let sectionHeaderData = data.subSequence(from: segmentCommandSize + index * sectionHeaderLength, count: sectionHeaderLength)
             let sectionHeader = SectionHeader(is64Bit: is64Bit, data: sectionHeaderData)
             sectionHeaders.append(sectionHeader)
         }

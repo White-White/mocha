@@ -12,8 +12,8 @@ class LCMain: LoadCommand {
     let entryOffset: UInt64
     let stackSize: UInt64
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         self.entryOffset = translationStore.translate(next: .quadWords,
                                                     dataInterpreter: { $0.UInt64 },

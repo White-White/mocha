@@ -57,9 +57,9 @@ class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver, Equa
         var highlightedLineViewModelIndexSet = Set<Int>()
         
         for (index, viewModel) in linesViewModels.enumerated() {
-            if (viewModel.line.offsetInMacho..<(viewModel.line.offsetInMacho + HexadecimalLine.LineBytesCount)).overlaps(selectedItemRange) {
-                let highlightRangeLowerBound = max(selectedItemRange.lowerBound - viewModel.line.offsetInMacho, 0)
-                let highlightRangeUpperBound = min(selectedItemRange.upperBound - viewModel.line.offsetInMacho, HexadecimalLine.LineBytesCount)
+            if (viewModel.line.offset..<(viewModel.line.offset + HexadecimalLine.LineBytesCount)).overlaps(selectedItemRange) {
+                let highlightRangeLowerBound = max(selectedItemRange.lowerBound - viewModel.line.offset, 0)
+                let highlightRangeUpperBound = min(selectedItemRange.upperBound - viewModel.line.offset, HexadecimalLine.LineBytesCount)
                 viewModel.highlightedDataRange = highlightRangeLowerBound..<highlightRangeUpperBound
                 
                 highlightedLineViewModelIndexSet.insert(index)
@@ -71,17 +71,17 @@ class HexadecimalViewModel: ObservableObject, TranslationViewModelObserver, Equa
     }
     
     static func hexadecimalLines(from machoComponent: MachoComponent, dataRange: Range<Int>) -> [HexadecimalLine] {
-        let dataSlice = machoComponent.dataSlice
-        let byteStartIndex = max(dataSlice.startOffset, dataRange.lowerBound) - dataSlice.startOffset
-        let byteEndIndex = min(dataSlice.startOffset + dataSlice.count, dataRange.upperBound) - dataSlice.startOffset
+        let data = machoComponent.data
+        let byteStartIndex = max(data.startIndex, dataRange.lowerBound) - data.startIndex
+        let byteEndIndex = min(data.startIndex + data.count, dataRange.upperBound) - data.startIndex
         guard byteStartIndex < byteEndIndex else { return [] }
         let linesStartIndex = byteStartIndex / HexadecimalLine.LineBytesCount
         var linesEndIndex = byteEndIndex / HexadecimalLine.LineBytesCount
         if (byteEndIndex % HexadecimalLine.LineBytesCount != 0) { linesEndIndex += 1 }
         var lines: [HexadecimalLine] = []
         for lineIndex in linesStartIndex..<linesEndIndex {
-            let line = HexadecimalLine(dataSlice: dataSlice.truncated(from: lineIndex * HexadecimalLine.LineBytesCount,
-                                                                      maxLength: HexadecimalLine.LineBytesCount))
+            let line = HexadecimalLine(data: data.subSequence(from: lineIndex * HexadecimalLine.LineBytesCount,
+                                                              maxCount: HexadecimalLine.LineBytesCount))
             lines.append(line)
         }
         return lines

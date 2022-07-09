@@ -23,12 +23,12 @@ struct HexadecimalView: View {
                 .onChange(of: viewModel.visiableHighlightedLineIndex, perform: { newValue in
                     if let visiableLineIndex = newValue {
                         withAnimation {
-                            scrollProxy.scrollTo(viewModel.linesViewModels[visiableLineIndex].line.offsetInMacho, anchor: .center)
+                            scrollProxy.scrollTo(viewModel.linesViewModels[visiableLineIndex].line.offset, anchor: .center)
                         }
                     }
                 })
                 .onChange(of: viewModel) { newValue in
-                    if let firstLienOffsetInMacho = newValue.linesViewModels.first?.line.offsetInMacho {
+                    if let firstLienOffsetInMacho = newValue.linesViewModels.first?.line.offset {
                         scrollProxy.scrollTo(firstLienOffsetInMacho, anchor: .top)
                     }
                 }
@@ -40,7 +40,7 @@ struct HexadecimalView: View {
     }
     
     func linesView(by viewModels: [HexadecimalLineViewModel]) -> some View {
-        ForEach(viewModel.linesViewModels, id: \.line.offsetInMacho) { lineViewModel in
+        ForEach(viewModel.linesViewModels, id: \.line.offset) { lineViewModel in
             HexadecimalLineView(viewModel: lineViewModel)
         }
     }

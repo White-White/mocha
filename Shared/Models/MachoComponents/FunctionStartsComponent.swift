@@ -20,14 +20,14 @@ class FunctionStartsComponent: MachoLazyComponent<[FunctionStart]> {
     
     let textSegmentVirtualStartAddress: Swift.UInt64
     
-    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+    override init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
         guard let textSegment = macho.segmentCommand(withName: Constants.segmentNameTEXT) else { fatalError() /* unlikely */ }
         self.textSegmentVirtualStartAddress = textSegment.vmaddr
-        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [FunctionStart] {
-        let rawData = self.dataSlice.raw
+        let rawData = self.data
         // ref: https://opensource.apple.com/source/ld64/ld64-127.2/src/other/dyldinfo.cpp in function printFunctionStartsInfo
         // The code below decode (unsigned) LEB128 data into integers
         var functionStarts: [FunctionStart] = []
@@ -71,7 +71,7 @@ class FunctionStartsComponent: MachoLazyComponent<[FunctionStart]> {
             symbolName = _symbolName
         }
         
-        return TranslationItem(sourceDataRange: dataSlice.absoluteRange(functionStart.startOffset, functionStart.byteLength),
+        return TranslationItem(sourceDataRange: data.absoluteRange(functionStart.startOffset, functionStart.byteLength),
                                content: TranslationItemContent(description: "Vitual Address", explanation: (functionStart.address + textSegmentVirtualStartAddress).hex,
                                                                extraDescription: symbolName != nil ? "Referred Symbol Name" : nil, extraExplanation: symbolName,
                                                                hasDivider: true))

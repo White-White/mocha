@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MachoView: View {
     
-    @Binding var macho: Macho
+    let macho: Macho
     @State var cellModels: [MachoViewCellModel]
     @State var selectedMachoComponent: MachoComponent
     @State var selectedCellModel: MachoViewCellModel
@@ -53,9 +53,10 @@ struct MachoView: View {
         }
     }
     
-    init(_ macho: Binding<Macho>) {
-        _macho = macho
-        let cellModels = macho.wrappedValue.machoComponents.map { MachoViewCellModel.init($0) }
+    init(_ macho: Macho) {
+        macho.initialize()
+        self.macho = macho
+        let cellModels = macho.machoComponents.map { MachoViewCellModel.init($0) }
         let firstCellModel = cellModels.first!
         firstCellModel.isSelected = true
         

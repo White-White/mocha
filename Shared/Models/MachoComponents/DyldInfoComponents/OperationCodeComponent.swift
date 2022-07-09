@@ -30,7 +30,7 @@ class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<Op
     override var shouldPreload: Bool { true }
     
     override func generatePayload() -> OperationCodeContainer<Code> {
-        return OperationCodeComponent.operationCodes(from: self.dataSlice)
+        return OperationCodeComponent.operationCodes(from: self.data)
     }
     
     override func numberOfTranslationSections() -> Int {
@@ -54,11 +54,10 @@ class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<Op
     }
     
     // parsing
-    static func operationCodes(from data: DataSlice) -> OperationCodeContainer<Code> {
+    static func operationCodes(from rawData: Data) -> OperationCodeContainer<Code> {
         
         var operationCodes: [OperationCode<Code>] = []
         var index: Int = 0
-        let rawData = data.raw
         while index < rawData.count {
             let startIndexOfCurrentOperation = index
             let byte = rawData[rawData.startIndex+index]; index += 1
@@ -88,7 +87,7 @@ class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<Op
                     delta |= signExtendMask << shift
                 }
                 
-                lebValues.append(DyldInfoLEB(absoluteRange:(data.startOffset+ulebStartIndex)..<(data.startOffset+index), raw: delta, isSigned: isSigned))
+                lebValues.append(DyldInfoLEB(absoluteRange:(rawData.startIndex+ulebStartIndex)..<(rawData.startIndex+index), raw: delta, isSigned: isSigned))
             }
             
             // trailing string
@@ -102,7 +101,7 @@ class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<Op
                 cstringData = rawData[rawData.startIndex+cstringStartIndex..<rawData.startIndex+index]
             }
             
-            operationCodes.append(OperationCode<Code>(absoluteOffset:data.startOffset+startIndexOfCurrentOperation,
+            operationCodes.append(OperationCode<Code>(absoluteOffset:rawData.startIndex+startIndexOfCurrentOperation,
                                                       operationCode: operationCode,
                                                       lebValues: lebValues,
                                                       cstringData: cstringData))

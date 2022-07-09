@@ -42,30 +42,31 @@ struct FatBinary {
 //        uint32_t    align;        /* alignment as a power of 2 */
 //    };
     
-    private let numberOfArchs: UInt32
-    private let fatArchs: [FatArch]
-    let machos: [Macho]
+    struct FatBinaryError: Error { }
     
-    init(with fileData: Data, machoFileName: String) {
+    let machoMetaDatas: [MachoMetaData]
+    
+    init(with fileData: Data, machoFileName: String) throws {
+        
+        // 0xcafebabe is also Java class files' magic number.
+        // ref: https://opensource.apple.com/source/file/file-47/file/magic/Magdir/cafebabe.auto.html
+        guard fileData.starts(with: [0xca, 0xfe, 0xba, 0xbe]) else { throw FatBinaryError() }
+        
         // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
         // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
-        self.numberOfArchs = fileData.select(from: 4, length: 4).UInt32.bigEndian
+        let numberOfArchs = Int(fileData.select(from: 4, length: 4).UInt32.bigEndian)
         
-        var fatArchs: [FatArch] = []
-        var machos: [Macho] = []
-        for index in 0..<Int(self.numberOfArchs) {
+        var machoMetaDatas: [MachoMetaData] = []
+        for index in 0..<numberOfArchs {
             // first 8 bytes are for magic and 'number of archs'
             // struct fat_arch has 20 bytes
             let fatArchData = fileData.select(from: 8 + (index * 20), length: 20)
             let farArch = FatArch(with: fatArchData)
-            fatArchs.append(farArch)
             
             let subFileDataRaw = fileData.select(from: Int(farArch.objectFileOffset), length: Int(farArch.objectFileSize))
-            let subMachos = File(with: machoFileName, fileData: subFileDataRaw).machos
-            machos.append(contentsOf: subMachos)
+            machoMetaDatas.append(contentsOf: try MochaDocument(fileName: machoFileName, fileData: Data(subFileDataRaw)).machoMetaDatas)
         }
-        self.fatArchs = fatArchs
-        self.machos = machos
+        self.machoMetaDatas = machoMetaDatas
     }
     
 }

@@ -16,13 +16,13 @@ class SymbolPointerComponent: MachoLazyComponent<[DummySymbolPointer]> {
     let sectionType: SectionType
     let startIndexInIndirectSymbolTable: Int
     
-    init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?, sectionType: SectionType, startIndexInIndirectSymbolTable: Int) {
+    init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?, sectionType: SectionType, startIndexInIndirectSymbolTable: Int) {
         let pointerSize = is64Bit ? 8 : 4
         self.pointerSize = pointerSize
-        self.numberOfPointers = dataSlice.count / pointerSize
+        self.numberOfPointers = data.count / pointerSize
         self.sectionType = sectionType
         self.startIndexInIndirectSymbolTable = startIndexInIndirectSymbolTable
-        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func numberOfTranslationSections() -> Int {
@@ -35,7 +35,7 @@ class SymbolPointerComponent: MachoLazyComponent<[DummySymbolPointer]> {
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
         let index = indexPath.section
-        let pointerRawData = dataSlice.truncated(from: index * pointerSize, length: pointerSize).raw
+        let pointerRawData = data.subSequence(from: index * pointerSize, count: pointerSize)
         let pointerRawValue = is64Bit ? pointerRawData.UInt64 : UInt64(pointerRawData.UInt32)
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
         
@@ -53,7 +53,7 @@ class SymbolPointerComponent: MachoLazyComponent<[DummySymbolPointer]> {
             description += " (To be fixed by dyld)"
         }
         
-        return TranslationItem(sourceDataRange: dataSlice.absoluteRange(index * pointerSize, pointerSize),
+        return TranslationItem(sourceDataRange: data.absoluteRange(index * pointerSize, pointerSize),
                                content: TranslationItemContent(description: description,
                                                                explanation: pointerRawValue.hex,
                                                                extraDescription: "Symbol Name of the Corresponding Indirect Symbol Table Entry",

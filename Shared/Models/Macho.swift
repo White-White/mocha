@@ -66,15 +66,16 @@ class MachoHeader: MachoComponent {
         return translationStore.items[indexPath.item]
     }
     
-    init(from machoDataSlice: DataSlice, is64Bit: Bool) {
+    init(from machoData: Data, is64Bit: Bool) {
         self.is64Bit = is64Bit
         
-        let transStore = TranslationStore(machoDataSlice: machoDataSlice)
+        let headerData = machoData.subSequence(from: .zero, count: is64Bit ? 32 : 28)
+        let transStore = TranslationStore(data: headerData)
         
         _ =
         transStore.translate(next: .doubleWords,
                              dataInterpreter: { $0 },
-                             itemContentGenerator: { _  in TranslationItemContent(description: "File Magic", explanation: (is64Bit ? MagicType.macho64 : MagicType.macho32).readable) })
+                             itemContentGenerator: { data in TranslationItemContent(description: "File Magic", explanation: "File Magic") })
         
         let cpuType =
         transStore.translate(next: .doubleWords,
@@ -118,7 +119,7 @@ class MachoHeader: MachoComponent {
         
         self.translationStore = transStore
         
-        super.init(machoDataSlice)
+        super.init(headerData)
     }
     
     private static func flagsDescriptionFrom(_ flags: UInt32) -> String {
@@ -161,7 +162,7 @@ class Macho: Equatable {
     
     let id = UUID()
     
-    let machoData: DataSlice
+    let machoData: Data
     var fileSize: Int { machoData.count }
     
     private var initialized = false
@@ -197,32 +198,26 @@ class Macho: Equatable {
     
     let dynamicSymbolTable: LCDynamicSymbolTable? = nil //FIXME:
     
-    init(with machoDataRaw: Data, machoFileName: String) {
-        let machoData = DataSlice(machoDataRaw)
+    init(with machoData: Data, machoFileName: String, header: MachoHeader) {
         self.machoData = machoData
         self.machoFileName = machoFileName
-        
-        guard let magicType = MagicType(machoData.raw) else { fatalError() }
-        let is64bit = magicType == .macho64
-        
-        let header = MachoHeader(from: machoData.truncated(from: .zero, length: is64bit ? 32 : 28), is64Bit: is64bit)
         self.header = header
     }
     
     func initialize() {
         guard !self.initialized else { return }
         
-        var nextLoadCommandStartOffset = header.componentSize
+        var nextLoadCommandStartOffset = header.dataSize
         for _ in 0..<header.numberOfLoadCommands {
             
-            let loadCommandTypeRaw = machoData.truncated(from: nextLoadCommandStartOffset, length: 4).raw.UInt32
+            let loadCommandTypeRaw = machoData.subSequence(from: nextLoadCommandStartOffset, count: 4).UInt32
             guard let loadCommandType = LoadCommandType(rawValue: loadCommandTypeRaw) else {
                 print("Unknown load command type \(loadCommandTypeRaw.hex). This must be a new one.")
                 fatalError()
             }
             
-            let loadCommandSize = Int(machoData.truncated(from: nextLoadCommandStartOffset + 4, length: 4).raw.UInt32)
-            let loadCommandData = machoData.truncated(from: nextLoadCommandStartOffset, length: loadCommandSize)
+            let loadCommandSize = Int(machoData.subSequence(from: nextLoadCommandStartOffset + 4, count: 4).UInt32)
+            let loadCommandData = machoData.subSequence(from: nextLoadCommandStartOffset, count: loadCommandSize)
             nextLoadCommandStartOffset += loadCommandSize
             
             let loadCommand: LoadCommand
@@ -291,7 +286,7 @@ class Macho: Equatable {
         }
         
         // sort linkedItComponents
-        linkedItComponents.sort { $0.componentFileOffset < $1.componentFileOffset }
+        linkedItComponents.sort { $0.fileOffset < $1.fileOffset }
         self.machoComponents = [header] + loadCommandComponents + sectionComponents + linkedItComponents
         
         self.initialized = true
@@ -307,7 +302,7 @@ extension Macho {
         let numberOfRelocEntries = Int(sectionHeader.numberOfRelocatioEntries)
         
         if relocationOffset != 0 && numberOfRelocEntries != 0 {
-            let entriesData = machoData.truncated(from: relocationOffset, length: numberOfRelocEntries * RelocationEntry.modelSize(is64Bit: is64Bit))
+            let entriesData = machoData.subSequence(from: relocationOffset, count: numberOfRelocEntries * RelocationEntry.modelSize(is64Bit: is64Bit))
             return RelocationComponent(entriesData, macho: self,
                                        is64Bit: is64Bit,
                                        title: "Relocation Table",
@@ -333,72 +328,72 @@ extension Macho {
              }
              */
             return MachoZeroFilledComponent(runtimeSize: Int(sectionHeader.size), title: componentTitle, subTitle: componentSubTitle)
-
+            
         case .S_CSTRING_LITERALS:
-            let dataSlice = machoData.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
-            let cStringComponent = CStringComponent(dataSlice, macho: self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle, sectionVirtualAddress: sectionHeader.addr, demanglingCString: true)
+            let data = machoData.subSequence(from: Int(sectionHeader.offset), count: Int(sectionHeader.size))
+            let cStringComponent = CStringComponent(data, macho: self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle, sectionVirtualAddress: sectionHeader.addr, demanglingCString: true)
             self.allCStringComponents.append(cStringComponent)
             return cStringComponent
             
         case .S_LITERAL_POINTERS:
-            let dataSlice = machoData.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
-            return LiteralPointerComponent(dataSlice, macho: self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
+            let data = machoData.subSequence(from: Int(sectionHeader.offset), count: Int(sectionHeader.size))
+            return LiteralPointerComponent(data, macho: self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
             
         case .S_LAZY_SYMBOL_POINTERS, .S_NON_LAZY_SYMBOL_POINTERS, .S_LAZY_DYLIB_SYMBOL_POINTERS:
-            let dataSlice = machoData.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
-            return SymbolPointerComponent(dataSlice, macho: self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle,
+            let data = machoData.subSequence(from: Int(sectionHeader.offset), count: Int(sectionHeader.size))
+            return SymbolPointerComponent(data, macho: self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle,
                                           sectionType: sectionHeader.sectionType, startIndexInIndirectSymbolTable: Int(sectionHeader.reserved1))
             
         default:
             break
         }
-
+        
         // recognize section by section attributes
         if sectionHeader.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
-            let dataSlice = machoData.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
+            let data = machoData.subSequence(from: Int(sectionHeader.offset), count: Int(sectionHeader.size))
             if (sectionHeader.section == Constants.sectionNameTEXT) {
-                return MachoUnknownCodeComponent(dataSlice, title: componentTitle, subTitle: componentSubTitle)
+                return MachoUnknownCodeComponent(data, title: componentTitle, subTitle: componentSubTitle)
             } else {
-                return InstructionComponent(dataSlice, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
+                return InstructionComponent(data, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
             }
         }
         
         // recognize section by section name
-        let dataSlice = machoData.truncated(from: Int(sectionHeader.offset), length: Int(sectionHeader.size))
+        let data = machoData.subSequence(from: Int(sectionHeader.offset), count: Int(sectionHeader.size))
         switch sectionHeader.segment {
         case Constants.sectionNameTEXT:
             switch sectionHeader.section {
             case Constants.sectionNameUString:
-                return UStringComponent(dataSlice, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
+                return UStringComponent(data, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
             case "__swift5_reflstr":
                 // https://knight.sc/reverse%20engineering/2019/07/17/swift-metadata.html
                 // a great article on introducing swift metadata sections
-                return CStringComponent(dataSlice, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle,
+                return CStringComponent(data, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle,
                                         sectionVirtualAddress: sectionHeader.addr, demanglingCString: false)
             default:
-                return ASCIIComponent(dataSlice, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
+                return ASCIIComponent(data, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
             }
         default:
-            return ASCIIComponent(dataSlice, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
+            return ASCIIComponent(data, macho:self, is64Bit: is64Bit, title: componentTitle, subTitle: componentSubTitle)
         }
     }
     
     fileprivate func machoComponent(from linkedITData: LCLinkedITData) -> MachoComponent {
-        let dataSlice = machoData.truncated(from: Int(linkedITData.containedDataFileOffset), length: Int(linkedITData.containedDataSize))
+        let data = machoData.subSequence(from: Int(linkedITData.containedDataFileOffset), count: Int(linkedITData.containedDataSize))
         switch linkedITData.type {
         case .dataInCode:
-            return ModelBasedLazyComponent<DataInCodeModel>(dataSlice, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
+            return ModelBasedLazyComponent<DataInCodeModel>(data, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
         case .codeSignature:
             // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
             // FIXME: better parsing
-            return ASCIIComponent(dataSlice, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
+            return ASCIIComponent(data, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
         case .functionStarts:
-            return FunctionStartsComponent(dataSlice, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
+            return FunctionStartsComponent(data, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
         case .dyldExportsTrie:
-            return ExportInfoComponent(dataSlice, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
+            return ExportInfoComponent(data, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
         default:
             print("Unknow how to parse \(self). Please contact the author.") // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
-            return ASCIIComponent(dataSlice, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
+            return ASCIIComponent(data, macho: self, is64Bit: is64Bit, title: linkedITData.dataName, subTitle: Constants.segmentNameLINKEDIT)
         }
     }
     
@@ -406,7 +401,7 @@ extension Macho {
         let symbolTableStartOffset = Int(symbolTableCommand.symbolTableOffset)
         let numberOfEntries = Int(symbolTableCommand.numberOfSymbolTableEntries)
         let entrySize = is64Bit ? 16 : 12
-        let symbolTableData = machoData.truncated(from: symbolTableStartOffset, length: numberOfEntries * entrySize)
+        let symbolTableData = machoData.subSequence(from: symbolTableStartOffset, count: numberOfEntries * entrySize)
         return SymbolTable(symbolTableData,
                            macho: self,
                            is64Bit: is64Bit,
@@ -417,7 +412,7 @@ extension Macho {
     fileprivate func stringTable(from symbolTableCommand: LCSymbolTable) -> StringTable {
         let stringTableStartOffset = Int(symbolTableCommand.stringTableOffset)
         let stringTableSize = Int(symbolTableCommand.sizeOfStringTable)
-        let stringTableData = machoData.truncated(from: stringTableStartOffset, length: stringTableSize)
+        let stringTableData = machoData.subSequence(from: stringTableStartOffset, count: stringTableSize)
         let stringTable = StringTable(stringTableData,
                                       macho: self,
                                       is64Bit: is64Bit,
@@ -433,7 +428,7 @@ extension Macho {
         let indirectSymbolTableStartOffset = Int(dynamicSymbolCommand.indirectsymoff)
         let indirectSymbolTableSize = Int(dynamicSymbolCommand.nindirectsyms * 4)
         if indirectSymbolTableSize == .zero { return nil }
-        let indirectSymbolTableData = machoData.truncated(from: indirectSymbolTableStartOffset, length: indirectSymbolTableSize)
+        let indirectSymbolTableData = machoData.subSequence(from: indirectSymbolTableStartOffset, count: indirectSymbolTableSize)
         return IndirectSymbolTable(indirectSymbolTableData,
                                    macho:self,
                                    is64Bit: is64Bit,
@@ -447,7 +442,7 @@ extension Macho {
         let rebaseInfoStart = Int(dyldInfoCommand.rebaseOffset)
         let rebaseInfoSize = Int(dyldInfoCommand.rebaseSize)
         if rebaseInfoStart.isNotZero && rebaseInfoSize.isNotZero {
-            let rebaseInfoData = machoData.truncated(from: rebaseInfoStart, length: rebaseInfoSize)
+            let rebaseInfoData = machoData.subSequence(from: rebaseInfoStart, count: rebaseInfoSize)
             let rebaseInfoComponent = OperationCodeComponent<RebaseOperationCode>(rebaseInfoData,
                                                                                   macho:self,
                                                                                   is64Bit: is64Bit,
@@ -460,7 +455,7 @@ extension Macho {
         let bindInfoStart = Int(dyldInfoCommand.bindOffset)
         let bindInfoSize = Int(dyldInfoCommand.bindSize)
         if bindInfoStart.isNotZero && bindInfoSize.isNotZero {
-            let bindInfoData = machoData.truncated(from: bindInfoStart, length: bindInfoSize)
+            let bindInfoData = machoData.subSequence(from: bindInfoStart, count: bindInfoSize)
             let bindingInfoComponent = OperationCodeComponent<BindOperationCode>(bindInfoData,
                                                                                  macho:self,
                                                                                  is64Bit: is64Bit,
@@ -472,7 +467,7 @@ extension Macho {
         let weakBindInfoStart = Int(dyldInfoCommand.weakBindOffset)
         let weakBindSize = Int(dyldInfoCommand.weakBindSize)
         if weakBindInfoStart.isNotZero && weakBindSize.isNotZero {
-            let weakBindData = machoData.truncated(from: weakBindInfoStart, length: weakBindSize)
+            let weakBindData = machoData.subSequence(from: weakBindInfoStart, count: weakBindSize)
             let weakBindingInfoComponent = OperationCodeComponent<BindOperationCode>(weakBindData,
                                                                                      macho:self,
                                                                                      is64Bit: is64Bit,
@@ -484,19 +479,19 @@ extension Macho {
         let lazyBindInfoStart = Int(dyldInfoCommand.lazyBindOffset)
         let lazyBindSize = Int(dyldInfoCommand.lazyBindSize)
         if lazyBindInfoStart.isNotZero && lazyBindSize.isNotZero {
-            let lazyBindData = machoData.truncated(from: lazyBindInfoStart, length: lazyBindSize)
+            let lazyBindData = machoData.subSequence(from: lazyBindInfoStart, count: lazyBindSize)
             let lazyBindingInfoComponent = OperationCodeComponent<BindOperationCode>(lazyBindData,
-                                                                                       macho:self,
-                                                                                       is64Bit: is64Bit,
-                                                                                       title: "Lazy Binding Opcode",
-                                                                                       subTitle: Constants.segmentNameLINKEDIT)
+                                                                                     macho:self,
+                                                                                     is64Bit: is64Bit,
+                                                                                     title: "Lazy Binding Opcode",
+                                                                                     subTitle: Constants.segmentNameLINKEDIT)
             components.append(lazyBindingInfoComponent)
         }
         
         let exportInfoStart = Int(dyldInfoCommand.exportOffset)
         let exportInfoSize = Int(dyldInfoCommand.exportSize)
         if exportInfoStart.isNotZero && exportInfoSize.isNotZero {
-            let exportInfoData = machoData.truncated(from: exportInfoStart, length: exportInfoSize)
+            let exportInfoData = machoData.subSequence(from: exportInfoStart, count: exportInfoSize)
             let exportInfoComponent = ExportInfoComponent(exportInfoData,
                                                           macho:self,
                                                           is64Bit: is64Bit,
@@ -521,7 +516,7 @@ extension Macho {
     func searchString(by virtualAddress: UInt64) -> String? {
         for cStringComponent in self.allCStringComponents {
             if virtualAddress >= cStringComponent.sectionVirtualAddress
-                && virtualAddress < (cStringComponent.sectionVirtualAddress + UInt64(cStringComponent.dataSlice.count)) {
+                && virtualAddress < (cStringComponent.sectionVirtualAddress + UInt64(cStringComponent.data.count)) {
                 return cStringComponent.findString(with: virtualAddress)
             }
         }

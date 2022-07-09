@@ -15,15 +15,15 @@ class MachoComponent: Equatable, Identifiable {
     
     let id = UUID()
     
-    let dataSlice: DataSlice
-    var componentFileOffset: Int { dataSlice.startOffset }
-    var componentSize: Int { dataSlice.count }
+    let data: Data
+    var fileOffset: Int { data.startIndex }
+    var dataSize: Int { data.count }
     
     var componentTitle: String { fatalError() /* to be overriden */ }
     var componentSubTitle: String? { nil }
     
-    init(_ dataSlice: DataSlice) {
-        self.dataSlice = dataSlice
+    init(_ data: Data) {
+        self.data = data
     }
     
     func numberOfTranslationSections() -> Int {
@@ -48,10 +48,10 @@ class MachoUnknownCodeComponent: MachoComponent {
     let title: String
     let subTitle: String?
     
-    init(_ dataSlice: DataSlice, title: String, subTitle: String?) {
+    init(_ data: Data, title: String, subTitle: String?) {
         self.title = title
         self.subTitle = subTitle
-        super.init(dataSlice)
+        super.init(data)
     }
     
     override func numberOfTranslationSections() -> Int {

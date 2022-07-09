@@ -12,7 +12,7 @@ class InstructionComponent: MachoLazyComponent<[CapStoneInstruction]> {
     override var shouldPreload: Bool { true }
     let capStoneArchType: CapStoneArchType
     
-    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+    override init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
         let capStoneArchType: CapStoneArchType
         let cpuType = macho.cpuType
         switch cpuType {
@@ -30,11 +30,11 @@ class InstructionComponent: MachoLazyComponent<[CapStoneInstruction]> {
             fatalError() /* unknown code */
         }
         self.capStoneArchType = capStoneArchType
-        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [CapStoneInstruction] {
-        return CapStoneHelper.instructions(from: dataSlice.raw, arch: capStoneArchType)
+        return CapStoneHelper.instructions(from: data, arch: capStoneArchType)
     }
     
     override func numberOfTranslationSections() -> Int {
@@ -47,7 +47,7 @@ class InstructionComponent: MachoLazyComponent<[CapStoneInstruction]> {
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
         let instruction = self.payload[indexPath.section]
-        return TranslationItem(sourceDataRange: self.dataSlice.absoluteRange(instruction.startOffset, instruction.length),
+        return TranslationItem(sourceDataRange: self.data.absoluteRange(instruction.startOffset, instruction.length),
                                content: TranslationItemContent(description: "Assembly",
                                                                explanation: instruction.mnemonic + "    " + instruction.operand))
     }

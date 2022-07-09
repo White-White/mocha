@@ -18,8 +18,8 @@ class LCDylib: LoadCommand {
     
     override var componentSubTitle: String { super.componentSubTitle + " (\(libPath.components(separatedBy: "/").last ?? ""))" }
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         let libPathOffset =
         translationStore.translate(next: .doubleWords,

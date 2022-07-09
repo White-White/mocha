@@ -14,8 +14,8 @@ class LCSymbolTable: LoadCommand {
     let stringTableOffset: UInt32
     let sizeOfStringTable: UInt32
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         self.symbolTableOffset = translationStore.translate(next: .doubleWords,
                                                           dataInterpreter: DataInterpreterPreset.UInt32,
@@ -65,8 +65,8 @@ class LCDynamicSymbolTable: LoadCommand {
     let locreloff: UInt32       /* offset to local relocation entries */
     let nlocrel: UInt32         /* number of local relocation entries */
     
-    required init(with type: LoadCommandType, data: DataSlice, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(machoDataSlice: data).skip(.quadWords)
+    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+        let translationStore = TranslationStore(data: data).skip(.quadWords)
         
         self.ilocalsym =
         translationStore.translate(next: .doubleWords,

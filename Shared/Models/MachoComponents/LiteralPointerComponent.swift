@@ -16,13 +16,13 @@ class LiteralPointerComponent: MachoLazyComponent<[LiteralPointer]> {
     
     let pointerLength: Int
     
-    override init(_ dataSlice: DataSlice, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+    override init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
         self.pointerLength = is64Bit ? 8 : 4
-        super.init(dataSlice, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
     }
     
     override func generatePayload() -> [LiteralPointer] {
-        let rawData = self.dataSlice.raw
+        let rawData = self.data
         guard rawData.count % pointerLength == 0 else { fatalError() /* section of type S_LITERAL_POINTERS should be in align of 8 (bytes) */  }
         var pointers: [LiteralPointer] = []
         let numberOfPointers = rawData.count / 8
@@ -51,7 +51,7 @@ class LiteralPointerComponent: MachoLazyComponent<[LiteralPointer]> {
             // didn't find string
             fatalError()
         }
-        return TranslationItem(sourceDataRange: self.dataSlice.absoluteRange(pointer.relativeDataOffset, self.pointerLength),
+        return TranslationItem(sourceDataRange: self.data.absoluteRange(pointer.relativeDataOffset, self.pointerLength),
                                content: TranslationItemContent(description: "Pointer Value (Virtual Address)",
                                                                explanation: pointer.pointerValue.hex,
                                                                extraDescription: "Referenced String Symbol",

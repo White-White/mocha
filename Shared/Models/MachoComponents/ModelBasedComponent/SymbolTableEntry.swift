@@ -181,13 +181,13 @@ struct SymbolTableEntry: InterpretableModel {
     
     let translaitonItems: [TranslationItem]
     
-    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
+    init(with data: Data, is64Bit: Bool, macho: Macho) {
         
         self.macho = macho
         
         var translaitonItems: [TranslationItem] = []
         
-        let indexInStringTable = data.truncated(from: .zero, length: 4).raw.UInt32
+        let indexInStringTable = data.subSequence(from: .zero, count: 4).UInt32
         self.indexInStringTable = indexInStringTable
         self.indexInStringTableRange = data.absoluteRange(.zero, 4)
         
@@ -202,7 +202,7 @@ struct SymbolTableEntry: InterpretableModel {
          */
         
         let nTypeByteRange = data.absoluteRange(4, 1)
-        let nTypeRaw = data.truncated(from: 4, length: 1).raw.UInt8
+        let nTypeRaw = data.subSequence(from: 4, count: 1).UInt8
         let symbolType = SymbolType(nTypeRaw: nTypeRaw)
         self.symbolType = symbolType
         
@@ -217,9 +217,9 @@ struct SymbolTableEntry: InterpretableModel {
          * n_value
          */
         
-        let nSect = data.truncated(from: 5, length: 1).raw.UInt8
-        let nDesc = data.truncated(from: 6, length: 2).raw.UInt16
-        let nValueRawData = data.truncated(from: 8, length: is64Bit ? 8 : 4).raw
+        let nSect = data.subSequence(from: 5, count: 1).UInt8
+        let nDesc = data.subSequence(from: 6, count: 2).UInt16
+        let nValueRawData = data.subSequence(from: 8, count: is64Bit ? 8 : 4)
         let nValue = is64Bit ? nValueRawData.UInt64 : UInt64(nValueRawData.UInt32)
         self.nSect = nSect
         self.nDesc = nDesc

@@ -37,9 +37,9 @@ struct DataInCodeModel: InterpretableModel {
     let kind: DataInCodeKind
     let translationStore: TranslationStore
     
-    init(with data: DataSlice, is64Bit: Bool, macho: Macho) {
+    init(with data: Data, is64Bit: Bool, macho: Macho) {
 
-        let translationStore = TranslationStore(machoDataSlice: data)
+        let translationStore = TranslationStore(data: data)
         
         self.offset = translationStore.translate(next: .doubleWords,
                                                dataInterpreter: DataInterpreterPreset.UInt32,

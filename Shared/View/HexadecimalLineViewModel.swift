@@ -11,14 +11,11 @@ struct HexadecimalLine {
     
     static let LineBytesCount = 24
     
-    let dataSlice: DataSlice
-    
-    var offsetInMacho: Int {
-        dataSlice.startOffset
-    }
+    let data: Data
+    var offset: Int { data.startIndex }
     
     var hexadecimalString: String {
-        let bytes = [UInt8](dataSlice.raw)
+        let bytes = [UInt8](data)
         var hexadecimalStringData = [UInt8].init(repeating: 0x20, count: HexadecimalViewModel.LineBytesCount * 2)
         let hexArray: [UInt8] = [0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46] // 0-9, A-F
         for (index, byte) in bytes.enumerated() {
@@ -40,8 +37,8 @@ class HexadecimalLineViewModel: ObservableObject {
     @Published var highlightedDataRange: Range<Int>? = nil
     let line: HexadecimalLine
     
-    var offsetInMachoString: String {
-        String(format: "0x%0\(hexDigits)X", line.offsetInMacho)
+    var offsetString: String {
+        String(format: "0x%0\(hexDigits)X", line.offset)
     }
     
     var attributedHexadecimalString: AttributedString {
