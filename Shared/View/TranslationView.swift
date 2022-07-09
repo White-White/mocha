@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TranslationView: View {
     
+    @Binding var selectedRange: Range<UInt64>
     @ObservedObject var translationViewModel: TranslationViewModel
     
     var body: some View {
@@ -21,6 +22,7 @@ struct TranslationView: View {
                                 TranslationItemView(viewModel: viewModel)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
+                                        selectedRange = viewModel.item.sourceDataRange
                                         translationViewModel.didSelect(viewModel)
                                     }
                                 if viewModel.item.content.hasDivider { Divider() }

@@ -11,8 +11,10 @@ struct MachoView: View {
     
     let macho: Macho
     @State var cellModels: [MachoViewCellModel]
-    @State var selectedMachoComponent: MachoComponent
     @State var selectedCellModel: MachoViewCellModel
+    
+    @State var selectedDataRange: Range<UInt64>
+    @State var selectedMachoComponent: MachoComponent
     
     var body: some View {
         ScrollViewReader { scrollViewProxy in
@@ -39,7 +41,8 @@ struct MachoView: View {
                     }
                 }
                 Divider()
-                MachoComponentView(with: $selectedMachoComponent, hexDigits: macho.hexDigits)
+                HexFiendView(data: macho.machoData, selectedRange: $selectedDataRange)
+                MachoComponentView(with: $selectedMachoComponent, hexDigits: macho.hexDigits, selectedRange: $selectedDataRange)
             }
         }
         .onChange(of: macho) { newValue in
@@ -50,6 +53,9 @@ struct MachoView: View {
             self.cellModels = cellModels
             self.selectedMachoComponent = firstCellModel.machoComponent
             self.selectedCellModel = firstCellModel
+            
+            let firstTranslationItem = firstCellModel.machoComponent.translationItem(at: IndexPath(item: .zero, section: .zero))
+            self.selectedDataRange = firstTranslationItem.sourceDataRange
         }
     }
     
@@ -63,5 +69,8 @@ struct MachoView: View {
         _cellModels = State(initialValue: cellModels)
         _selectedMachoComponent = State(initialValue: firstCellModel.machoComponent)
         _selectedCellModel = State(initialValue: firstCellModel)
+        
+        let firstTranslationItem = firstCellModel.machoComponent.translationItem(at: IndexPath(item: .zero, section: .zero))
+        _selectedDataRange = State(initialValue: firstTranslationItem.sourceDataRange)
     }
 }

@@ -3,3 +3,5 @@
 //
 
 #import "CapStoneHelper.h"
+#import <HexFiend/HexFiend.h>
+#import <HexFiend/HFLineCountingView.h>

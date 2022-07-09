@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F118CC62879185B0071C107 /* HexFiendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CC52879185B0071C107 /* HexFiendView.swift */; };
+		1F118CC828791EB20071C107 /* HexFiend.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC5CEB5287915E500F9A09F /* HexFiend.framework */; };
+		1F118CC928791EB20071C107 /* HexFiend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC5CEB5287915E500F9A09F /* HexFiend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F16F2202785FFBE0094E720 /* Demangle.swift */; };
 		1F16F22C278813E70094E720 /* DataShifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F16F22B278813E70094E720 /* DataShifter.swift */; };
 		1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F184B272769EBB700CA286A /* SymbolTableEntry.swift */; };
 		1F3C859C286D91160042EEA6 /* TranslationItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C859B286D91160042EEA6 /* TranslationItemView.swift */; };
 		1F3C859E286D9DB00042EEA6 /* PageControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C859D286D9DB00042EEA6 /* PageControlView.swift */; };
-		1F3C85A0286DA5920042EEA6 /* HexadecimalLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C859F286DA5920042EEA6 /* HexadecimalLineView.swift */; };
-		1F3C85A2286DA7320042EEA6 /* HexadecimalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C85A1286DA7320042EEA6 /* HexadecimalViewModel.swift */; };
-		1F3C85A4286DC9380042EEA6 /* HexadecimalLineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C85A3286DC9380042EEA6 /* HexadecimalLineViewModel.swift */; };
 		1F3C85A6286DC9850042EEA6 /* TranslationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C85A5286DC9850042EEA6 /* TranslationViewModel.swift */; };
 		1F40ED2C279FF57700D93824 /* FunctionStartsComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2B279FF57700D93824 /* FunctionStartsComponent.swift */; };
 		1F40ED2E27A13D3A00D93824 /* UStringComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2D27A13D3A00D93824 /* UStringComponent.swift */; };
@@ -36,7 +36,6 @@
 		1F73C6CD275A31F00020E581 /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BE275A31F00020E581 /* SectionHeader.swift */; };
 		1F73C6CF275A31F00020E581 /* Macho.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BF275A31F00020E581 /* Macho.swift */; };
 		1F73C6D1275A31F00020E581 /* CPUType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6C0275A31F00020E581 /* CPUType.swift */; };
-		1F73C6DA275A320D0020E581 /* HexadecimalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D5275A320D0020E581 /* HexadecimalView.swift */; };
 		1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D7275A320D0020E581 /* MachoView.swift */; };
 		1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6E3275A32120020E581 /* UnixArchive.swift */; };
 		1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EF275A322C0020E581 /* Extensions.swift */; };
@@ -202,9 +201,80 @@
 			remoteGlobalIDString = DCFE23BC19DDCC2D00EF8EA9;
 			remoteInfo = CapstoneStatic;
 		};
+		1FC5CEB2287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D1107320486CEB800E47090;
+			remoteInfo = HexFiend_2;
+		};
+		1FC5CEB4287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D01E7BB80CDC530C00943F9E;
+			remoteInfo = HexFiend_Framework;
+		};
+		1FC5CEB6287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A5EF294A20F187B700CA7B39;
+			remoteInfo = HexFiend_Framework_iOS;
+		};
+		1FC5CEB8287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D047E3151022CEFE00EF307B;
+			remoteInfo = "FortunateSon (PrivilegedHelper)";
+		};
+		1FC5CEBA287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D00C15E50FF091FF006D021F;
+			remoteInfo = HexFiendling;
+		};
+		1FC5CEBC287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9408FBFA19DD72DE004F800E;
+			remoteInfo = "HexFiend_Framework Tests";
+		};
+		1FC5CEBE287915E500F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A550A7161F7877F8001C79C7;
+			remoteInfo = hexf;
+		};
+		1FC5CEC0287915F700F9A09F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D01E7BB70CDC530C00943F9E;
+			remoteInfo = HexFiend_Framework;
+		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1F118CCA28791EB20071C107 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1F118CC928791EB20071C107 /* HexFiend.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		1F118CC52879185B0071C107 /* HexFiendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexFiendView.swift; sourceTree = "<group>"; };
 		1F16F2202785FFBE0094E720 /* Demangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demangle.swift; sourceTree = "<group>"; };
 		1F16F22B278813E70094E720 /* DataShifter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataShifter.swift; sourceTree = "<group>"; };
 		1F184B272769EBB700CA286A /* SymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTableEntry.swift; sourceTree = "<group>"; };
@@ -259,6 +329,7 @@
 		1FC258CE275F6250008C2826 /* TranslationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItem.swift; sourceTree = "<group>"; };
 		1FC5CD96287824D700F9A09F /* MochaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MochaDocument.swift; sourceTree = "<group>"; };
 		1FC5CDAB287842FC00F9A09F /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = HexFiend_2.xcodeproj; path = HexFiend/HexFiend_2.xcodeproj; sourceTree = "<group>"; };
 		1FD02A652845C7570036715E /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		1FE35B93286B1F5C00FE37AC /* MachoLazyComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoLazyComponent.swift; sourceTree = "<group>"; };
 		1FE35B95286B1F7900FE37AC /* MachoZeroFilledComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoZeroFilledComponent.swift; sourceTree = "<group>"; };
@@ -285,6 +356,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F436DBA27CE09DA00F4D7FA /* libcapstone.a in Frameworks */,
+				1F118CC828791EB20071C107 /* HexFiend.framework in Frameworks */,
 				1F844CB327B2434700ED0246 /* libcapstone.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -292,6 +364,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1F118CAC287918150071C107 /* HexFiendBased */ = {
+			isa = PBXGroup;
+			children = (
+				1F118CC52879185B0071C107 /* HexFiendView.swift */,
+			);
+			path = HexFiendBased;
+			sourceTree = "<group>";
+		};
+		1F118CC4287918380071C107 /* DeprecatedHexView */ = {
+			isa = PBXGroup;
+			children = (
+				1F3C85A3286DC9380042EEA6 /* HexadecimalLineViewModel.swift */,
+				1F3C859F286DA5920042EEA6 /* HexadecimalLineView.swift */,
+				1F3C85A1286DA7320042EEA6 /* HexadecimalViewModel.swift */,
+				1F73C6D5275A320D0020E581 /* HexadecimalView.swift */,
+			);
+			path = DeprecatedHexView;
+			sourceTree = "<group>";
+		};
 		1F16F22D27882F310094E720 /* Translations */ = {
 			isa = PBXGroup;
 			children = (
@@ -317,10 +408,8 @@
 		1F73C6D4275A320D0020E581 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				1F3C85A3286DC9380042EEA6 /* HexadecimalLineViewModel.swift */,
-				1F3C859F286DA5920042EEA6 /* HexadecimalLineView.swift */,
-				1F3C85A1286DA7320042EEA6 /* HexadecimalViewModel.swift */,
-				1F73C6D5275A320D0020E581 /* HexadecimalView.swift */,
+				1F118CC4287918380071C107 /* DeprecatedHexView */,
+				1F118CAC287918150071C107 /* HexFiendBased */,
 				1F3C859B286D91160042EEA6 /* TranslationItemView.swift */,
 				1F3C85A5286DC9850042EEA6 /* TranslationViewModel.swift */,
 				1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */,
@@ -346,6 +435,7 @@
 		1F75F8A1275A314F001A4E29 = {
 			isa = PBXGroup;
 			children = (
+				1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */,
 				1F844C6927B2429100ED0246 /* Capstone.xcodeproj */,
 				1FB650452790445C004327BB /* README.md */,
 				1F75F8C5275A3161001A4E29 /* mocha (iOS).entitlements */,
@@ -443,6 +533,20 @@
 			path = Helpers;
 			sourceTree = "<group>";
 		};
+		1FC5CEA8287915E500F9A09F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1FC5CEB3287915E500F9A09F /* Hex Fiend.app */,
+				1FC5CEB5287915E500F9A09F /* HexFiend.framework */,
+				1FC5CEB7287915E500F9A09F /* HexFiend_Framework_iOS.framework */,
+				1FC5CEB9287915E500F9A09F /* com.ridiculousfish.HexFiend.PrivilegedHelper */,
+				1FC5CEBB287915E500F9A09F /* HexFiendling.app */,
+				1FC5CEBD287915E500F9A09F /* HexFiend_Framework Tests.xctest */,
+				1FC5CEBF287915E500F9A09F /* hexf */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		1FFE55F2277F764B00ECD395 /* LoadCommand */ = {
 			isa = PBXGroup;
 			children = (
@@ -508,10 +612,12 @@
 				1F75F8B0275A3151001A4E29 /* Sources */,
 				1F75F8B1275A3151001A4E29 /* Frameworks */,
 				1F75F8B2275A3151001A4E29 /* Resources */,
+				1F118CCA28791EB20071C107 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1FC5CEC1287915F700F9A09F /* PBXTargetDependency */,
 				1F844CB227B242EC00ED0246 /* PBXTargetDependency */,
 			);
 			name = "mocha (macOS)";
@@ -554,6 +660,10 @@
 				{
 					ProductGroup = 1F844C6A27B2429100ED0246 /* Products */;
 					ProjectRef = 1F844C6927B2429100ED0246 /* Capstone.xcodeproj */;
+				},
+				{
+					ProductGroup = 1FC5CEA8287915E500F9A09F /* Products */;
+					ProjectRef = 1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -684,6 +794,55 @@
 			remoteRef = 1F844C9D27B2429100ED0246 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		1FC5CEB3287915E500F9A09F /* Hex Fiend.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Hex Fiend.app";
+			remoteRef = 1FC5CEB2287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1FC5CEB5287915E500F9A09F /* HexFiend.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = HexFiend.framework;
+			remoteRef = 1FC5CEB4287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1FC5CEB7287915E500F9A09F /* HexFiend_Framework_iOS.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = HexFiend_Framework_iOS.framework;
+			remoteRef = 1FC5CEB6287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1FC5CEB9287915E500F9A09F /* com.ridiculousfish.HexFiend.PrivilegedHelper */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = com.ridiculousfish.HexFiend.PrivilegedHelper;
+			remoteRef = 1FC5CEB8287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1FC5CEBB287915E500F9A09F /* HexFiendling.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = HexFiendling.app;
+			remoteRef = 1FC5CEBA287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1FC5CEBD287915E500F9A09F /* HexFiend_Framework Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "HexFiend_Framework Tests.xctest";
+			remoteRef = 1FC5CEBC287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1FC5CEBF287915E500F9A09F /* hexf */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = hexf;
+			remoteRef = 1FC5CEBE287915E500F9A09F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -703,6 +862,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F68325A276C49AB002609C5 /* RelocationEntry.swift in Sources */,
+				1F118CC62879185B0071C107 /* HexFiendView.swift in Sources */,
 				1FFE55F9278030AE00ECD395 /* LCMinOSVersion.swift in Sources */,
 				1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */,
 				1F73C706275A322C0020E581 /* Theme.swift in Sources */,
@@ -717,13 +877,11 @@
 				1F6212EB2796747C009A9154 /* LCMain.swift in Sources */,
 				1F6EB9FE278AECB000590729 /* OperationCodeComponent.swift in Sources */,
 				1FFCA6E22780C22600634B79 /* CStringComponent.swift in Sources */,
-				1F3C85A0286DA5920042EEA6 /* HexadecimalLineView.swift in Sources */,
 				1F40ED2E27A13D3A00D93824 /* UStringComponent.swift in Sources */,
 				1FFE5604278032D200ECD395 /* Log.swift in Sources */,
 				1FEF55DA278B3C170037098B /* TranslationStore.swift in Sources */,
 				1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */,
 				1F6212E72796744F009A9154 /* LCUUID.swift in Sources */,
-				1F3C85A2286DA7320042EEA6 /* HexadecimalViewModel.swift in Sources */,
 				1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */,
 				1FE35B96286B1F7900FE37AC /* MachoZeroFilledComponent.swift in Sources */,
 				1F3C85A6286DC9850042EEA6 /* TranslationViewModel.swift in Sources */,
@@ -738,7 +896,6 @@
 				1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */,
 				1F40ED3227AB88A800D93824 /* SymbolPointerComponent.swift in Sources */,
 				1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */,
-				1F3C85A4286DC9380042EEA6 /* HexadecimalLineViewModel.swift in Sources */,
 				1F73C6D1275A31F00020E581 /* CPUType.swift in Sources */,
 				1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */,
 				1F40ED2C279FF57700D93824 /* FunctionStartsComponent.swift in Sources */,
@@ -756,7 +913,6 @@
 				1FE35B94286B1F5C00FE37AC /* MachoLazyComponent.swift in Sources */,
 				1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */,
 				1F6EB9FC278AE46500590729 /* LCDyldInfo.swift in Sources */,
-				1F73C6DA275A320D0020E581 /* HexadecimalView.swift in Sources */,
 				1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */,
 				1FFCA6EC278487D300634B79 /* ASCIIComponent.swift in Sources */,
 				1FFE55FD278030F100ECD395 /* LCSegment.swift in Sources */,
@@ -775,6 +931,11 @@
 			isa = PBXTargetDependency;
 			name = CapstoneStatic;
 			targetProxy = 1F844CB127B242EC00ED0246 /* PBXContainerItemProxy */;
+		};
+		1FC5CEC1287915F700F9A09F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = HexFiend_Framework;
+			targetProxy = 1FC5CEC0287915F700F9A09F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -897,7 +1058,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -934,7 +1095,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;

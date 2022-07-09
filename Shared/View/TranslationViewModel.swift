@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-protocol TranslationViewModelObserver {
-    func onChange(visiableDataRange: Range<Int>)
-    func onChange(selectedItemViewModel: TranslationItemViewModel?, oldValue:TranslationItemViewModel?)
-}
-
 class TranslationViewModel: ObservableObject, Equatable {
     static func == (lhs: TranslationViewModel, rhs: TranslationViewModel) -> Bool {
         return lhs.machoComponent == rhs.machoComponent
@@ -26,24 +21,14 @@ class TranslationViewModel: ObservableObject, Equatable {
     @Published var currentPage: Int {
         didSet {
             self.translationItemViewModels = TranslationViewModel.translationItems(machoComponent: machoComponent, at: currentPage)
-            self.observers.forEach { $0.onChange(visiableDataRange: visiableDataRange) }
             self.lastPage = oldValue
             self.didSelect(self.translationItemViewModels.first?.first)
         }
     }
     
-    var visiableDataRange: Range<Int> {
-        return machoComponent.data.startIndex..<(machoComponent.data.startIndex+machoComponent.data.count)
-    }
-    
     let machoComponent: MachoComponent
-    var observers: [TranslationViewModelObserver] = []
     
-    var lastSelectedItemViewModel: TranslationItemViewModel? = nil {
-        didSet {
-            self.observers.forEach { $0.onChange(selectedItemViewModel: lastSelectedItemViewModel, oldValue: oldValue) }
-        }
-    }
+    var lastSelectedItemViewModel: TranslationItemViewModel? = nil
     @Published var translationItemViewModels: [[TranslationItemViewModel]]
     
     init(_ machoComponent: MachoComponent, minPage: Int = 0) {

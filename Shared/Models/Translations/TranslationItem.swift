@@ -62,10 +62,10 @@ struct TranslationItemContent {
 }
 
 struct TranslationItem {
-    var sourceDataRange: Range<Int>?
+    let sourceDataRange: Range<UInt64>
     let content: TranslationItemContent
-    init(sourceDataRange: Range<Int>?, content: TranslationItemContent) {
-        self.sourceDataRange = sourceDataRange
+    init(sourceDataRange: Range<Int>, content: TranslationItemContent) {
+        self.sourceDataRange = UInt64(sourceDataRange.lowerBound)..<UInt64(sourceDataRange.upperBound)
         self.content = content
     }
 }

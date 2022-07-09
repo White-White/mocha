@@ -11,32 +11,26 @@ struct MachoComponentView: View {
     
     let hexDigits: Int
     @Binding var machoComponent: MachoComponent
-    @State var hexadecimalViewModel: HexadecimalViewModel
+    @Binding var selectedRange: Range<UInt64>
     @State var translationViewModel: TranslationViewModel
     
     var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            HexadecimalView(viewModel: hexadecimalViewModel)
-            VStack {
-                TranslationView(translationViewModel: translationViewModel)
-                PageControlView(translationViewModel: translationViewModel)
-            }
+        VStack {
+            TranslationView(selectedRange: $selectedRange, translationViewModel: translationViewModel)
+            PageControlView(translationViewModel: translationViewModel)
         }
         .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
         .onChange(of: machoComponent) { newValue in
             self.translationViewModel = TranslationViewModel(newValue)
-            self.hexadecimalViewModel = HexadecimalViewModel(newValue, translationViewModel: self.translationViewModel, hexDigits: hexDigits)
         }
     }
     
-    init(with machoComponent: Binding<MachoComponent>, hexDigits: Int) {
+    init(with machoComponent: Binding<MachoComponent>, hexDigits: Int, selectedRange: Binding<Range<UInt64>>) {
         self.hexDigits = hexDigits
         _machoComponent = machoComponent
         let translationViewModel = TranslationViewModel(machoComponent.wrappedValue)
         _translationViewModel = State(initialValue: translationViewModel)
-        _hexadecimalViewModel = State(initialValue: HexadecimalViewModel(machoComponent.wrappedValue,
-                                                                         translationViewModel: translationViewModel,
-                                                                         hexDigits: hexDigits))
+        _selectedRange = selectedRange
     }
     
 }

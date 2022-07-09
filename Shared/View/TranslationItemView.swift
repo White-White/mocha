@@ -7,8 +7,11 @@
 
 import SwiftUI
 
-class TranslationItemViewModel: ObservableObject, Identifiable {
-    let id = UUID()
+class TranslationItemViewModel: ObservableObject, Identifiable, Equatable {
+    static func == (lhs: TranslationItemViewModel, rhs: TranslationItemViewModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+    var id = UUID()
     let item: TranslationItem
     @Published var isSelected: Bool = false
     

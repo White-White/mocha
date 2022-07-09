@@ -140,7 +140,7 @@ class ExportInfoNode {
             rangeOfLastEdge = edgeOffsetRange
         }
         
-        transItems.insert(TranslationItem(sourceDataRange: nil,
+        transItems.insert(TranslationItem(sourceDataRange: 0..<0,
                                           content: TranslationItemContent(description: "Trie Node Full Name",
                                                                           explanation: accumulatedString,
                                                                           explanationStyle: .extraDetail)),

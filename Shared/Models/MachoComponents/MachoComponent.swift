@@ -63,7 +63,7 @@ class MachoUnknownCodeComponent: MachoComponent {
     }
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        return TranslationItem(sourceDataRange: nil,
+        return TranslationItem(sourceDataRange: 0..<0,
                                content: TranslationItemContent(description: "Code",
                                                                explanation: "This part of the macho is machine code. Hopper.app would be a better choice to parse it."))
     }

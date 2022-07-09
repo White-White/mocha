@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+	<channel>
+		<title>HexFiend</title>
+		<link>https://raw.github.com/HexFiend/HexFiend/master/app/appcast.xml</link>
+		<description>HexFiend 2 Release Notes</description>
+		<language>en</language>
+		<item>
+			<title>HexFiend 2.16</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.16.0/Hex_Fiend_2.16.dmg"
+				sparkle:version="1655090551"
+				sparkle:shortVersionString="2.16.0"
+				sparkle:dsaSignature="MC0CFQC6XVvSUXZFWG9xG5MsszCrkMWh8QIUKimWI1PxBSJokindAXXA4MAfkMM="
+			/>
+			<sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.15</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.15.0/Hex_Fiend_2.15.dmg"
+				sparkle:version="1653795547"
+				sparkle:shortVersionString="2.15.0"
+				sparkle:dsaSignature="MCwCFCUioUUZn5EhwzM6ebrJmUHahb2CAhQywHxWZD6Fyc6beL1efoY+aLcWdQ=="
+			/>
+			<sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.14.1</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.14.1/Hex_Fiend_2.14.1.dmg"
+				sparkle:version="1615771335"
+				sparkle:shortVersionString="2.14.1"
+				sparkle:dsaSignature="MCwCFAdLjBvvjJN0VnfMnn7BCl6503qNAhR+XuFABVKky8zJn/oKtC1sv58ySQ=="
+			/>
+			<sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.14.0</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.14.0/Hex_Fiend_2.14.dmg"
+				sparkle:version="1605491578"
+				sparkle:shortVersionString="2.14"
+				sparkle:dsaSignature="MCwCFBwmzzHwNXQi7HyyO3HH1vEncf1tAhRU9pYwSNl4addaLHGiLbgUyGrmUw=="
+			/>
+			<sparkle:minimumSystemVersion>10.11</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.13.1</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.13.1/Hex_Fiend_2.13.1.dmg"
+				sparkle:version="1593833290"
+				sparkle:shortVersionString="2.13.1"
+				sparkle:dsaSignature="MCwCFCDCGZkLM4f3hayEkcA+SjDDezvVAhQbkuHO+ZSbEjjBIWR2eoKw7vjVZQ=="
+			/>
+			<sparkle:minimumSystemVersion>10.9</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.13</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.13.0/Hex_Fiend_2.13.dmg"
+				sparkle:version="1593301800"
+				sparkle:shortVersionString="2.13"
+				sparkle:dsaSignature="MC4CFQCsfQHyEGpc9d1yWDJv2lmAwGdS8gIVAI7xdBZ4BYyPNM0KA4IMG41QwRx5"
+			/>
+			<sparkle:minimumSystemVersion>10.9</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.12</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.12.0/Hex_Fiend_2.12.dmg"
+				sparkle:version="1577426716"
+				sparkle:shortVersionString="2.12"
+				sparkle:dsaSignature="MCwCFGwTu1y2SGQvE9DcZXbtYx/T40FwAhQiR95Y2eG6ESUfRtN6B0EhJ9DyJA=="
+			/>
+			<sparkle:minimumSystemVersion>10.9</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.11</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.11.0/Hex_Fiend_2.11.0.dmg"
+				sparkle:version="1549175187"
+				sparkle:shortVersionString="2.11"
+				sparkle:dsaSignature="MC0CFQCqSroBi30+5ZWGU931d95rsQHVNAIUA1Z2zryk+aboZPLFGQbBh+JPu1w="
+			/>
+			<sparkle:minimumSystemVersion>10.8</sparkle:minimumSystemVersion>
+		</item>
+		<item>
+			<title>HexFiend 2.8</title>
+			<sparkle:releaseNotesLink>https://hexfiend.github.io/HexFiend/ReleaseNotes.html</sparkle:releaseNotesLink>
+			<enclosure
+				url="https://github.com/HexFiend/HexFiend/releases/download/v2.8.0/Hex_Fiend_2.8.dmg"
+				sparkle:version="170719"
+				sparkle:shortVersionString="2.8"
+				sparkle:dsaSignature="MCwCFAumBhb7Bq74AQ0QAAtxzT0uHUs3AhQUH2IxG5aFVRS9gS9aUU+3hCKdiw=="
+			/>
+			<sparkle:minimumSystemVersion>10.7</sparkle:minimumSystemVersion>
+		</item>
+	</channel>
+</rss>

@@ -32,7 +32,7 @@ class MachoZeroFilledComponent: MachoComponent {
     }
     
     override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        return TranslationItem(sourceDataRange: nil, content: TranslationItemContent(description: "Zero Filled Section",
+        return TranslationItem(sourceDataRange: 0..<0, content: TranslationItemContent(description: "Zero Filled Section",
                                                                                      explanation: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)",
                                                                                      explanationStyle: ExplanationStyle.extraDetail))
     }
