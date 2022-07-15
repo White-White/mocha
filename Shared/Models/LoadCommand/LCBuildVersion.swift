@@ -75,60 +75,39 @@ class LCBuildVersion: LoadCommand {
     let numberOfTools: UInt32
     let buildTools: [LCBuildTool]
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.platform =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: { data in BuildPlatform(rawValue: data.UInt32) },
-                                   itemContentGenerator: { platform in
-            TranslationItemContent(description: "Target Platform", explanation: platform?.readable ?? "⚠️ Unknown Platform. Contact the author.")
-        })
-        
-        self.minOSVersion =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: { LCBuildVersion.version(for: $0.UInt32) },
-                                   itemContentGenerator: { version in
-            TranslationItemContent(description: "Min OS Version", explanation: version)
-        })
-        
-        self.sdkVersion =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: { LCBuildVersion.version(for: $0.UInt32) },
-                                   itemContentGenerator: { version in
-            TranslationItemContent(description: "Min SDK Version", explanation: version)
-        })
-        
-        let numberOfTools =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32,
-                                   itemContentGenerator: { value in
-            TranslationItemContent(description: "Number of tool entries", explanation: "\(value)")
-        })
-        self.numberOfTools = numberOfTools
-        
+    init(with type: LoadCommandType, data: Data) {
+        var dataShifter = DataShifter(data); dataShifter.skip(.quadWords)
+        self.platform = BuildPlatform(rawValue: dataShifter.shiftUInt32())
+        self.minOSVersion = LCBuildVersion.version(for: dataShifter.shiftUInt32())
+        self.sdkVersion = LCBuildVersion.version(for: dataShifter.shiftUInt32())
+        self.numberOfTools = dataShifter.shiftUInt32()
         var tools: [LCBuildTool] = []
-        for _ in 0..<numberOfTools {
-            let toolType =
-            translationStore.translate(next: .doubleWords,
-                                       dataInterpreter: { BuildToolType(rawValue: $0.UInt32)! },
-                                       itemContentGenerator: { tool in
-                TranslationItemContent(description: "Build Tool", explanation: tool.readable)
-            })
-            let toolVersion =
-            translationStore.translate(next: .doubleWords,
-                                       dataInterpreter: { LCBuildVersion.version(for: $0.UInt32) },
-                                       itemContentGenerator: { toolVersion in
-                TranslationItemContent(description: "Tool Version", explanation: toolVersion)
-            })
+        for _ in 0..<self.numberOfTools {
+            let toolType = BuildToolType(rawValue: dataShifter.shiftUInt32())!
+            let toolVersion = LCBuildVersion.version(for: dataShifter.shiftUInt32())
             tools.append(LCBuildTool(toolType: toolType, version: toolVersion))
         }
         self.buildTools = tools
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+        super.init(data, type: type)
+    }
+    
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "Target Platform",
+                                        explanation: platform?.readable ?? "⚠️ Unknown Platform. Contact the author.",
+                                        bytesCount: 4))
+        translations.append(Translation(description: "Min OS Version", explanation: self.minOSVersion, bytesCount: 4))
+        translations.append(Translation(description: "Min SDK Version", explanation: self.sdkVersion, bytesCount: 4))
+        translations.append(contentsOf: self.buildTools.map { tool in
+            Translation(description: "Build Tool",
+                        explanation: tool.toolType.readable + "(\(tool.version)",
+                        bytesCount: 8)
+        })
+        return translations
     }
     
     static func version(for value: UInt32) -> String {
         return String(format: "%d.%d.%d", value >> 16, (value >> 8) & 0xff, value & 0xff)
     }
+    
 }

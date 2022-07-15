@@ -14,7 +14,7 @@ struct MachoView: View {
     @State var selectedCellModel: MachoViewCellModel
     
     @State var selectedDataRange: Range<UInt64>
-    @State var selectedMachoComponent: MachoComponent
+    @State var translationGroup: TranslationGroup
     
     var body: some View {
         ScrollViewReader { scrollViewProxy in
@@ -22,13 +22,16 @@ struct MachoView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 4) {
                         ForEach(cellModels) { cellModel in
-                            MachoComponentCellView(cellModel: cellModel, machoFileSize: macho.fileSize, hexDigits: macho.hexDigits)
+                            MachoComponentCellView(cellModel: cellModel)
                                 .onTapGesture {
                                     if self.selectedCellModel.machoComponent == cellModel.machoComponent { return }
                                     cellModel.isSelected.toggle()
                                     self.selectedCellModel.isSelected.toggle()
                                     self.selectedCellModel = cellModel
-                                    self.selectedMachoComponent = cellModel.machoComponent
+                                    self.translationGroup = cellModel.machoComponent.translationGroup
+                                    
+//                                    let firstTranslation = cellModel.machoComponent.firstTranslation
+//                                    self.selectedDataRange = firstTranslation.dataRange
                                 }
                         }
                     }
@@ -41,36 +44,36 @@ struct MachoView: View {
                     }
                 }
                 Divider()
+                
+                TranslationGroupView(translationGroup: translationGroup, selectedRange: $selectedDataRange)
+                
                 HexFiendView(data: macho.machoData, selectedRange: $selectedDataRange)
-                MachoComponentView(with: $selectedMachoComponent, hexDigits: macho.hexDigits, selectedRange: $selectedDataRange)
             }
         }
         .onChange(of: macho) { newValue in
-            let cellModels = newValue.machoComponents.map { MachoViewCellModel.init($0) }
+            let cellModels = newValue.allComponents.map { MachoViewCellModel.init($0) }
             let firstCellModel = cellModels.first!
             firstCellModel.isSelected = true
             
             self.cellModels = cellModels
-            self.selectedMachoComponent = firstCellModel.machoComponent
+            self.translationGroup = firstCellModel.machoComponent.translationGroup
             self.selectedCellModel = firstCellModel
             
-            let firstTranslationItem = firstCellModel.machoComponent.translationItem(at: IndexPath(item: .zero, section: .zero))
-            self.selectedDataRange = firstTranslationItem.sourceDataRange
+//            let firstTranslation = firstCellModel.machoComponent.firstTranslation
         }
     }
     
     init(_ macho: Macho) {
-        macho.initialize()
         self.macho = macho
-        let cellModels = macho.machoComponents.map { MachoViewCellModel.init($0) }
+        let cellModels = macho.allComponents.map { MachoViewCellModel.init($0) }
         let firstCellModel = cellModels.first!
         firstCellModel.isSelected = true
         
         _cellModels = State(initialValue: cellModels)
-        _selectedMachoComponent = State(initialValue: firstCellModel.machoComponent)
+        _translationGroup = State(initialValue: firstCellModel.machoComponent.translationGroup)
         _selectedCellModel = State(initialValue: firstCellModel)
         
-        let firstTranslationItem = firstCellModel.machoComponent.translationItem(at: IndexPath(item: .zero, section: .zero))
-        _selectedDataRange = State(initialValue: firstTranslationItem.sourceDataRange)
+//        let firstTranslation = firstCellModel.machoComponent.firstTranslation
+        _selectedDataRange = State(initialValue: 0..<1)
     }
 }

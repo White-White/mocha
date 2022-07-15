@@ -12,19 +12,18 @@ struct UStringPosition {
     let length: Int
 }
 
-class UStringComponent: MachoLazyComponent<[UStringPosition]> {
+class UStringComponent: MachoComponent {
     
-    override var shouldPreload: Bool { true }
+    let uStringPositions: [UStringPosition]
     
-    override func generatePayload() -> [UStringPosition] {
-        let rawData = self.data
-        let dataLength = rawData.count
+    override init(_ data: Data, title: String, subTitle: String) {
+        let dataLength = data.count
         let utf16UnitCount = dataLength / 2
         var uStringPositions: [UStringPosition] = []
         var indexOfLastNull = -2
         for index in 0..<utf16UnitCount {
             let curNullIndex = index * 2
-            let utf16UnitValue = rawData.select(from: curNullIndex, length: 2).UInt16
+            let utf16UnitValue = data.subSequence(from: curNullIndex, count: 2).UInt16
             if utf16UnitValue != 0 { continue }
             
             let uStringStartIndex = indexOfLastNull + 2
@@ -36,30 +35,21 @@ class UStringComponent: MachoLazyComponent<[UStringPosition]> {
             uStringPositions.append(uStringPosition)
             indexOfLastNull = curNullIndex
         }
-        return uStringPositions
-    }
-    
-    override func numberOfTranslationSections() -> Int {
-        return self.payload.count
-    }
-    
-    override func numberOfTranslationItems(at section: Int) -> Int {
-        return 1
-    }
-    
-    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        let index = indexPath.section
-        let uStringPosition = self.payload[index]
-        let uStringRelativeRange = uStringPosition.relativeStartOffset..<uStringPosition.relativeStartOffset+uStringPosition.length
-        let uStringAbsoluteRange = self.data.absoluteRange(uStringRelativeRange)
-        let uStringRaw = self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length)
+        self.uStringPositions = uStringPositions
         
-        if let string = String(data: uStringRaw, encoding: .utf16LittleEndian) {
-            return TranslationItem(sourceDataRange: uStringAbsoluteRange,
-                                   content: TranslationItemContent(description: "UTF16-String", explanation: string))
+        super.init(data, title: title, subTitle: subTitle)
+    }
+    
+    override func createTranslations() -> [Translation] {
+        return self.uStringPositions.map { self.translation(at: $0) }
+    }
+    
+    private func translation(at uStringPosition: UStringPosition) -> Translation {
+        if let string = String(data: self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length), encoding: .utf16LittleEndian) {
+            return Translation(description: "UTF16-String", explanation: string, bytesCount: uStringPosition.length)
         } else {
-            return TranslationItem(sourceDataRange: uStringAbsoluteRange,
-                                   content: TranslationItemContent(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF16 String"))
+            return Translation(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length)
         }
     }
+    
 }

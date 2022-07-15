@@ -55,7 +55,7 @@ class InterpreterUtils {
             startIndex += 1
         }
         let cStringByteLength = startIndex - offset + 1
-        guard let cString = data.select(from: offset, length: cStringByteLength).utf8String else {
+        guard let cString = data.subSequence(from: offset, count: cStringByteLength).utf8String else {
             // invalid utf8 string in dyld exported info trie. this is unexpected
             fatalError()
         }

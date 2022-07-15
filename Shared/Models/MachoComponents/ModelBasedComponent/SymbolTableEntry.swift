@@ -118,12 +118,12 @@ enum SymbolType: Equatable {
         }
     }
     
-    init(nTypeRaw: UInt8) {
-        if (nTypeRaw & 0xe0) != 0 {
-            let stabType = StabType(rawValue: nTypeRaw)
+    init(rawValue: UInt8) {
+        if (rawValue & 0xe0) != 0 {
+            let stabType = StabType(rawValue: rawValue)
             self = .stab(stabType)
         } else {
-            let n_type_filed = nTypeRaw & 0x0e /* 0x0e == N_TYPE mask == 00001110 */
+            let n_type_filed = rawValue & 0x0e /* 0x0e == N_TYPE mask == 00001110 */
             switch n_type_filed {
             case 0x0:
                 self = .undefined // N_UNDF    0x0        /* undefined, n_sect == NO_SECT */
@@ -145,11 +145,12 @@ enum SymbolType: Equatable {
 
 struct SymbolTableEntry: InterpretableModel {
     
-    weak var macho: Macho?
+    static var modelSizeFor64Bit: Int { 16 }
+    static var modelSizeFor32Bit: Int { 12 }
     
-    let indexInStringTableRange: Range<Int>
+    let is64Bit: Bool
     let indexInStringTable: UInt32
-    
+    let symbolName: String
     let symbolType: SymbolType
     
     /*
@@ -179,17 +180,19 @@ struct SymbolTableEntry: InterpretableModel {
     let nDesc: Swift.UInt16
     let nValue: UInt64
     
-    let translaitonItems: [TranslationItem]
+    var macho: Macho { machoInside! }
+    weak var machoInside: Macho?
     
     init(with data: Data, is64Bit: Bool, macho: Macho) {
         
-        self.macho = macho
+        self.is64Bit = is64Bit
+        self.machoInside = macho
         
-        var translaitonItems: [TranslationItem] = []
+        var dataShifter = DataShifter(data)
         
-        let indexInStringTable = data.subSequence(from: .zero, count: 4).UInt32
-        self.indexInStringTable = indexInStringTable
-        self.indexInStringTableRange = data.absoluteRange(.zero, 4)
+        self.indexInStringTable = dataShifter.shiftUInt32()
+        guard let symbolName = macho.stringTable?.findString(at: Int(self.indexInStringTable)) else { fatalError() /* unexpected */ }
+        self.symbolName = symbolName
         
         /*
          * n_type
@@ -201,14 +204,13 @@ struct SymbolTableEntry: InterpretableModel {
          * which are used via the following masks.
          */
         
-        let nTypeByteRange = data.absoluteRange(4, 1)
-        let nTypeRaw = data.subSequence(from: 4, count: 1).UInt8
-        let symbolType = SymbolType(nTypeRaw: nTypeRaw)
-        self.symbolType = symbolType
         
-        let isPrivateExternalSymbol = (nTypeRaw & 0x10) != 0 // 0x10 == N_PEXT mask == 00010000 /* private external symbol bit */
+        let nTypeValue = dataShifter.shiftUInt8()
+        self.symbolType = SymbolType(rawValue: nTypeValue)
+        
+        let isPrivateExternalSymbol = (nTypeValue & 0x10) != 0 // 0x10 == N_PEXT mask == 00010000 /* private external symbol bit */
         self.isPrivateExternalSymbol = isPrivateExternalSymbol
-        let isExternalSymbol = (nTypeRaw & 0x01) != 0 // 0x01 == N_EXT mask == 00000001 /* external symbol bit, set for external symbols */
+        let isExternalSymbol = (nTypeValue & 0x01) != 0 // 0x01 == N_EXT mask == 00000001 /* external symbol bit, set for external symbols */
         self.isExternalSymbol = isExternalSymbol
         
         /*
@@ -217,66 +219,64 @@ struct SymbolTableEntry: InterpretableModel {
          * n_value
          */
         
-        let nSect = data.subSequence(from: 5, count: 1).UInt8
-        let nDesc = data.subSequence(from: 6, count: 2).UInt16
-        let nValueRawData = data.subSequence(from: 8, count: is64Bit ? 8 : 4)
-        let nValue = is64Bit ? nValueRawData.UInt64 : UInt64(nValueRawData.UInt32)
-        self.nSect = nSect
-        self.nDesc = nDesc
-        self.nValue = nValue
+        self.nSect = dataShifter.shiftUInt8()
+        self.nDesc = dataShifter.shiftUInt16()
+        self.nValue = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+    }
+    
+    var translations: [Translation] {
         
-        let symbolTypeDesp: String = "Symbol Type"
-        var symbolTypeExplanation: String = symbolType.readable
+        var translations: [Translation] = []
         
-        let nSectDesp: String = "Section Ordinal"
+        
+        
+        translations.append(Translation(description: "String table offset", explanation: self.indexInStringTable.hex,
+                                        bytesCount: 4,
+                                        extraDescription: "Symbol Name", extraExplanation: self.symbolName))
+        
+        var symbolTypeExplanation: String = self.symbolType.readable
         var nSectExplanation: String = "\(nSect)"
-        
-        let nDescDesp: String = "Descriptions"
-        let nDescExplanation: String = SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n")
         
         var nValueDesp: String = "Value"
         var nValueExplanation: String = "\(nValue)"
         var nValueExtraDesp: String?
         var nValueExtraExplanation: String?
         
-        switch symbolType {
+        switch self.symbolType {
         case .undefined:
             nSectExplanation = "0 (NO_SECT)"
         case .absolute:
             nSectExplanation = "0 (NO_SECT)"
         case .section:
-            symbolTypeExplanation += (self.macho!.sectionName(at: Int(nSect)) + " (N_SECT)")
+            let ordinal = Int(self.nSect)
+            let sectionHeader = macho.sectionHeaders[ordinal - 1] // ordinal starts from 1
+            let sectionName = sectionHeader.segment + "," + sectionHeader.section
+            symbolTypeExplanation += (sectionName + " (N_SECT)")
         case .indirect:
             nValueDesp = "String table offset"
             nValueExplanation = nValue.hex
             nValueExtraDesp = "Referred string"
-            nValueExtraExplanation = self.macho!.stringInStringTable(at: Int(nValue))
+            nValueExtraExplanation = macho.stringTable?.findString(at: Int(nValue))
         default:
             break
         }
         
-        translaitonItems.append(TranslationItem(sourceDataRange: nTypeByteRange,
-                                                content: TranslationItemContent(description: symbolTypeDesp,
-                                                                                explanation: symbolTypeExplanation)))
+        translations.append(Translation(description: "Symbol Type",
+                                        explanation: symbolTypeExplanation + " (Private External:\(self.isPrivateExternalSymbol), External:\(self.isExternalSymbol)",
+                                        bytesCount: 1))
         
-        translaitonItems.append(TranslationItem(sourceDataRange: nTypeByteRange,
-                                                content: TranslationItemContent(description: "Private External / External",
-                                                                                explanation: "\(isPrivateExternalSymbol) / \(isExternalSymbol)")))
+        translations.append(Translation(description: "Section Ordinal", explanation: nSectExplanation,
+                                        bytesCount: 1))
         
-        translaitonItems.append(TranslationItem(sourceDataRange: data.absoluteRange(5, 1),
-                                                content: TranslationItemContent(description: nSectDesp,
-                                                                                explanation: nSectExplanation)))
+        translations.append(Translation(description: "Descriptions", explanation: SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n"),
+                                        bytesCount: 2))
         
-        translaitonItems.append(TranslationItem(sourceDataRange: data.absoluteRange(6, 2),
-                                                content: TranslationItemContent(description: nDescDesp,
-                                                                                explanation: nDescExplanation)))
+        translations.append(Translation(description: nValueDesp, explanation: nValueExplanation,
+                                        bytesCount: self.is64Bit ? 8 : 4,
+                                        extraDescription: nValueExtraDesp, extraExplanation: nValueExtraExplanation,
+                                        hasDivider: true))
         
-        translaitonItems.append(TranslationItem(sourceDataRange: data.absoluteRange(8, is64Bit ? 8 : 4),
-                                                content: TranslationItemContent(description: nValueDesp, explanation: nValueExplanation,
-                                                                                extraDescription: nValueExtraDesp, extraExplanation: nValueExtraExplanation,
-                                                                                hasDivider: true)))
-        
-        self.translaitonItems = translaitonItems
+        return translations
     }
     
     static func flagsFrom(nDesc: UInt16, symbolType: SymbolType) -> [String] {
@@ -361,33 +361,4 @@ struct SymbolTableEntry: InterpretableModel {
         return flags
     }
     
-    func translationItem(at index: Int) -> TranslationItem {
-        
-        // string searching takes too much time. so make it lazy
-        if index == 0 {
-            let symbolName: String
-            if indexInStringTable == 0 {
-                symbolName = "" // if zero, means empty string
-            } else {
-                guard let symbolStringFromStringTable = macho?.stringInStringTable(at: Int(indexInStringTable)) else {
-                    fatalError() /* didn't find symbol string. unexpected */
-                }
-                symbolName = symbolStringFromStringTable
-            }
-            
-            return TranslationItem(sourceDataRange: indexInStringTableRange,
-                                   content: TranslationItemContent(description: "String table offset", explanation: indexInStringTable.hex,
-                                                                   extraDescription: "Symbol Name", extraExplanation: symbolName))
-        }
-        
-        return translaitonItems[index - 1]
-    }
-    
-    static func modelSize(is64Bit: Bool) -> Int {
-        return is64Bit ? 16 : 12
-    }
-    
-    static func numberOfTranslationItems() -> Int {
-        return 6
-    }
 }

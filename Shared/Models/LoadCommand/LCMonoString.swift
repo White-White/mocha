@@ -10,19 +10,20 @@ import Foundation
 class LCMonoString: LoadCommand {
     
     let stringOffset: UInt32
+    let stringLength: Int
     let string: String
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        let stringOffset =  translationStore.translate(next: .doubleWords,
-                                                     dataInterpreter: DataInterpreterPreset.UInt32,
-                                                     itemContentGenerator: { stringOffset in TranslationItemContent(description: "String Offset", explanation: stringOffset.hex) })
-        self.stringOffset = stringOffset
-        
-        self.string = translationStore.translate(next: .rawNumber(data.count - Int(stringOffset)),
-                                               dataInterpreter: { $0.utf8String ?? Log.warning("Failed to parse \(type.name). Debug me.") },
-                                               itemContentGenerator: { string in TranslationItemContent(description: "Content", explanation: string) })
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        self.stringOffset = data.subSequence(from: 8, count: 4).UInt32
+        self.stringLength = data.count - Int(self.stringOffset)
+        self.string = data.subSequence(from: Int(self.stringOffset)).utf8String ?? Log.warning("Failed to parse \(type.name). Debug me.")
+        super.init(data, type: type)
+    }
+    
+    override var commandTranslations: [Translation] {
+        return [
+            Translation(description: "String Offset", explanation: self.stringOffset.hex, bytesCount: 4),
+            Translation(description: "Content", explanation: string, bytesCount: self.stringLength)
+        ]
     }
 }

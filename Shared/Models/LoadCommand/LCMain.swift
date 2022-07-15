@@ -12,19 +12,15 @@ class LCMain: LoadCommand {
     let entryOffset: UInt64
     let stackSize: UInt64
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.entryOffset = translationStore.translate(next: .quadWords,
-                                                    dataInterpreter: { $0.UInt64 },
-                                                    itemContentGenerator: { entryOffset in TranslationItemContent(description: "Entry Offset (relative to __TEXT)",
-                                                                                                                  explanation: entryOffset.hex) })
-        
-        self.stackSize = translationStore.translate(next: .quadWords,
-                                                  dataInterpreter: { $0.UInt64 },
-                                                  itemContentGenerator: { stackSize in TranslationItemContent(description: "Stack Size",
-                                                                                                              explanation: stackSize.hex) })
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        self.entryOffset = data.subSequence(from: 8, count: 8).UInt64
+        self.stackSize = data.subSequence(from: 16, count: 8).UInt64
+        super.init(data, type: type)
     }
+    
+    override var commandTranslations: [Translation] {
+        return [Translation(description: "Entry Offset (relative to __TEXT)", explanation: entryOffset.hex, bytesCount: 8),
+                Translation(description: "Entry Offset (relative to __TEXT)", explanation: entryOffset.hex, bytesCount: 8)]
+    }
+    
 }

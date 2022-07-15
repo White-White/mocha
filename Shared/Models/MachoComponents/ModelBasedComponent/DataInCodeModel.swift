@@ -35,36 +35,22 @@ struct DataInCodeModel: InterpretableModel {
     let offset: UInt32
     let length: UInt16
     let kind: DataInCodeKind
-    let translationStore: TranslationStore
     
     init(with data: Data, is64Bit: Bool, macho: Macho) {
-
-        let translationStore = TranslationStore(data: data)
-        
-        self.offset = translationStore.translate(next: .doubleWords,
-                                               dataInterpreter: DataInterpreterPreset.UInt32,
-                                               itemContentGenerator: { offset in TranslationItemContent(description: "File Offset", explanation: offset.hex) })
-        
-        self.length = translationStore.translate(next: .word,
-                                               dataInterpreter: { $0.UInt16 },
-                                               itemContentGenerator: { length in TranslationItemContent(description: "Size", explanation: "\(length)") })
-        
-        self.kind = translationStore.translate(next: .word,
-                                             dataInterpreter: { DataInCodeKind(rawValue: $0.UInt16)! /* Unknown Kind. Unlikely */ },
-                                             itemContentGenerator: { kind in TranslationItemContent(description: "Kind", explanation: kind.name) })
-        
-        self.translationStore = translationStore
+        var dataShifter = DataShifter(data)
+        self.offset = dataShifter.shift(.doubleWords).UInt32
+        self.length = dataShifter.shift(.word).UInt16
+        self.kind = DataInCodeKind(rawValue: dataShifter.shift(.word).UInt16)! /* crash if unknown kind. unlikely */
     }
     
-    func translationItem(at index: Int) -> TranslationItem {
-        return translationStore.items[index]
+    var translations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "File Offset", explanation: self.offset.hex, bytesCount: Straddle.doubleWords.raw))
+        translations.append(Translation(description: "Size", explanation: "\(self.length)", bytesCount: Straddle.word.raw))
+        translations.append(Translation(description: "Kind", explanation: self.kind.name, bytesCount: Straddle.word.raw))
+        return translations
     }
     
-    static func modelSize(is64Bit: Bool) -> Int {
-        return 8
-    }
-    
-    static func numberOfTranslationItems() -> Int {
-        return 3
-    }
+    static var modelSizeFor64Bit: Int { 8 }
+    static var modelSizeFor32Bit: Int { 8 }
 }

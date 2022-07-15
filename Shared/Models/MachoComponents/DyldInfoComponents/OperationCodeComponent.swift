@@ -7,59 +7,25 @@
 
 import Foundation
 
-struct OperationCodeContainer<Code: OperationCodeProtocol> {
+class OperationCodeComponent<Code: OperationCodeMetadataProtocol>: MachoComponent {
     
     let operationCodes: [OperationCode<Code>]
-    let numberOfAccumulatedTransItems: [Int]
-    let numberOfTransItemsTotal: Int
     
-    init(operationCodes: [OperationCode<Code>]) {
-        self.operationCodes = operationCodes
-        var numberOfAccumulatedTransItems = [Int].init(repeating: 0, count: operationCodes.count)
-        for (index, operationCode) in operationCodes.enumerated() {
-            let accumulated = index == 0 ? 0 : numberOfAccumulatedTransItems[index - 1]
-            numberOfAccumulatedTransItems[index] = accumulated + operationCode.numberOfTranslationItems
-        }
-        self.numberOfAccumulatedTransItems = numberOfAccumulatedTransItems
-        self.numberOfTransItemsTotal = numberOfAccumulatedTransItems.last!
-    }
-}
-
-class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<OperationCodeContainer<Code>> {
-    
-    override var shouldPreload: Bool { true }
-    
-    override func generatePayload() -> OperationCodeContainer<Code> {
-        return OperationCodeComponent.operationCodes(from: self.data)
+    override init(_ data: Data, title: String, subTitle: String) {
+        self.operationCodes = OperationCodeComponent.operationCodes(from: data)
+        super.init(data, title: title, subTitle: subTitle)
     }
     
-    override func numberOfTranslationSections() -> Int {
-        return self.payload.numberOfTransItemsTotal
-    }
-    
-    override func numberOfTranslationItems(at section: Int) -> Int {
-        return 1
-    }
-    
-    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        let index = indexPath.section
-        for element in self.payload.numberOfAccumulatedTransItems.enumerated() {
-            let operationCode = self.payload.operationCodes[element.offset]
-            if index < element.element {
-                let numberOfTransItemsBeforeCurrent = element.element - operationCode.numberOfTranslationItems
-                return operationCode.translationItems[index - numberOfTransItemsBeforeCurrent]
-            }
-        }
-        fatalError()
+    override func createTranslations() -> [Translation] {
+        return self.operationCodes.flatMap { $0.translations }
     }
     
     // parsing
-    static func operationCodes(from rawData: Data) -> OperationCodeContainer<Code> {
+    static func operationCodes(from rawData: Data) -> [OperationCode<Code>] {
         
         var operationCodes: [OperationCode<Code>] = []
         var index: Int = 0
         while index < rawData.count {
-            let startIndexOfCurrentOperation = index
             let byte = rawData[rawData.startIndex+index]; index += 1
             let operationCodeValue = byte & 0xf0 // mask the most significant 4 bits
             let immediateValue = byte & 0x0f // mask the least significant 4 bits
@@ -87,7 +53,7 @@ class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<Op
                     delta |= signExtendMask << shift
                 }
                 
-                lebValues.append(DyldInfoLEB(absoluteRange:(rawData.startIndex+ulebStartIndex)..<(rawData.startIndex+index), raw: delta, isSigned: isSigned))
+                lebValues.append(DyldInfoLEB(byteCount:index-ulebStartIndex, raw: delta, isSigned: isSigned))
             }
             
             // trailing string
@@ -101,12 +67,9 @@ class OperationCodeComponent<Code: OperationCodeProtocol>: MachoLazyComponent<Op
                 cstringData = rawData[rawData.startIndex+cstringStartIndex..<rawData.startIndex+index]
             }
             
-            operationCodes.append(OperationCode<Code>(absoluteOffset:rawData.startIndex+startIndexOfCurrentOperation,
-                                                      operationCode: operationCode,
-                                                      lebValues: lebValues,
-                                                      cstringData: cstringData))
+            operationCodes.append(OperationCode<Code>.init(operationCode: operationCode, lebValues: lebValues, cstringData: cstringData))
         }
         
-        return OperationCodeContainer(operationCodes: operationCodes)
+        return operationCodes
     }
 }

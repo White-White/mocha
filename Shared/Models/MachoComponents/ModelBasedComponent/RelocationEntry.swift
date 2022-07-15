@@ -18,59 +18,45 @@ import Foundation
 //        r_type:4;    /* if not 0, machine specific relocation type */
 //};
 
-struct RelocationEntry: InterpretableModel {
+struct RelocationEntry {
+    
+    static let entrySize: Int = 8
     
     let address: UInt32
-    let symbolNum: UInt32 // 24 bits
-    let pcRelocated: Bool // 1 bit
-    let length: UInt8 // 2 bits
-    let isExternal: Bool // 1 bit
-    let type: UInt8 // 4
+    let symbolNum: UInt32
+    let pcRelocated: Bool
+    let length: UInt8
+    let isExternal: Bool
+    let type: UInt8
+    let sectionName: String
     
-    let translationStore: TranslationStore
-    
-    init(with data: Data, is64Bit: Bool, macho: Macho) {
+    init(with data: Data, sectionName: String) {
+        self.address = data.subSequence(from: .zero, count: Straddle.doubleWords.raw).UInt32
+        self.symbolNum = (data.subSequence(from: 4, count: 3) + [UInt8(0)]).UInt32
         
-        let translationStore = TranslationStore(data: data)
-        
-        self.address = translationStore.translate(next: .doubleWords,
-                                                dataInterpreter: DataInterpreterPreset.UInt32,
-                                                itemContentGenerator: { value in TranslationItemContent(description: "Address", explanation: value.hex) })
-        
-        self.symbolNum = translationStore.translate(next: .rawNumber(3),
-                                                  dataInterpreter: { ([UInt8(0)] + $0).UInt32 },
-                                                  itemContentGenerator: { value in TranslationItemContent(description: "symbolNum", explanation: "\(value)") })
-        
-        let rangeOfLastByte = data.absoluteRange(7, 1)
         let lastByte = data.subSequence(from: 7, count: 1).UInt8
         
-        let pcRelocated = (lastByte & 0b10000000) != 0
-        self.pcRelocated = pcRelocated
-        
-        let length = UInt8((lastByte & 0b01100000) >> 4)
-        self.length = length
-        
-        let isExternal = (lastByte & 0b00010000) != 0
-        self.isExternal = isExternal
-        
-        let type = UInt8((lastByte & 0b00001111) >> 4)
+        let type = (lastByte & 0b11110000) >> 4
         self.type = type
         
-        translationStore.append(TranslationItemContent(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)"),
-                              forRange: rangeOfLastByte)
+        let isExternal = (lastByte & 0b00001000) != 0
+        self.isExternal = isExternal
         
-        self.translationStore = translationStore
+        let powerOfLength = (lastByte & 0b00000110) >> 1
+        self.length = 0b00000001 << powerOfLength
+        
+        let pcRelocated = (lastByte & 0b00000001) != 0
+        self.pcRelocated = pcRelocated
+        
+        self.sectionName = sectionName
     }
     
-    func translationItem(at index: Int) -> TranslationItem {
-        return translationStore.items[index]
-    }
-
-    static func modelSize(is64Bit: Bool) -> Int {
-        return 8
+    var translations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "Address", explanation: self.address.hex, bytesCount: 4))
+        translations.append(Translation(description: "SymbolNum", explanation: self.symbolNum.hex, bytesCount: 3))
+        translations.append(Translation(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)", bytesCount: 1))
+        return translations
     }
     
-    static func numberOfTranslationItems() -> Int {
-        return 1
-    }
 }

@@ -14,155 +14,38 @@ class LCSymbolTable: LoadCommand {
     let stringTableOffset: UInt32
     let sizeOfStringTable: UInt32
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.symbolTableOffset = translationStore.translate(next: .doubleWords,
-                                                          dataInterpreter: DataInterpreterPreset.UInt32,
-                                                          itemContentGenerator: { value in TranslationItemContent(description: "Symbol table offset", explanation: value.hex) })
-        
-        self.numberOfSymbolTableEntries = translationStore.translate(next: .doubleWords,
-                                                                   dataInterpreter: DataInterpreterPreset.UInt32,
-                                                                   itemContentGenerator: { value in TranslationItemContent(description: "Number of entries", explanation: "\(value)") })
-        
-        self.stringTableOffset = translationStore.translate(next: .doubleWords,
-                                                          dataInterpreter: DataInterpreterPreset.UInt32,
-                                                          itemContentGenerator: { value in TranslationItemContent(description: "String table offset", explanation: value.hex) })
-        
-        self.sizeOfStringTable = translationStore.translate(next: .doubleWords,
-                                                          dataInterpreter: DataInterpreterPreset.UInt32,
-                                                          itemContentGenerator: { value in TranslationItemContent(description: "Size of string table", explanation: value.hex) })
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        var dataShifter = DataShifter(data); dataShifter.skip(.quadWords)
+        self.symbolTableOffset = dataShifter.shiftUInt32()
+        self.numberOfSymbolTableEntries = dataShifter.shiftUInt32()
+        self.stringTableOffset = dataShifter.shiftUInt32()
+        self.sizeOfStringTable = dataShifter.shiftUInt32()
+        super.init(data, type: type)
     }
-}
-
-class LCDynamicSymbolTable: LoadCommand {
-    let ilocalsym: UInt32       /* index to local symbols */
-    let nlocalsym: UInt32       /* number of local symbols */
     
-    let iextdefsym: UInt32      /* index to externally defined symbols */
-    let nextdefsym: UInt32      /* number of externally defined symbols */
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "Symbol table offset", explanation: self.symbolTableOffset.hex, bytesCount: 4))
+        translations.append(Translation(description: "Number of entries", explanation: "\(self.numberOfSymbolTableEntries)", bytesCount: 4))
+        translations.append(Translation(description: "String table offset", explanation: self.stringTableOffset.hex, bytesCount: 4))
+        translations.append(Translation(description: "Size of string table", explanation: self.sizeOfStringTable.hex, bytesCount: 4))
+        return translations
+    }
     
-    let iundefsym: UInt32       /* index to undefined symbols */
-    let nundefsym: UInt32       /* number of undefined symbols */
+    func symbolTable(machoData: Data, machoHeader: MachoHeader) -> SymbolTable {
+        let is64Bit = machoHeader.is64Bit
+        let symbolTableStartOffset = Int(self.symbolTableOffset)
+        let numberOfEntries = Int(self.numberOfSymbolTableEntries)
+        let entrySize = is64Bit ? 16 : 12
+        let symbolTableData = machoData.subSequence(from: symbolTableStartOffset, count: numberOfEntries * entrySize)
+        return SymbolTable(symbolTableData, title: "Symbol Table", subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+    }
     
-    let tocoff: UInt32          /* file offset to table of contents */
-    let ntoc: UInt32            /* number of entries in table of contents */
-    
-    let modtaboff: UInt32       /* file offset to module table */
-    let nmodtab: UInt32         /* number of module table entries */
-    
-    let extrefsymoff: UInt32    /* offset to referenced symbol table */
-    let nextrefsyms: UInt32     /* number of referenced symbol table entries */
-    
-    let indirectsymoff: UInt32  /* file offset to the indirect symbol table */
-    let nindirectsyms: UInt32   /* number of indirect symbol table entries */
-    
-    let extreloff: UInt32       /* offset to external relocation entries */
-    let nextrel: UInt32         /* number of external relocation entries */
-    
-    let locreloff: UInt32       /* offset to local relocation entries */
-    let nlocrel: UInt32         /* number of local relocation entries */
-    
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.ilocalsym =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Start Index of Local Symbols ",
-                                                                                         explanation: "\(value)") })
-        
-        self.nlocalsym =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Number of Local Symbols ", explanation: "\(value)") })
-        
-        self.iextdefsym =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Start Index of External Defined Symbols ",
-                                                                                         explanation: "\(value)") })
-        
-        self.nextdefsym =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Number of External Defined Symbols ", explanation: "\(value)") })
-        
-        self.iundefsym =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Start Index of Undefined Symbols ",
-                                                                                         explanation: "\(value)") })
-        
-        self.nundefsym =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Number of Undefined Symbols ", explanation: "\(value)") })
-        
-        self.tocoff =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "file offset to table of contents ", explanation: "\(value.hex)") })
-        
-        self.ntoc =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of entries in table of contents ", explanation: "\(value)") })
-        
-        self.modtaboff =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "file offset to module table ", explanation: "\(value.hex)") })
-        
-        self.nmodtab =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of module table entries ", explanation: "\(value)") })
-        
-        self.extrefsymoff =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "offset to referenced symbol table ", explanation: "\(value.hex)") })
-        
-        self.nextrefsyms =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of referenced symbol table entries ", explanation: "\(value)") })
-        
-        self.indirectsymoff =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "file offset to the indirect symbol table ", explanation: "\(value.hex)") })
-        
-        self.nindirectsyms =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of indirect symbol table entries ", explanation: "\(value)") })
-        
-        self.extreloff =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "offset to external relocation entries ", explanation: "\(value.hex)") })
-        
-        self.nextrel =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of external relocation entries ", explanation: "\(value)") })
-        
-        self.locreloff =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "offset to local relocation entries ", explanation: "\(value.hex)") })
-        
-        self.nlocrel =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "number of local relocation entries ", explanation: "\(value)") })
-        
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    func stringTable(machoData: Data) -> StringTable {
+        let stringTableStartOffset = Int(self.stringTableOffset)
+        let stringTableSize = Int(self.sizeOfStringTable)
+        let stringTableData = machoData.subSequence(from: stringTableStartOffset, count: stringTableSize)
+        return StringTable(stringTableData, title: "String Table", subTitle: Constants.segmentNameLINKEDIT, virtualAddress: 0, demanglingCString: false)
     }
     
 }

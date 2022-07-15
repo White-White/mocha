@@ -42,19 +42,37 @@ class LCLinkedITData: LoadCommand {
         }
     }
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.containedDataFileOffset =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32,
-                                   itemContentGenerator: { fileOffset in TranslationItemContent(description: "File Offset", explanation: fileOffset.hex) })
-        
-        self.containedDataSize =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32,
-                                   itemContentGenerator: { dataSize in TranslationItemContent(description: "Size", explanation: dataSize.hex) })
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        self.containedDataFileOffset = data.subSequence(from: 8, count: 4).UInt32
+        self.containedDataSize = data.subSequence(from: 12, count: 4).UInt32
+        super.init(data, type: type)
+    }
+    
+    override var commandTranslations: [Translation] {
+        return [
+            Translation(description: "File Offset", explanation: self.containedDataFileOffset.hex, bytesCount: 4),
+            Translation(description: "Size", explanation: self.containedDataSize.hex, bytesCount: 4)
+        ]
+    }
+    
+    func linkedITComponent(machoData:Data, machoHeader: MachoHeader, textSegmentLoadCommand: LCSegment?) -> MachoComponent {
+        let is64Bit = machoHeader.is64Bit
+        let data = machoData.subSequence(from: Int(self.containedDataFileOffset), count: Int(self.containedDataSize))
+        switch self.type {
+        case .dataInCode:
+            return ModelBasedComponent<DataInCodeModel>(data, title: self.dataName, subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+        case .codeSignature:
+            // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
+            // FIXME: better parsing
+            return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+        case .functionStarts:
+            guard let textSegment = textSegmentLoadCommand else { fatalError() /* where there is function starts, there must be text segment */ }
+            return FunctionStartsComponent(data, title: self.dataName, textSegmentVirtualAddress: textSegment.vmaddr)
+        case .dyldExportsTrie:
+            return ExportInfoComponent(data, title: self.dataName, subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+        default:
+            print("Unknow how to parse \(self.type.name). Please contact the author.") // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
+            return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+        }
     }
 }

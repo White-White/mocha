@@ -24,7 +24,7 @@ struct MachoMetaData: Identifiable, Equatable {
     let machoData: Data
     var machoFileSize: Int { machoData.count }
     let machoHeader: MachoHeader
-    var macho: Macho { Macho(with: machoData, machoFileName: fileName, header: machoHeader) }
+    var macho: Macho { Macho(with: machoData, machoFileName: fileName, machoHeader: machoHeader) }
     
     init(fileName: String, machoData: Data) throws {
         self.fileName = fileName

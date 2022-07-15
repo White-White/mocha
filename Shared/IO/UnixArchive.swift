@@ -41,7 +41,7 @@ struct UnixArchiveFileHeader {
         // 4.4BSD ar stores extended filenames by placing the string "#1/" followed by the file name length in the file name field,
         // and storing the real filename in front of the data section.
         if fileID.hasPrefix("#1/") {
-            guard let extFileIDLength = fileIDData.select(from: 3, length: 13).utf8String else { fatalError() /* Very unlikely */ }
+            guard let extFileIDLength = fileIDData.subSequence(from: 3, count: 13).utf8String else { fatalError() /* Very unlikely */ }
             guard let extFileIDLengthInt = Int(extFileIDLength.spaceRemoved) else { fatalError() /* Very unlikely */ }
             // fetch more data from the ar file dataShifter
             guard let extendedFileID = dataShifter.shift(.rawNumber(extFileIDLengthInt)).utf8String else { fatalError() /* Very unlikely */ }

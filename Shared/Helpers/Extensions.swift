@@ -19,14 +19,7 @@ extension Data {
     var UInt16: Swift.UInt16 { cast(to: Swift.UInt16.self) }
     var UInt32: Swift.UInt32 { cast(to: Swift.UInt32.self) }
     var UInt64: Swift.UInt64 { cast(to: Swift.UInt64.self) }
-    
-    func select(from: Data.Index, length: Data.Index) -> Self {
-        return self[self.startIndex+from..<self.startIndex+from+length]
-    }
-    
-    var utf8String: String? {
-        return String(data: self, encoding: .utf8)
-    }
+    var utf8String: String? { String(data: self, encoding: .utf8) }
     
     func subSequence(from: Int, maxCount: Int) -> Data {
         if from + maxCount > self.count {
@@ -49,19 +42,14 @@ extension Data {
         }
     }
     
-    func absoluteRange(_ start: Int, _ length: Int) -> Range<Int> {
-        return self.startIndex+start..<self.startIndex+start+length
-    }
-    
-    func absoluteRange(_ relativeRange: Range<Int>) -> Range<Int> {
-        return self.startIndex+relativeRange.lowerBound..<self.startIndex+relativeRange.upperBound
-    }
 }
 
 extension String {
+    
     var spaceRemoved: String {
         return self.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\0", with: "")
     }
+    
 }
 
 extension Int {
@@ -88,29 +76,23 @@ extension UInt64 {
     func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
 
-class Utils {
-    
-    struct TickTock {
-        let time = CACurrentMediaTime() * 1000
-        let name: String
-    }
-    
-    static func makeRange(start: Int, length: Int) -> Range<Int> {
-        return start..<start+length
-    }
-    static func range(after range: Range<Int>, distance: Int = 0, length: Int) -> Range<Int> {
-        guard length != 0 else { fatalError() }
-        return range.upperBound+distance..<range.upperBound+distance+length
-    }
-    
-    static func tick(_ name: String) -> TickTock {
-        return TickTock(name: name)
-    }
-    
-    static func tock(_ tickTock: TickTock) {
-        let timeGap = CACurrentMediaTime() * 1000 - tickTock.time
-        print("\n \(tickTock.name)'s Time Usage:")
-        print("--- \(timeGap) ms. ---")
+extension RandomAccessCollection {
+    /// Finds such index N that predicate is true for all elements up to
+    /// but not including the index N, and is false for all elements
+    /// starting with index N.
+    /// Behavior is undefined if there is no such N.
+    func binarySearch(predicate: (Element) -> Bool) -> Index {
+        var low = startIndex
+        var high = endIndex
+        while low != high {
+            let mid = index(low, offsetBy: distance(from: low, to: high)/2)
+            if predicate(self[mid]) {
+                low = index(after: mid)
+            } else {
+                high = mid
+            }
+        }
+        return low
     }
 }
 

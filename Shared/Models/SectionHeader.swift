@@ -129,96 +129,99 @@ struct SectionHeader {
     let reserved1: UInt32
     let reserved2: UInt32
     let reserved3: UInt32? // exists only for 64 bit
-    
     let is64Bit: Bool
-    let data: Data
-    let translationStore: TranslationStore
-
+    
     init(is64Bit: Bool, data: Data) {
         self.is64Bit = is64Bit
-        self.data = data
-        
-        let translationStore = TranslationStore(data: data)
-        
-        self.section =
-        translationStore.translate(next: .rawNumber(16),
-                                 dataInterpreter: { $0.utf8String!.spaceRemoved /* Very unlikely crash */ },
-                                 itemContentGenerator: { string in TranslationItemContent(description: "Section Name", explanation: string) })
-        
-        self.segment =
-        translationStore.translate(next: .rawNumber(16),
-                                 dataInterpreter: { $0.utf8String!.spaceRemoved /* Very unlikely crash */ },
-                                 itemContentGenerator: { string in TranslationItemContent(description: "Segment Name", explanation: string) })
-        
-        self.addr =
-        translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                 dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Virtual Address", explanation: value.hex) })
-        
-        self.size =
-        translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                 dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Section Size", explanation: value.hex) })
-        
-        self.offset =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
-        
-        self.align =
-        translationStore.translate(next: .doubleWords,
-                                 dataInterpreter: DataInterpreterPreset.UInt32,
-                                 itemContentGenerator: { value in TranslationItemContent(description: "Align", explanation: "\(value)") })
-        
-        let relocValues: (UInt32, UInt32) =
-        translationStore.translate(next: .quadWords,
-                                   dataInterpreter: { data in (data.select(from: 0, length: 4).UInt32, data.select(from: 4, length: 4).UInt32) },
-                                   itemContentGenerator: { values in TranslationItemContent(description: "Reloc Entry Offset / Number", explanation: values.0.hex + " / \(values.1)") })
-        self.fileOffsetOfRelocationEntries = relocValues.0
-        self.numberOfRelocatioEntries = relocValues.1
-        
-        // parse flags
-        let flags = data.subSequence(from: translationStore.translated, count: 4).UInt32
-        let rangeOfNextDWords = data.absoluteRange(translationStore.translated, 4)
-        
-        let sectionTypeRawValue = flags & 0x000000ff
-        guard let sectionType = SectionType(rawValue: sectionTypeRawValue) else {
-            print("Unknown section type with raw value: \(sectionTypeRawValue). Contact the author.")
-            fatalError()
-        }
-        self.sectionType = sectionType
-        translationStore.append(TranslationItemContent(description: "Section Type", explanation: "\(sectionType)"), forRange: rangeOfNextDWords)
-        
-        let sectionAttributesRaw = flags & 0xffffff00 // section attributes mask
-        let sectionAttributes =  SectionAttributes(raw: sectionAttributesRaw)
-        translationStore.append(TranslationItemContent(description: "Section Attributes", explanation: sectionAttributes.descriptions.joined(separator: "\n")), forRange: rangeOfNextDWords)
-        self.sectionAttributes = sectionAttributes
-        
-        _ = translationStore.skip(.doubleWords)
-        
-        var reserved1Description = "reserved1"
-        if sectionType.hasIndirectSymbolTableEntries { reserved1Description = "Indirect Symbol Table Index" }
-        
-        var reserved2Description = "reserved2"
-        if sectionType == .S_SYMBOL_STUBS { reserved2Description = "Stub Size" }
-        
-        let reservedValue: (UInt32, UInt32, UInt32?) =
-        translationStore.translate(next: .rawNumber(is64Bit ? 12 : 8),
-                                   dataInterpreter: { data -> (UInt32, UInt32, UInt32?) in (data.select(from: 0, length: 4).UInt32,
-                                                                                            data.select(from: 4, length: 4).UInt32,
-                                                                                            is64Bit ? data.select(from: 8, length: 4).UInt32 : nil) },
-                                   itemContentGenerator: { values in TranslationItemContent(description: "\(reserved1Description) / \(reserved2Description)" + (values.2 == nil ? "" : " / reserved3"),
-                                                                                            explanation: "\(values.0) / \(values.1)" + (values.2 == nil ? "" : " / \(values.2!)"),
-                                                                                            hasDivider: true) })
-        
-        self.reserved1 = reservedValue.0
-        self.reserved2 = reservedValue.1
-        self.reserved3 = reservedValue.2
-        
-        self.translationStore = translationStore
+        var dataShifter = DataShifter(data)
+        self.section = dataShifter.shift(.rawNumber(16)).utf8String!.spaceRemoved /* Very unlikely crash */
+        self.segment = dataShifter.shift(.rawNumber(16)).utf8String!.spaceRemoved /* Very unlikely crash */
+        self.addr = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        self.size = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        self.offset = dataShifter.shiftUInt32()
+        self.align = dataShifter.shiftUInt32()
+        self.fileOffsetOfRelocationEntries = dataShifter.shiftUInt32()
+        self.numberOfRelocatioEntries = dataShifter.shiftUInt32()
+        let flags = dataShifter.shiftUInt32()
+        self.sectionType = SectionType(rawValue: flags & 0x000000ff)! /* unlikely to crash */
+        self.sectionAttributes = SectionAttributes(raw: flags & 0xffffff00 /* section attributes mask */)
+        self.reserved1 = dataShifter.shiftUInt32()
+        self.reserved2 = dataShifter.shiftUInt32()
+        self.reserved3 = is64Bit ? dataShifter.shiftUInt32() : nil
     }
     
-    static func numberOfTranslationItems(is64Bit: Bool) -> Int {
-        return 10
+    func getTranslations() -> [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "Section Name", explanation: self.section, bytesCount: 16))
+        translations.append(Translation(description: "Segment Name", explanation: self.segment, bytesCount: 16))
+        translations.append(Translation(description: "Virtual Address", explanation: self.addr.hex, bytesCount: self.is64Bit ? 8 : 4))
+        translations.append(Translation(description: "Section Size", explanation: self.size.hex, bytesCount: self.is64Bit ? 8 : 4))
+        translations.append(Translation(description: "File Offset", explanation: self.offset.hex, bytesCount: 4))
+        translations.append(Translation(description: "Align", explanation: "\(self.align)", bytesCount: 4))
+        translations.append(Translation(description: "Reloc Entry Offset / Number", explanation: self.fileOffsetOfRelocationEntries.hex + " / \(self.numberOfRelocatioEntries)", bytesCount: 8))
+        translations.append(Translation(description: "Section Type", explanation: "\(self.sectionType)", bytesCount: 1))
+        translations.append(Translation(description: "Section Attributes", explanation: self.sectionAttributes.descriptions.joined(separator: "\n"), bytesCount: 7))
+        translations.append(Translation(description: self.sectionType.hasIndirectSymbolTableEntries ? "Indirect Symbol Table Index" : "reserved1", explanation: self.reserved1.hex, bytesCount: 4))
+        translations.append(Translation(description: self.sectionType == .S_SYMBOL_STUBS ? "Stub Size" : "reserved2", explanation: self.reserved2.hex, bytesCount: 4))
+        if let reserved3 = self.reserved3 { translations.append(Translation(description: "reserved3", explanation: reserved3.hex, bytesCount: 4)) }
+        return translations
     }
+    
+    func sectionComponent(machoData: Data, machoHeader: MachoHeader) -> MachoComponent {
+        
+        let is64Bit = machoHeader.is64Bit
+        let title = "Section"
+        let subTitle = self.segment + "," + self.section
+        
+        // recognize section by section type
+        switch self.sectionType {
+        case .S_ZEROFILL, .S_THREAD_LOCAL_ZEROFILL, .S_GB_ZEROFILL:
+            // ref: https://lists.llvm.org/pipermail/llvm-commits/Week-of-Mon-20151207/319108.html
+            /* code snipet from llvm
+             inline bool isZeroFillSection(SectionType T) {
+             return (T == llvm::MachO::S_ZEROFILL ||
+             T == llvm::MachO::S_THREAD_LOCAL_ZEROFILL);
+             }
+             */
+            return MachoZeroFilledComponent(runtimeSize: Int(self.size), title: title, subTitle: subTitle)
+            
+        case .S_CSTRING_LITERALS:
+            let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
+            let cStringComponent = CStringComponent(data, title: title, subTitle: subTitle, virtualAddress: self.addr, demanglingCString: true)
+            return cStringComponent
+        case .S_LITERAL_POINTERS:
+            let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
+            return LiteralPointerComponent(data, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        case .S_LAZY_SYMBOL_POINTERS, .S_NON_LAZY_SYMBOL_POINTERS, .S_LAZY_DYLIB_SYMBOL_POINTERS:
+            let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
+            return SymbolPointerComponent(data, is64Bit: is64Bit, title: title, subTitle: subTitle, sectionHeader: self)
+        default:
+            break
+        }
+        
+        // recognize section by section attributes
+        if self.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
+            let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
+            return InstructionComponent(data, title: title, subTitle: subTitle, cpuType: machoHeader.cpuType)
+        }
+        
+        // recognize section by section name
+        let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
+        switch self.segment {
+        case Constants.sectionNameTEXT:
+            switch self.section {
+            case Constants.sectionNameUString:
+                return UStringComponent(data, title: title, subTitle: subTitle)
+            case "__swift5_reflstr":
+                // https://knight.sc/reverse%20engineering/2019/07/17/swift-metadata.html
+                // a great article on introducing swift metadata sections
+                return CStringComponent(data, title: title, subTitle: subTitle, virtualAddress: self.addr, demanglingCString: false)
+            default:
+                return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+            }
+        default:
+            return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+        }
+    }
+    
 }

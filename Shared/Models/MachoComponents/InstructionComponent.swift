@@ -7,14 +7,16 @@
 
 import Foundation
 
-class InstructionComponent: MachoLazyComponent<[CapStoneInstruction]> {
+// ARMv8 (AArch64) Instruction Encoding
+// http://kitoslab-eng.blogspot.com/2012/10/armv8-aarch64-instruction-encoding.html
 
-    override var shouldPreload: Bool { true }
+class InstructionComponent: MachoComponent {
+
     let capStoneArchType: CapStoneArchType
+    private var instructions: [CapStoneInstruction] = []
     
-    override init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
+    init(_ data: Data, title: String, subTitle: String, cpuType: CPUType) {
         let capStoneArchType: CapStoneArchType
-        let cpuType = macho.cpuType
         switch cpuType {
         case .x86:
             capStoneArchType = .I386
@@ -30,28 +32,15 @@ class InstructionComponent: MachoLazyComponent<[CapStoneInstruction]> {
             fatalError() /* unknown code */
         }
         self.capStoneArchType = capStoneArchType
-        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, title: title, subTitle: subTitle)
     }
     
-    override func generatePayload() -> [CapStoneInstruction] {
-        return CapStoneHelper.instructions(from: data, arch: capStoneArchType)
+    override func initialize() {
+        self.instructions = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType)
     }
     
-    override func numberOfTranslationSections() -> Int {
-        return self.payload.count
+    override func createTranslations() -> [Translation] {
+        return self.instructions.map { Translation(description: "Assembly", explanation: $0.mnemonic + "  " + $0.operand, bytesCount: $0.length) }
     }
     
-    override func numberOfTranslationItems(at section: Int) -> Int {
-        return 1
-    }
-    
-    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        let instruction = self.payload[indexPath.section]
-        return TranslationItem(sourceDataRange: self.data.absoluteRange(instruction.startOffset, instruction.length),
-                               content: TranslationItemContent(description: "Assembly",
-                                                               explanation: instruction.mnemonic + "    " + instruction.operand))
-    }
 }
-
-// ARMv8 (AArch64) Instruction Encoding
-// http://kitoslab-eng.blogspot.com/2012/10/armv8-aarch64-instruction-encoding.html

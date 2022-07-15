@@ -47,86 +47,66 @@ class LCSegment: LoadCommand {
     let flags: UInt32
     let sectionHeaders: [SectionHeader]
     
-    override var componentSubTitle: String { type.name + " (\(segmentName))" }
-    
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
+    init(with type: LoadCommandType, data: Data) {
         let is64Bit = type == LoadCommandType.segment64
         self.is64Bit = is64Bit
         
-        self.segmentName = translationStore.translate(next: .rawNumber(16),
-                                                    dataInterpreter: { $0.utf8String!.spaceRemoved /* Unlikely Error */ },
-                                                        itemContentGenerator: { segmentName in TranslationItemContent(description: "Segment Name", explanation: segmentName) })
-        
-        self.vmaddr = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                                 dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Virtual Memory Start Address", explanation: value.hex) })
-        
-        self.vmsize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                               dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Virtual Memory Size", explanation: value.hex) })
-        
-        self.segmentFileOff = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                                         dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
-                                                         itemContentGenerator: { value in TranslationItemContent(description: "File Offset", explanation: value.hex) })
-        
-        self.segmentSize = translationStore.translate(next: (is64Bit ? .quadWords : .doubleWords),
-                                               dataInterpreter: { is64Bit ? $0.UInt64 : UInt64($0.UInt32) },
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Size to Map into Memory", explanation: value.hex) })
-        
-        self.maxprot = translationStore.translate(next: .doubleWords,
-                                               dataInterpreter: DataInterpreterPreset.UInt32,
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Maximum VM Protection", explanation: VMProtection(raw: value).explanation) })
-        
-        self.initprot = translationStore.translate(next: .doubleWords,
-                                               dataInterpreter: DataInterpreterPreset.UInt32,
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Initial VM Protection", explanation: VMProtection(raw: value).explanation) })
-        
-        self.numberOfSections = translationStore.translate(next: .doubleWords,
-                                               dataInterpreter: DataInterpreterPreset.UInt32,
-                                               itemContentGenerator: { value in TranslationItemContent(description: "Number of Sections", explanation: "\(value)") })
-        
-        self.flags = translationStore.translate(next: .doubleWords,
-                                              dataInterpreter: { $0.UInt32 },
-                                              itemContentGenerator: { flags in TranslationItemContent(description: "Flags",
-                                                                                                      explanation: LCSegment.flags(for: flags),
-                                                                                                      hasDivider: true) })
+        var dataShifter = DataShifter(data); dataShifter.skip(.quadWords)
+        self.segmentName = dataShifter.shift(.rawNumber(16)).utf8String!.spaceRemoved /* Unlikely Error */
+        self.vmaddr = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        self.vmsize = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        self.segmentFileOff = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        self.segmentSize = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        self.maxprot = dataShifter.shiftUInt32()
+        self.initprot = dataShifter.shiftUInt32()
+        self.numberOfSections = dataShifter.shiftUInt32()
+        self.flags = dataShifter.shiftUInt32()
         
         var sectionHeaders: [SectionHeader] = []
-        for index in 0..<Int(numberOfSections) {
+        while dataShifter.shiftable {
             // section header data length for 32-bit is 68, and 64-bit 80
-            let sectionHeaderLength = is64Bit ? 80 : 68
-            let segmentCommandSize = is64Bit ? 72 : 56
-            let sectionHeaderData = data.subSequence(from: segmentCommandSize + index * sectionHeaderLength, count: sectionHeaderLength)
-            let sectionHeader = SectionHeader(is64Bit: is64Bit, data: sectionHeaderData)
-            sectionHeaders.append(sectionHeader)
+            sectionHeaders.append(SectionHeader(is64Bit: is64Bit, data: dataShifter.shift(.rawNumber(is64Bit ? 80 : 68))))
         }
+        guard sectionHeaders.count == Int(self.numberOfSections) else { fatalError() }
         self.sectionHeaders = sectionHeaders
+        super.init(data, type: type, title: type.name + " (\(segmentName))")
+    }
+    
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "Segment Name", explanation: self.segmentName, bytesCount: 16))
+        translations.append(Translation(description: "Virtual Memory Start Address", explanation: self.vmaddr.hex, bytesCount: self.is64Bit ? 8 : 4))
+        translations.append(Translation(description: "Virtual Memory Size", explanation: self.vmsize.hex, bytesCount: self.is64Bit ? 8 : 4))
+        translations.append(Translation(description: "File Offset", explanation: self.segmentFileOff.hex, bytesCount: self.is64Bit ? 8 : 4))
+        translations.append(Translation(description: "Size to Map into Memory", explanation: self.segmentSize.hex, bytesCount: self.is64Bit ? 8 : 4))
+        translations.append(Translation(description: "Maximum VM Protection", explanation: VMProtection(raw: self.maxprot).explanation, bytesCount: 4))
+        translations.append(Translation(description: "Initial VM Protection", explanation: VMProtection(raw: self.initprot).explanation, bytesCount: 4))
+        translations.append(Translation(description: "Number of Sections", explanation: "\(self.numberOfSections)", bytesCount: 4))
+        translations.append(Translation(description: "Flags", explanation: LCSegment.flags(for: self.flags), bytesCount: 4))
+        return translations + self.sectionHeaders.flatMap { $0.getTranslations() }
+    }
+    
+    func relocationTable(machoData: Data, machoHeader: MachoHeader) -> RelocationTable? {
+        var startOffsetInMacho: Int?
+        var numberOfAllEntries: Int = 0
         
-        super.init(with: type, data: data, translationStore: translationStore)
-    }
-    
-    override func numberOfTranslationSections() -> Int {
-        return super.numberOfTranslationSections() + sectionHeaders.count
-    }
-    
-    override func numberOfTranslationItems(at section: Int) -> Int {
-        switch section {
-        case 0:
-            return super.numberOfTranslationItems(at: section)
-        default:
-            return SectionHeader.numberOfTranslationItems(is64Bit: self.is64Bit)
+        var relocationInfos: [RelocationInfo] = []
+        self.sectionHeaders.forEach {
+            let fileOffsetOfRelocationEntries = Int($0.fileOffsetOfRelocationEntries)
+            let numberOfRelocatioEntries = Int($0.numberOfRelocatioEntries)
+            if fileOffsetOfRelocationEntries == 0 || numberOfRelocatioEntries == 0 { return }
+            if let startOffsetInMacho = startOffsetInMacho {
+                guard startOffsetInMacho + (numberOfAllEntries * RelocationEntry.entrySize) == fileOffsetOfRelocationEntries else { fatalError() }
+            } else {
+                startOffsetInMacho = fileOffsetOfRelocationEntries
+            }
+            numberOfAllEntries += numberOfRelocatioEntries
+            relocationInfos.append(RelocationInfo(numberOfEntries: numberOfRelocatioEntries, sectionName: $0.section))
         }
-    }
-    
-    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        switch indexPath.section {
-        case 0:
-            return super.translationItem(at: indexPath)
-        default:
-            return self.sectionHeaders[indexPath.section - 1].translationStore.items[indexPath.item]
-        }
+        guard let startOffsetInMacho = startOffsetInMacho, !relocationInfos.isEmpty else { return nil }
+        
+        let relocationData = machoData.subSequence(from: startOffsetInMacho, count: RelocationEntry.entrySize * numberOfAllEntries)
+        return RelocationTable(data: relocationData, segmentTitle: self.segmentName, relocationInfos: relocationInfos)
     }
     
     static func flags(for flags: UInt32) -> String {
@@ -150,17 +130,11 @@ class LCSegment: LoadCommand {
         
         var ret: [String] = []
         if (flags & 0x1 != 0) { ret.append("SG_HIGHVM") }
-        
         if (flags & 0x2 != 0) { ret.append("SG_FVMLIB") }
-        
         if (flags & 0x4 != 0) { ret.append("SG_NORELOC") }
-        
         if (flags & 0x8 != 0) { ret.append("SG_PROTECTED_VERSION_1") }
-        
         if (flags & 0x10 != 0) { ret.append("SG_READ_ONLY") }
-            
         if ret.isEmpty { ret.append("NONE") }
-    
         return ret.joined(separator: "\n")
     }
 }

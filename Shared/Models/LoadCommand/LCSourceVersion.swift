@@ -11,14 +11,13 @@ class LCSourceVersion: LoadCommand {
     
     let version: String
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.version = translationStore.translate(next: .quadWords,
-                                                dataInterpreter: { LCSourceVersion.versionString(from: $0.UInt64) },
-                                                itemContentGenerator: { version in TranslationItemContent(description: "Source Version", explanation: version) })
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        self.version = LCSourceVersion.versionString(from: data.subSequence(from: 8, count: 8).UInt64)
+        super.init(data, type: type)
+    }
+    
+    override var commandTranslations: [Translation] {
+        return [Translation(description: "Source Version", explanation: self.version, bytesCount: 8)]
     }
     
     static func versionString(from versionValue: UInt64) -> String {
@@ -31,4 +30,5 @@ class LCSourceVersion: LoadCommand {
         let a = versionValue >> 40
         return String(format: "%d.%d.%d.%d.%d", a, b, c, d, e)
     }
+    
 }

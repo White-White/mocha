@@ -7,18 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F0F1AAF2881389D00C4815B /* HexFiendUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F0F1AAE2881389D00C4815B /* HexFiendUtil.m */; };
 		1F118CC62879185B0071C107 /* HexFiendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CC52879185B0071C107 /* HexFiendView.swift */; };
 		1F118CC828791EB20071C107 /* HexFiend.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC5CEB5287915E500F9A09F /* HexFiend.framework */; };
 		1F118CC928791EB20071C107 /* HexFiend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC5CEB5287915E500F9A09F /* HexFiend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1F118CE7287AD12D0071C107 /* SymbolTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CE6287AD12D0071C107 /* SymbolTable.swift */; };
+		1F118CEB287AD2170071C107 /* StringTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CEA287AD2170071C107 /* StringTable.swift */; };
+		1F118CED287AD51F0071C107 /* PointerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CEC287AD51F0071C107 /* PointerComponent.swift */; };
+		1F118CF1287ADC1B0071C107 /* IndirectSymbolTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CF0287ADC1B0071C107 /* IndirectSymbolTable.swift */; };
+		1F118CF7287BCE070071C107 /* Translation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CF6287BCE070071C107 /* Translation.swift */; };
+		1F118CFB287BD10D0071C107 /* ModelBasedComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118CFA287BD10D0071C107 /* ModelBasedComponent.swift */; };
+		1F118D1E287C74320071C107 /* LCDynamicSymbolTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118D1D287C74320071C107 /* LCDynamicSymbolTable.swift */; };
+		1F118D39287D94930071C107 /* TickTock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118D38287D94930071C107 /* TickTock.swift */; };
+		1F118D41287EA0800071C107 /* RelocationTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F118D40287EA0800071C107 /* RelocationTable.swift */; };
 		1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F16F2202785FFBE0094E720 /* Demangle.swift */; };
 		1F16F22C278813E70094E720 /* DataShifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F16F22B278813E70094E720 /* DataShifter.swift */; };
 		1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F184B272769EBB700CA286A /* SymbolTableEntry.swift */; };
-		1F3C859C286D91160042EEA6 /* TranslationItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C859B286D91160042EEA6 /* TranslationItemView.swift */; };
-		1F3C859E286D9DB00042EEA6 /* PageControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C859D286D9DB00042EEA6 /* PageControlView.swift */; };
-		1F3C85A6286DC9850042EEA6 /* TranslationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3C85A5286DC9850042EEA6 /* TranslationViewModel.swift */; };
 		1F40ED2C279FF57700D93824 /* FunctionStartsComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2B279FF57700D93824 /* FunctionStartsComponent.swift */; };
 		1F40ED2E27A13D3A00D93824 /* UStringComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED2D27A13D3A00D93824 /* UStringComponent.swift */; };
-		1F40ED3227AB88A800D93824 /* SymbolPointerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3127AB88A800D93824 /* SymbolPointerComponent.swift */; };
 		1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */; };
 		1F40ED8627B110AD00D93824 /* InstructionComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8527B110AD00D93824 /* InstructionComponent.swift */; };
 		1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F40ED8927B1120400D93824 /* CapStoneHelper.m */; };
@@ -39,31 +45,22 @@
 		1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6D7275A320D0020E581 /* MachoView.swift */; };
 		1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6E3275A32120020E581 /* UnixArchive.swift */; };
 		1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6EF275A322C0020E581 /* Extensions.swift */; };
-		1F73C706275A322C0020E581 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6F3275A322C0020E581 /* Theme.swift */; };
 		1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C709275A5C6D0020E581 /* FatBinary.swift */; };
 		1F75F8B8275A3151001A4E29 /* mochaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F75F8A7275A314F001A4E29 /* mochaApp.swift */; };
 		1F75F8BC275A3151001A4E29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F75F8A9275A3151001A4E29 /* Assets.xcassets */; };
 		1F844CB327B2434700ED0246 /* libcapstone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F844C7E27B2429100ED0246 /* libcapstone.a */; };
 		1FB6504827904971004327BB /* OperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504727904971004327BB /* OperationCode.swift */; };
-		1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */; };
-		1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504D279051FF004327BB /* BindOperationCode.swift */; };
-		1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */; };
+		1FB6504C27904B9C004327BB /* RebaseOperationCodeMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504B27904B9C004327BB /* RebaseOperationCodeMetadata.swift */; };
+		1FB6504E279051FF004327BB /* BindOperationCodeMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504D279051FF004327BB /* BindOperationCodeMetadata.swift */; };
+		1FB6505027916E06004327BB /* ExportInfoComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6504F27916E06004327BB /* ExportInfoComponent.swift */; };
 		1FB6505227918F85004327BB /* InterpreterUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB6505127918F85004327BB /* InterpreterUtils.swift */; };
-		1FBB28222799483800E7C53D /* LiteralPointerComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB28212799483800E7C53D /* LiteralPointerComponent.swift */; };
-		1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */; };
-		1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC258CE275F6250008C2826 /* TranslationItem.swift */; };
+		1FC11B0C277B2DFD008D42D9 /* TranslationGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC11B0B277B2DFD008D42D9 /* TranslationGroupView.swift */; };
 		1FC5CD97287824D700F9A09F /* MochaDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC5CD96287824D700F9A09F /* MochaDocument.swift */; };
 		1FC5CDAC287842FC00F9A09F /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC5CDAB287842FC00F9A09F /* MainView.swift */; };
 		1FD02A662845C7570036715E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD02A652845C7570036715E /* Constants.swift */; };
-		1FE35B94286B1F5C00FE37AC /* MachoLazyComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE35B93286B1F5C00FE37AC /* MachoLazyComponent.swift */; };
-		1FE35B96286B1F7900FE37AC /* MachoZeroFilledComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE35B95286B1F7900FE37AC /* MachoZeroFilledComponent.swift */; };
-		1FE35B9A286B393500FE37AC /* MachoComponentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE35B99286B393500FE37AC /* MachoComponentView.swift */; };
 		1FE35B9C286B3AEE00FE37AC /* MachoComponentCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE35B9B286B3AEE00FE37AC /* MachoComponentCellView.swift */; };
-		1FEF55DA278B3C170037098B /* TranslationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF55D9278B3C170037098B /* TranslationStore.swift */; };
-		1FFCA6E02780C20700634B79 /* ModelBasedLazyComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6DF2780C20700634B79 /* ModelBasedLazyComponent.swift */; };
 		1FFCA6E22780C22600634B79 /* CStringComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6E12780C22600634B79 /* CStringComponent.swift */; };
 		1FFCA6E6278205CA00634B79 /* MachoComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6E5278205CA00634B79 /* MachoComponent.swift */; };
-		1FFCA6EC278487D300634B79 /* ASCIIComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCA6EB278487D300634B79 /* ASCIIComponent.swift */; };
 		1FFE55F4277F766500ECD395 /* LCLinkedITData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFE55F3277F766500ECD395 /* LCLinkedITData.swift */; };
 		1FFE55F727802FA300ECD395 /* DataInCodeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFE55F627802FA300ECD395 /* DataInCodeModel.swift */; };
 		1FFE55F9278030AE00ECD395 /* LCMinOSVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFE55F8278030AE00ECD395 /* LCMinOSVersion.swift */; };
@@ -274,19 +271,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1F0F1AAD2881389D00C4815B /* HexFiendUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HexFiendUtil.h; sourceTree = "<group>"; };
+		1F0F1AAE2881389D00C4815B /* HexFiendUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HexFiendUtil.m; sourceTree = "<group>"; };
 		1F118CC52879185B0071C107 /* HexFiendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexFiendView.swift; sourceTree = "<group>"; };
+		1F118CE6287AD12D0071C107 /* SymbolTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTable.swift; sourceTree = "<group>"; };
+		1F118CEA287AD2170071C107 /* StringTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringTable.swift; sourceTree = "<group>"; };
+		1F118CEC287AD51F0071C107 /* PointerComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointerComponent.swift; sourceTree = "<group>"; };
+		1F118CF0287ADC1B0071C107 /* IndirectSymbolTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndirectSymbolTable.swift; sourceTree = "<group>"; };
+		1F118CF6287BCE070071C107 /* Translation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Translation.swift; sourceTree = "<group>"; };
+		1F118CFA287BD10D0071C107 /* ModelBasedComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelBasedComponent.swift; sourceTree = "<group>"; };
+		1F118D1D287C74320071C107 /* LCDynamicSymbolTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCDynamicSymbolTable.swift; sourceTree = "<group>"; };
+		1F118D38287D94930071C107 /* TickTock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickTock.swift; sourceTree = "<group>"; };
+		1F118D40287EA0800071C107 /* RelocationTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelocationTable.swift; sourceTree = "<group>"; };
 		1F16F2202785FFBE0094E720 /* Demangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demangle.swift; sourceTree = "<group>"; };
 		1F16F22B278813E70094E720 /* DataShifter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataShifter.swift; sourceTree = "<group>"; };
 		1F184B272769EBB700CA286A /* SymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTableEntry.swift; sourceTree = "<group>"; };
-		1F3C859B286D91160042EEA6 /* TranslationItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItemView.swift; sourceTree = "<group>"; };
-		1F3C859D286D9DB00042EEA6 /* PageControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageControlView.swift; sourceTree = "<group>"; };
-		1F3C859F286DA5920042EEA6 /* HexadecimalLineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexadecimalLineView.swift; sourceTree = "<group>"; };
-		1F3C85A1286DA7320042EEA6 /* HexadecimalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexadecimalViewModel.swift; sourceTree = "<group>"; };
-		1F3C85A3286DC9380042EEA6 /* HexadecimalLineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexadecimalLineViewModel.swift; sourceTree = "<group>"; };
-		1F3C85A5286DC9850042EEA6 /* TranslationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationViewModel.swift; sourceTree = "<group>"; };
 		1F40ED2B279FF57700D93824 /* FunctionStartsComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunctionStartsComponent.swift; sourceTree = "<group>"; };
 		1F40ED2D27A13D3A00D93824 /* UStringComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringComponent.swift; sourceTree = "<group>"; };
-		1F40ED3127AB88A800D93824 /* SymbolPointerComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPointerComponent.swift; sourceTree = "<group>"; };
 		1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndirectSymbolTableEntry.swift; sourceTree = "<group>"; };
 		1F40ED8527B110AD00D93824 /* InstructionComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionComponent.swift; sourceTree = "<group>"; };
 		1F40ED8727B1120400D93824 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
@@ -305,41 +306,31 @@
 		1F73C6BE275A31F00020E581 /* SectionHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SectionHeader.swift; sourceTree = "<group>"; };
 		1F73C6BF275A31F00020E581 /* Macho.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Macho.swift; sourceTree = "<group>"; };
 		1F73C6C0275A31F00020E581 /* CPUType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPUType.swift; sourceTree = "<group>"; };
-		1F73C6D5275A320D0020E581 /* HexadecimalView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HexadecimalView.swift; sourceTree = "<group>"; };
 		1F73C6D7275A320D0020E581 /* MachoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachoView.swift; sourceTree = "<group>"; };
 		1F73C6E3275A32120020E581 /* UnixArchive.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnixArchive.swift; sourceTree = "<group>"; };
 		1F73C6EF275A322C0020E581 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		1F73C6F3275A322C0020E581 /* Theme.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1F73C709275A5C6D0020E581 /* FatBinary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatBinary.swift; sourceTree = "<group>"; };
 		1F75F8A7275A314F001A4E29 /* mochaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mochaApp.swift; sourceTree = "<group>"; };
 		1F75F8A9275A3151001A4E29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1F75F8B4275A3151001A4E29 /* mocha.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mocha.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F75F8B6275A3151001A4E29 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
 		1F75F8C5275A3161001A4E29 /* mocha (iOS).entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "mocha (iOS).entitlements"; sourceTree = "<group>"; };
-		1F8447B927B11D7000ED0246 /* libcapstone.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcapstone.a; path = capstone/libcapstone.a; sourceTree = "<group>"; };
-		1F844C6927B2429100ED0246 /* Capstone.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Capstone.xcodeproj; path = capstone/xcode/Capstone.xcodeproj; sourceTree = "<group>"; };
+		1F8447B927B11D7000ED0246 /* libcapstone.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcapstone.a; path = "capstone-fee83fc/libcapstone.a"; sourceTree = "<group>"; };
+		1F844C6927B2429100ED0246 /* Capstone.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Capstone.xcodeproj; path = "capstone-fee83fc/xcode/Capstone.xcodeproj"; sourceTree = "<group>"; };
 		1FB650452790445C004327BB /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1FB6504727904971004327BB /* OperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationCode.swift; sourceTree = "<group>"; };
-		1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RebaseOperationCode.swift; sourceTree = "<group>"; };
-		1FB6504D279051FF004327BB /* BindOperationCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindOperationCode.swift; sourceTree = "<group>"; };
-		1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportInfoInterpreter.swift; sourceTree = "<group>"; };
+		1FB6504B27904B9C004327BB /* RebaseOperationCodeMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RebaseOperationCodeMetadata.swift; sourceTree = "<group>"; };
+		1FB6504D279051FF004327BB /* BindOperationCodeMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BindOperationCodeMetadata.swift; sourceTree = "<group>"; };
+		1FB6504F27916E06004327BB /* ExportInfoComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportInfoComponent.swift; sourceTree = "<group>"; };
 		1FB6505127918F85004327BB /* InterpreterUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterUtils.swift; sourceTree = "<group>"; };
-		1FBB28212799483800E7C53D /* LiteralPointerComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteralPointerComponent.swift; sourceTree = "<group>"; };
-		1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
-		1FC258CE275F6250008C2826 /* TranslationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationItem.swift; sourceTree = "<group>"; };
+		1FC11B0B277B2DFD008D42D9 /* TranslationGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationGroupView.swift; sourceTree = "<group>"; };
 		1FC5CD96287824D700F9A09F /* MochaDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MochaDocument.swift; sourceTree = "<group>"; };
 		1FC5CDAB287842FC00F9A09F /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		1FC5CEA7287915E500F9A09F /* HexFiend_2.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = HexFiend_2.xcodeproj; path = HexFiend/HexFiend_2.xcodeproj; sourceTree = "<group>"; };
 		1FD02A652845C7570036715E /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		1FE35B93286B1F5C00FE37AC /* MachoLazyComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoLazyComponent.swift; sourceTree = "<group>"; };
-		1FE35B95286B1F7900FE37AC /* MachoZeroFilledComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoZeroFilledComponent.swift; sourceTree = "<group>"; };
-		1FE35B99286B393500FE37AC /* MachoComponentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoComponentView.swift; sourceTree = "<group>"; };
 		1FE35B9B286B3AEE00FE37AC /* MachoComponentCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoComponentCellView.swift; sourceTree = "<group>"; };
-		1FEF55D9278B3C170037098B /* TranslationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationStore.swift; sourceTree = "<group>"; };
-		1FFCA6DF2780C20700634B79 /* ModelBasedLazyComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelBasedLazyComponent.swift; sourceTree = "<group>"; };
 		1FFCA6E12780C22600634B79 /* CStringComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CStringComponent.swift; sourceTree = "<group>"; };
 		1FFCA6E5278205CA00634B79 /* MachoComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoComponent.swift; sourceTree = "<group>"; };
-		1FFCA6EB278487D300634B79 /* ASCIIComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ASCIIComponent.swift; sourceTree = "<group>"; };
 		1FFE55F3277F766500ECD395 /* LCLinkedITData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCLinkedITData.swift; sourceTree = "<group>"; };
 		1FFE55F627802FA300ECD395 /* DataInCodeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataInCodeModel.swift; sourceTree = "<group>"; };
 		1FFE55F8278030AE00ECD395 /* LCMinOSVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCMinOSVersion.swift; sourceTree = "<group>"; };
@@ -364,32 +355,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1F118CAC287918150071C107 /* HexFiendBased */ = {
+		1F118CF5287BCDF40071C107 /* Translation */ = {
 			isa = PBXGroup;
 			children = (
-				1F118CC52879185B0071C107 /* HexFiendView.swift */,
+				1F118CF6287BCE070071C107 /* Translation.swift */,
 			);
-			path = HexFiendBased;
-			sourceTree = "<group>";
-		};
-		1F118CC4287918380071C107 /* DeprecatedHexView */ = {
-			isa = PBXGroup;
-			children = (
-				1F3C85A3286DC9380042EEA6 /* HexadecimalLineViewModel.swift */,
-				1F3C859F286DA5920042EEA6 /* HexadecimalLineView.swift */,
-				1F3C85A1286DA7320042EEA6 /* HexadecimalViewModel.swift */,
-				1F73C6D5275A320D0020E581 /* HexadecimalView.swift */,
-			);
-			path = DeprecatedHexView;
-			sourceTree = "<group>";
-		};
-		1F16F22D27882F310094E720 /* Translations */ = {
-			isa = PBXGroup;
-			children = (
-				1FC258CE275F6250008C2826 /* TranslationItem.swift */,
-				1FEF55D9278B3C170037098B /* TranslationStore.swift */,
-			);
-			path = Translations;
+			path = Translation;
 			sourceTree = "<group>";
 		};
 		1F73C6B8275A31F00020E581 /* Models */ = {
@@ -398,9 +369,9 @@
 				1F73C6BF275A31F00020E581 /* Macho.swift */,
 				1F73C6C0275A31F00020E581 /* CPUType.swift */,
 				1F73C6BE275A31F00020E581 /* SectionHeader.swift */,
-				1F16F22D27882F310094E720 /* Translations */,
 				1FFE560727803AE200ECD395 /* MachoComponents */,
 				1FFE55F2277F764B00ECD395 /* LoadCommand */,
+				1F118CF5287BCDF40071C107 /* Translation */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -408,13 +379,8 @@
 		1F73C6D4275A320D0020E581 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				1F118CC4287918380071C107 /* DeprecatedHexView */,
-				1F118CAC287918150071C107 /* HexFiendBased */,
-				1F3C859B286D91160042EEA6 /* TranslationItemView.swift */,
-				1F3C85A5286DC9850042EEA6 /* TranslationViewModel.swift */,
-				1FC11B0B277B2DFD008D42D9 /* TranslationView.swift */,
-				1F3C859D286D9DB00042EEA6 /* PageControlView.swift */,
-				1FE35B99286B393500FE37AC /* MachoComponentView.swift */,
+				1F118CC52879185B0071C107 /* HexFiendView.swift */,
+				1FC11B0B277B2DFD008D42D9 /* TranslationGroupView.swift */,
 				1FE35B9B286B3AEE00FE37AC /* MachoComponentCellView.swift */,
 				1F73C6D7275A320D0020E581 /* MachoView.swift */,
 				1FC5CDAB287842FC00F9A09F /* MainView.swift */,
@@ -511,11 +477,11 @@
 		1FB6504627904933004327BB /* DyldInfoComponents */ = {
 			isa = PBXGroup;
 			children = (
-				1FB6504B27904B9C004327BB /* RebaseOperationCode.swift */,
-				1FB6504D279051FF004327BB /* BindOperationCode.swift */,
+				1FB6504B27904B9C004327BB /* RebaseOperationCodeMetadata.swift */,
+				1FB6504D279051FF004327BB /* BindOperationCodeMetadata.swift */,
 				1FB6504727904971004327BB /* OperationCode.swift */,
 				1F6EB9FD278AECB000590729 /* OperationCodeComponent.swift */,
-				1FB6504F27916E06004327BB /* ExportInfoInterpreter.swift */,
+				1FB6504F27916E06004327BB /* ExportInfoComponent.swift */,
 			);
 			path = DyldInfoComponents;
 			sourceTree = "<group>";
@@ -523,12 +489,14 @@
 		1FC258C7275C90C4008C2826 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
-				1F73C6F3275A322C0020E581 /* Theme.swift */,
 				1F73C6EF275A322C0020E581 /* Extensions.swift */,
 				1FFE5603278032D200ECD395 /* Log.swift */,
 				1F16F2202785FFBE0094E720 /* Demangle.swift */,
 				1F16F22B278813E70094E720 /* DataShifter.swift */,
 				1FD02A652845C7570036715E /* Constants.swift */,
+				1F118D38287D94930071C107 /* TickTock.swift */,
+				1F0F1AAD2881389D00C4815B /* HexFiendUtil.h */,
+				1F0F1AAE2881389D00C4815B /* HexFiendUtil.m */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -560,6 +528,7 @@
 				1FFE55FA278030DA00ECD395 /* LCLinkerOption.swift */,
 				1FFE55FC278030F100ECD395 /* LCSegment.swift */,
 				1FFE55FE2780312B00ECD395 /* LCSymbolTable.swift */,
+				1F118D1D287C74320071C107 /* LCDynamicSymbolTable.swift */,
 				1FFE56012780325D00ECD395 /* LCDylib.swift */,
 				1F6EB9FB278AE46500590729 /* LCDyldInfo.swift */,
 				1F6212E227966ED0009A9154 /* LCEncryptionInfo.swift */,
@@ -571,11 +540,14 @@
 		1FFE55F527802E9900ECD395 /* ModelBasedComponent */ = {
 			isa = PBXGroup;
 			children = (
-				1FFCA6DF2780C20700634B79 /* ModelBasedLazyComponent.swift */,
+				1F118CFA287BD10D0071C107 /* ModelBasedComponent.swift */,
 				1FFE55F627802FA300ECD395 /* DataInCodeModel.swift */,
-				1F184B272769EBB700CA286A /* SymbolTableEntry.swift */,
-				1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */,
 				1F683259276C49AB002609C5 /* RelocationEntry.swift */,
+				1F118D40287EA0800071C107 /* RelocationTable.swift */,
+				1F184B272769EBB700CA286A /* SymbolTableEntry.swift */,
+				1F118CE6287AD12D0071C107 /* SymbolTable.swift */,
+				1F40ED3527AFAAA200D93824 /* IndirectSymbolTableEntry.swift */,
+				1F118CF0287ADC1B0071C107 /* IndirectSymbolTable.swift */,
 			);
 			path = ModelBasedComponent;
 			sourceTree = "<group>";
@@ -584,16 +556,13 @@
 			isa = PBXGroup;
 			children = (
 				1FFCA6E5278205CA00634B79 /* MachoComponent.swift */,
-				1FE35B95286B1F7900FE37AC /* MachoZeroFilledComponent.swift */,
-				1FE35B93286B1F5C00FE37AC /* MachoLazyComponent.swift */,
 				1FB6505127918F85004327BB /* InterpreterUtils.swift */,
 				1FFCA6E12780C22600634B79 /* CStringComponent.swift */,
 				1F40ED2D27A13D3A00D93824 /* UStringComponent.swift */,
 				1F40ED2B279FF57700D93824 /* FunctionStartsComponent.swift */,
-				1FFCA6EB278487D300634B79 /* ASCIIComponent.swift */,
-				1FBB28212799483800E7C53D /* LiteralPointerComponent.swift */,
-				1F40ED3127AB88A800D93824 /* SymbolPointerComponent.swift */,
+				1F118CEC287AD51F0071C107 /* PointerComponent.swift */,
 				1F40ED8527B110AD00D93824 /* InstructionComponent.swift */,
+				1F118CEA287AD2170071C107 /* StringTable.swift */,
 				1F40ED8827B1120400D93824 /* CapStoneHelper.h */,
 				1F40ED8927B1120400D93824 /* CapStoneHelper.m */,
 				1FFE55F527802E9900ECD395 /* ModelBasedComponent */,
@@ -698,7 +667,6 @@
 		1F844C8427B2429100ED0246 /* test */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			name = test;
 			path = test_basic;
 			remoteRef = 1F844C8327B2429100ED0246 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -864,12 +832,10 @@
 				1F68325A276C49AB002609C5 /* RelocationEntry.swift in Sources */,
 				1F118CC62879185B0071C107 /* HexFiendView.swift in Sources */,
 				1FFE55F9278030AE00ECD395 /* LCMinOSVersion.swift in Sources */,
-				1FC11B0C277B2DFD008D42D9 /* TranslationView.swift in Sources */,
-				1F73C706275A322C0020E581 /* Theme.swift in Sources */,
-				1FFCA6E02780C20700634B79 /* ModelBasedLazyComponent.swift in Sources */,
+				1FC11B0C277B2DFD008D42D9 /* TranslationGroupView.swift in Sources */,
 				1FD02A662845C7570036715E /* Constants.swift in Sources */,
+				1F118CFB287BD10D0071C107 /* ModelBasedComponent.swift in Sources */,
 				1FFE55FB278030DA00ECD395 /* LCLinkerOption.swift in Sources */,
-				1FBB28222799483800E7C53D /* LiteralPointerComponent.swift in Sources */,
 				1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */,
 				1FFE56022780325D00ECD395 /* LCDylib.swift in Sources */,
 				1F6212ED279693BE009A9154 /* LCBuildVersion.swift in Sources */,
@@ -877,30 +843,29 @@
 				1F6212EB2796747C009A9154 /* LCMain.swift in Sources */,
 				1F6EB9FE278AECB000590729 /* OperationCodeComponent.swift in Sources */,
 				1FFCA6E22780C22600634B79 /* CStringComponent.swift in Sources */,
+				1F118CED287AD51F0071C107 /* PointerComponent.swift in Sources */,
 				1F40ED2E27A13D3A00D93824 /* UStringComponent.swift in Sources */,
 				1FFE5604278032D200ECD395 /* Log.swift in Sources */,
-				1FEF55DA278B3C170037098B /* TranslationStore.swift in Sources */,
+				1F118CEB287AD2170071C107 /* StringTable.swift in Sources */,
 				1F40ED8A27B1120400D93824 /* CapStoneHelper.m in Sources */,
 				1F6212E72796744F009A9154 /* LCUUID.swift in Sources */,
-				1FB6505027916E06004327BB /* ExportInfoInterpreter.swift in Sources */,
-				1FE35B96286B1F7900FE37AC /* MachoZeroFilledComponent.swift in Sources */,
-				1F3C85A6286DC9850042EEA6 /* TranslationViewModel.swift in Sources */,
+				1FB6505027916E06004327BB /* ExportInfoComponent.swift in Sources */,
 				1FC5CD97287824D700F9A09F /* MochaDocument.swift in Sources */,
 				1F184B282769EBB700CA286A /* SymbolTableEntry.swift in Sources */,
 				1F16F22C278813E70094E720 /* DataShifter.swift in Sources */,
+				1F118CF1287ADC1B0071C107 /* IndirectSymbolTable.swift in Sources */,
 				1F40ED8627B110AD00D93824 /* InstructionComponent.swift in Sources */,
 				1F73C70A275A5C6D0020E581 /* FatBinary.swift in Sources */,
 				1FFE55F727802FA300ECD395 /* DataInCodeModel.swift in Sources */,
 				1FFE55FF2780312B00ECD395 /* LCSymbolTable.swift in Sources */,
 				1FC5CDAC287842FC00F9A09F /* MainView.swift in Sources */,
-				1FB6504C27904B9C004327BB /* RebaseOperationCode.swift in Sources */,
-				1F40ED3227AB88A800D93824 /* SymbolPointerComponent.swift in Sources */,
+				1FB6504C27904B9C004327BB /* RebaseOperationCodeMetadata.swift in Sources */,
 				1F16F2212785FFBE0094E720 /* Demangle.swift in Sources */,
 				1F73C6D1275A31F00020E581 /* CPUType.swift in Sources */,
-				1FB6504E279051FF004327BB /* BindOperationCode.swift in Sources */,
+				1FB6504E279051FF004327BB /* BindOperationCodeMetadata.swift in Sources */,
+				1F118D39287D94930071C107 /* TickTock.swift in Sources */,
 				1F40ED2C279FF57700D93824 /* FunctionStartsComponent.swift in Sources */,
 				1F73C6DE275A320D0020E581 /* MachoView.swift in Sources */,
-				1F3C859C286D91160042EEA6 /* TranslationItemView.swift in Sources */,
 				1F73C6CF275A31F00020E581 /* Macho.swift in Sources */,
 				1FFE55F4277F766500ECD395 /* LCLinkedITData.swift in Sources */,
 				1FB6504827904971004327BB /* OperationCode.swift in Sources */,
@@ -908,19 +873,19 @@
 				1FFCA6E6278205CA00634B79 /* MachoComponent.swift in Sources */,
 				1FE35B9C286B3AEE00FE37AC /* MachoComponentCellView.swift in Sources */,
 				1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */,
+				1F118D41287EA0800071C107 /* RelocationTable.swift in Sources */,
 				1F6212E527967438009A9154 /* LCMonoString.swift in Sources */,
+				1F118CE7287AD12D0071C107 /* SymbolTable.swift in Sources */,
 				1F6212E92796746C009A9154 /* LCSourceVersion.swift in Sources */,
-				1FE35B94286B1F5C00FE37AC /* MachoLazyComponent.swift in Sources */,
-				1FC258CF275F6250008C2826 /* TranslationItem.swift in Sources */,
+				1F118CF7287BCE070071C107 /* Translation.swift in Sources */,
 				1F6EB9FC278AE46500590729 /* LCDyldInfo.swift in Sources */,
 				1F73C6FE275A322C0020E581 /* Extensions.swift in Sources */,
-				1FFCA6EC278487D300634B79 /* ASCIIComponent.swift in Sources */,
+				1F118D1E287C74320071C107 /* LCDynamicSymbolTable.swift in Sources */,
 				1FFE55FD278030F100ECD395 /* LCSegment.swift in Sources */,
 				1F40ED3627AFAAA200D93824 /* IndirectSymbolTableEntry.swift in Sources */,
 				1F73C6CD275A31F00020E581 /* SectionHeader.swift in Sources */,
-				1F3C859E286D9DB00042EEA6 /* PageControlView.swift in Sources */,
+				1F0F1AAF2881389D00C4815B /* HexFiendUtil.m in Sources */,
 				1F73C6C9275A31F00020E581 /* LoadCommand.swift in Sources */,
-				1FE35B9A286B393500FE37AC /* MachoComponentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1066,7 +1031,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "${SRCROOT}/capstone/include";
+				HEADER_SEARCH_PATHS = "${SRCROOT}/capstone-fee83fc/include";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1074,7 +1039,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/capstone",
+					"$(PROJECT_DIR)/capstone-fee83fc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0;
@@ -1103,7 +1068,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = "${SRCROOT}/capstone/include";
+				HEADER_SEARCH_PATHS = "${SRCROOT}/capstone-fee83fc/include";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1111,7 +1076,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/capstone",
+					"$(PROJECT_DIR)/capstone-fee83fc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MARKETING_VERSION = 1.0;

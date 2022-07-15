@@ -16,31 +16,27 @@ struct FunctionStart {
 // a great description for function start section data format
 // https://stackoverflow.com/questions/9602438/mach-o-file-lc-function-starts-load-command
 
-class FunctionStartsComponent: MachoLazyComponent<[FunctionStart]> {
+class FunctionStartsComponent: MachoComponent {
     
-    let textSegmentVirtualStartAddress: Swift.UInt64
+    let textSegmentVirtualAddress: Swift.UInt64
+    let functionStarts: [FunctionStart]
     
-    override init(_ data: Data, macho: Macho, is64Bit: Bool, title: String, subTitle: String?) {
-        guard let textSegment = macho.segmentCommand(withName: Constants.segmentNameTEXT) else { fatalError() /* unlikely */ }
-        self.textSegmentVirtualStartAddress = textSegment.vmaddr
-        super.init(data, macho: macho, is64Bit: is64Bit, title: title, subTitle: subTitle)
-    }
-    
-    override func generatePayload() -> [FunctionStart] {
-        let rawData = self.data
+    init(_ data: Data, title: String, textSegmentVirtualAddress: UInt64) {
+        self.textSegmentVirtualAddress = textSegmentVirtualAddress
+        
         // ref: https://opensource.apple.com/source/ld64/ld64-127.2/src/other/dyldinfo.cpp in function printFunctionStartsInfo
         // The code below decode (unsigned) LEB128 data into integers
         var functionStarts: [FunctionStart] = []
         var address: UInt64 = 0
         var index = 0
-        while index < rawData.count {
+        while index < data.count {
             var delta: Swift.UInt64 = 0
             var shift: Swift.UInt32 = 0
             var more = true
             
             let startIndex = index
             repeat {
-                let byte = rawData[rawData.startIndex+index]; index += 1
+                let byte = data[data.startIndex+index]; index += 1
                 delta |= ((Swift.UInt64(byte) & 0x7f) << shift)
                 shift += 7
                 if byte < 0x80 {
@@ -50,31 +46,29 @@ class FunctionStartsComponent: MachoLazyComponent<[FunctionStart]> {
                 }
             } while (more)
         }
-        return functionStarts
+        self.functionStarts = functionStarts
+        super.init(data, title: title, subTitle: Constants.segmentNameLINKEDIT)
     }
     
-    override func numberOfTranslationSections() -> Int {
-        return self.payload.count
+    override func createTranslations() -> [Translation] {
+        return self.functionStarts.map { self.translation(for: $0) }
     }
     
-    override func numberOfTranslationItems(at section: Int) -> Int {
-        return 1
-    }
-    
-    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        let index = indexPath.section
-        let functionStart = self.payload[index]
-        
+    private func translation(for functionStart: FunctionStart) -> Translation {
         var symbolName: String?
-        if let functionSymbol = self.macho.symbolInSymbolTable(by: functionStart.address + textSegmentVirtualStartAddress),
-           let _symbolName = self.macho.stringInStringTable(at: Int(functionSymbol.indexInStringTable)) {
+        let functionVirtualAddress = functionStart.address + textSegmentVirtualAddress
+        
+        if let functionSymbol = macho?.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress),
+           let _symbolName = macho?.stringTable?.findString(at: Int(functionSymbol.indexInStringTable)) {
             symbolName = _symbolName
         }
         
-        return TranslationItem(sourceDataRange: data.absoluteRange(functionStart.startOffset, functionStart.byteLength),
-                               content: TranslationItemContent(description: "Vitual Address", explanation: (functionStart.address + textSegmentVirtualStartAddress).hex,
-                                                               extraDescription: symbolName != nil ? "Referred Symbol Name" : nil, extraExplanation: symbolName,
-                                                               hasDivider: true))
+        return Translation(description: "Vitual Address",
+                           explanation: (functionStart.address + textSegmentVirtualAddress).hex,
+                           bytesCount: functionStart.byteLength,
+                           extraDescription: symbolName != nil ? "Referred Symbol Name" : nil,
+                           extraExplanation: symbolName,
+                           hasDivider: true)
     }
     
 }

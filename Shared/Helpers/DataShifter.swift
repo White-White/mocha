@@ -37,15 +37,27 @@ struct DataShifter {
         self.data = data
     }
     
-    mutating func shift(_ straddle: Straddle, updateIndex: Bool = true) -> Data {
+    mutating func shift(_ straddle: Straddle) -> Data {
         let num = straddle.raw
         guard num > 0 else { fatalError() }
         guard shifted + num <= data.count else { fatalError() }
-        defer { if (updateIndex) { shifted += num } }
-        return data.select(from: shifted, length: num)
+        let selectedData = data.subSequence(from: shifted, count: num)
+        shifted += num
+        return selectedData
     }
     
     mutating func skip(_ straddle: Straddle) {
         shifted += straddle.raw
     }
+    
+    mutating func back(_ straddle: Straddle) {
+        guard shifted >= straddle.raw else { fatalError() }
+        shifted -= straddle.raw
+    }
+    
+    mutating func shiftUInt64() -> UInt64 { self.shift(.quadWords).UInt64 }
+    mutating func shiftUInt32() -> UInt32 { self.shift(.doubleWords).UInt32 }
+    mutating func shiftUInt16() -> UInt16 { self.shift(.word).UInt16 }
+    mutating func shiftUInt8() -> UInt8 { self.shift(.rawNumber(1)).UInt8 }
+    
 }

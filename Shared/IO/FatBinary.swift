@@ -16,11 +16,11 @@ private struct FatArch {
     let align: UInt32
     
     init(with data: Data) {
-        self.cpu = CPUType(data.select(from: 0, length: 4).UInt32.bigEndian)
-        self.cpuSub = CPUSubtype(data.select(from: 4, length: 4).UInt32.bigEndian, cpuType: self.cpu)
-        self.objectFileOffset = data.select(from: 8, length: 4).UInt32.bigEndian
-        self.objectFileSize = data.select(from: 12, length: 4).UInt32.bigEndian
-        self.align = data.select(from: 16, length: 4).UInt32.bigEndian
+        self.cpu = CPUType(data.subSequence(from: 0, count: 4).UInt32.bigEndian)
+        self.cpuSub = CPUSubtype(data.subSequence(from: 4, count: 4).UInt32.bigEndian, cpuType: self.cpu)
+        self.objectFileOffset = data.subSequence(from: 8, count: 4).UInt32.bigEndian
+        self.objectFileSize = data.subSequence(from: 12, count: 4).UInt32.bigEndian
+        self.align = data.subSequence(from: 16, count: 4).UInt32.bigEndian
     }
     
 }
@@ -54,16 +54,16 @@ struct FatBinary {
         
         // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
         // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
-        let numberOfArchs = Int(fileData.select(from: 4, length: 4).UInt32.bigEndian)
+        let numberOfArchs = Int(fileData.subSequence(from: 4, count: 4).UInt32.bigEndian)
         
         var machoMetaDatas: [MachoMetaData] = []
         for index in 0..<numberOfArchs {
             // first 8 bytes are for magic and 'number of archs'
             // struct fat_arch has 20 bytes
-            let fatArchData = fileData.select(from: 8 + (index * 20), length: 20)
+            let fatArchData = fileData.subSequence(from: 8 + (index * 20), count: 20)
             let farArch = FatArch(with: fatArchData)
             
-            let subFileDataRaw = fileData.select(from: Int(farArch.objectFileOffset), length: Int(farArch.objectFileSize))
+            let subFileDataRaw = fileData.subSequence(from: Int(farArch.objectFileOffset), count: Int(farArch.objectFileSize))
             machoMetaDatas.append(contentsOf: try MochaDocument(fileName: machoFileName, fileData: Data(subFileDataRaw)).machoMetaDatas)
         }
         self.machoMetaDatas = machoMetaDatas

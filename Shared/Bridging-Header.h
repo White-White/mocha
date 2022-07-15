@@ -5,3 +5,5 @@
 #import "CapStoneHelper.h"
 #import <HexFiend/HexFiend.h>
 #import <HexFiend/HFLineCountingView.h>
+#import <HexFiend/HFRepresenterTextView.h>
+#import "HexFiendUtil.h"

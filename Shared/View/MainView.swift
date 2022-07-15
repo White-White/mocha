@@ -47,33 +47,42 @@ struct MachoSelectionView: View {
     @Binding var selectedMacho: Macho?
     
     var body: some View {
-        List {
-            ForEach($seletableMachoMetaDatas, id: \.machoMetaData.id) { $seletableMachoMetaData in
-                HStack(alignment: .center) {
-                    Toggle("", isOn: $seletableMachoMetaData.selected)
-                    VStack(alignment: .leading) {
-                        Text(seletableMachoMetaData.machoMetaData.fileName)
-                            .font(.system(size: 14))
-                            .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
-                        Text("Arch: \(seletableMachoMetaData.machoMetaData.machoHeader.cpuType.name)")
-                            .font(.system(size: 12))
-                            .padding(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
-                        Text("Size: \(seletableMachoMetaData.machoMetaData.machoFileSize.hex)")
-                            .font(.system(size: 12))
-                            .padding(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
+        HStack {
+            Spacer()
+            VStack(alignment: .center, spacing: 0) {
+                Spacer()
+                List {
+                    ForEach($seletableMachoMetaDatas, id: \.machoMetaData.id) { $seletableMachoMetaData in
+                        HStack(alignment: .center) {
+                            Toggle("", isOn: $seletableMachoMetaData.selected)
+                            VStack(alignment: .leading) {
+                                Text(seletableMachoMetaData.machoMetaData.fileName)
+                                    .font(.system(size: 14))
+                                    .padding(EdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 4))
+                                Text("Arch: \(seletableMachoMetaData.machoMetaData.machoHeader.cpuType.name)")
+                                    .font(.system(size: 12))
+                                    .padding(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+                                Text("Size: \(seletableMachoMetaData.machoMetaData.machoFileSize.hex)")
+                                    .font(.system(size: 12))
+                                    .padding(EdgeInsets(top: 0, leading: 4, bottom: 4, trailing: 4))
+                            }
+                            .cornerRadius(4)
+                        }
+                        Divider()
                     }
-                    .cornerRadius(4)
                 }
-                Divider()
+                .frame(maxWidth: 300, maxHeight: 500)
+                Button {
+                    self.selectedMacho = (seletableMachoMetaDatas.first { $0.selected })?.machoMetaData.macho
+                } label: {
+                    Text("Open")
+                }
+                .disabled(seletableMachoMetaDatas.first { $0.selected } == nil)
+                .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                Spacer()
             }
+            Spacer()
         }
-        Button {
-            self.selectedMacho = (seletableMachoMetaDatas.first { $0.selected })?.machoMetaData.macho
-        } label: {
-            Text("Open")
-        }
-        .disabled(seletableMachoMetaDatas.first { $0.selected } == nil)
-        .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
     }
     
     init(_ machoMetaDatas: [MachoMetaData], selectedMacho: Binding<Macho?>) {
@@ -94,7 +103,7 @@ struct MainView: View {
     var body: some View {
         if let selectedMacho = selectedMacho {
             MachoView(selectedMacho)
-                .navigationTitle(selectedMacho.machoFileName + " (" + selectedMacho.header.cpuType.name + ")")
+                .navigationTitle(selectedMacho.machoFileName + " (" + selectedMacho.machoHeader.cpuType.name + ")")
         } else if let machoMetaDatas = machoMetaDatas {
             MachoSelectionView(machoMetaDatas, selectedMacho: $selectedMacho)
                 .navigationTitle(self.selectedFileURL?.lastPathComponent ?? "Invalid File Name ⚠️")
@@ -118,7 +127,7 @@ struct MainView: View {
                     Label("Open File", systemImage: "doc")
                 }
             }
-            .frame(width: 400, height: 300)
+            .frame(width: 1200, height: 600)
         }
     }
     

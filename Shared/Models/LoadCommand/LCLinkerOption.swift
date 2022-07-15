@@ -10,20 +10,21 @@ import Foundation
 class LCLinkerOption: LoadCommand {
     
     let numberOfOptions: Int
+    let optionDataLength: Int
     let options: [String]
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.numberOfOptions = translationStore.translate(next: .doubleWords,
-                                                        dataInterpreter: { Int($0.UInt32) },
-                                                        itemContentGenerator: { number in TranslationItemContent(description: "Number of options", explanation: "\(number)") })
-        
-        self.options = translationStore.translate(next: .rawNumber(data.count - 12),
-                                                dataInterpreter: { LCLinkerOption.options(from: $0) },
-                                                itemContentGenerator: { options in TranslationItemContent(description: "Options(s)", explanation: options.joined(separator: " ")) })
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        self.numberOfOptions = Int(data.subSequence(from: 8, count: 4).UInt32)
+        self.optionDataLength = data.count - 12
+        self.options = LCLinkerOption.options(from: data.subSequence(from: 12))
+        super.init(data, type: type)
+    }
+    
+    override var commandTranslations: [Translation] {
+        return [
+            Translation(description: "Number of options", explanation: "\(self.numberOfOptions)", bytesCount: 4),
+            Translation(description: "Options(s)", explanation: self.options.joined(separator: " "), bytesCount: self.optionDataLength)
+        ]
     }
     
     static func options(from data: Data) -> [String] {

@@ -25,30 +25,22 @@ class LCEncryptionInfo: LoadCommand {
     let cryptoID: UInt32
     let pad: UInt32?
     
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
-        let translationStore = TranslationStore(data: data).skip(.quadWords)
-        
-        self.cryptoOffset =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32) { offset in TranslationItemContent(description: "Crypto File Offset", explanation: offset.hex) }
-        
-        self.cryptoSize =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32) { size in TranslationItemContent(description: "Crypto File Size", explanation: size.hex) }
-        
-        self.cryptoID =
-        translationStore.translate(next: .doubleWords,
-                                   dataInterpreter: DataInterpreterPreset.UInt32) { id in TranslationItemContent(description: "Crypto ID", explanation: "\(id)") }
-        
-        if type == .encryptionInfo64 {
-            self.pad =
-            translationStore.translate(next: .doubleWords,
-                                       dataInterpreter: DataInterpreterPreset.UInt32) { pad in TranslationItemContent(description: "Crypto Pad", explanation: "\(pad)") }
-        } else {
-            self.pad = nil
-        }
-        
-        super.init(with: type, data: data, translationStore: translationStore)
+    init(with type: LoadCommandType, data: Data) {
+        var dataShifter = DataShifter(data); dataShifter.skip(.quadWords)
+        self.cryptoOffset = dataShifter.shiftUInt32()
+        self.cryptoSize = dataShifter.shiftUInt32()
+        self.cryptoID = dataShifter.shiftUInt32()
+        self.pad = (type == .encryptionInfo64 ? dataShifter.shiftUInt32() : nil)
+        super.init(data, type: type)
+    }
+    
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(description: "Crypto File Offset", explanation: self.cryptoOffset.hex, bytesCount: 4))
+        translations.append(Translation(description: "Crypto File Size", explanation: self.cryptoSize.hex, bytesCount: 4))
+        translations.append(Translation(description: "Crypto ID", explanation: "\(self.cryptoID)", bytesCount: 4))
+        if let pad = self.pad { translations.append(Translation(description: "Crypto Pad", explanation: "\(pad)", bytesCount: 4)) }
+        return translations
     }
     
 }

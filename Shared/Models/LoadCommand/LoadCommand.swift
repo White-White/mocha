@@ -187,29 +187,72 @@ enum LoadCommandType: UInt32 {
 class LoadCommand: MachoComponent {
     
     let type: LoadCommandType
-    let translationStore: TranslationStore
     
-    override var componentTitle: String { "Load Command" }
-    override var componentSubTitle: String { type.name }
-    
-    override func numberOfTranslationSections() -> Int {
-        return 1
-    }
-    
-    override func numberOfTranslationItems(at section: Int) -> Int {
-        return translationStore.items.count
-    }
-    
-    override func translationItem(at indexPath: IndexPath) -> TranslationItem {
-        return translationStore.items[indexPath.item]
-    }
-    
-    required init(with type: LoadCommandType, data: Data, translationStore: TranslationStore? = nil) {
+    init(_ data: Data, type: LoadCommandType, title: String? = nil, subTitle: String? = nil) {
         self.type = type
-        let translationStore = translationStore ?? TranslationStore(data: data.subSequence(from: 0, count: 8))
-        translationStore.insert(TranslationItemContent(description: "Load Command Size", explanation: data.count.hex), forRange: data.absoluteRange(4, 4), at: .zero)
-        translationStore.insert(TranslationItemContent(description: "Load Command Type", explanation: type.name), forRange: data.absoluteRange(0, 4), at: .zero)
-        self.translationStore = translationStore
-        super.init(data)
+        super.init(data, title: title ?? "Load Command", subTitle: subTitle ?? type.name)
+    }
+    
+    override func createTranslations() -> [Translation] {
+        let typeTranslation = Translation(description: "Load Command Type", explanation: type.name, bytesCount: 4)
+        let sizeTranslation = Translation(description: "Load Command Size", explanation: data.count.hex, bytesCount: 4)
+        return [typeTranslation, sizeTranslation] + self.commandTranslations
+    }
+    var commandTranslations: [Translation] { fatalError() }
+
+    static func loadCommands(from data: Data) -> [LoadCommand] {
+        var loadCommands: [LoadCommand] = []
+        var dataShifter = DataShifter(data)
+        while dataShifter.shiftable {
+            guard let loadCommandType = LoadCommandType(rawValue: dataShifter.shift(.doubleWords).UInt32) else {
+                print("Unknown load command type. Debug me."); fatalError()
+            }
+            let loadCommandSize = dataShifter.shift(.doubleWords).UInt32
+            dataShifter.back(.quadWords)
+            let loadCommandData = dataShifter.shift(.rawNumber(Int(loadCommandSize)))
+            
+            
+            let loadCommand: LoadCommand
+            switch loadCommandType {
+            case .iOSMinVersion, .macOSMinVersion, .tvOSMinVersion, .watchOSMinVersion:
+                loadCommand = LCMinOSVersion(with: loadCommandType, data: loadCommandData)
+            case .linkerOption:
+                loadCommand = LCLinkerOption(with: loadCommandType, data: loadCommandData)
+            case .segment, .segment64:
+                let segment = LCSegment(with: loadCommandType, data: loadCommandData)
+                loadCommand = segment
+            case .symbolTable:
+                let symbolTableCommand = LCSymbolTable(with: loadCommandType, data: loadCommandData)
+                loadCommand = symbolTableCommand
+            case .dynamicSymbolTable:
+                let dynamicSymbolTableCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
+                loadCommand = dynamicSymbolTableCommand
+            case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
+                loadCommand = LCDylib(with: loadCommandType, data: loadCommandData)
+            case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
+                loadCommand = LCMonoString(with: loadCommandType, data: loadCommandData)
+            case .uuid:
+                loadCommand = LCUUID(with: loadCommandType, data: loadCommandData)
+            case .sourceVersion:
+                loadCommand = LCSourceVersion(with: loadCommandType, data: loadCommandData)
+            case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
+                let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
+                loadCommand = linkedITData
+            case .main:
+                loadCommand = LCMain(with: loadCommandType, data: loadCommandData)
+            case .dyldInfo, .dyldInfoOnly:
+                let dyldInfo = LCDyldInfo(with: loadCommandType, data: loadCommandData)
+                loadCommand = dyldInfo
+            case .encryptionInfo64,. encryptionInfo:
+                loadCommand = LCEncryptionInfo(with: loadCommandType, data: loadCommandData)
+            case .buildVersion:
+                loadCommand = LCBuildVersion(with: loadCommandType, data: loadCommandData)
+            default:
+                Log.warning("Unknown load command \(loadCommandType.name). Debug me.")
+                loadCommand = LoadCommand(loadCommandData, type: loadCommandType)
+            }
+            loadCommands.append(loadCommand)
+        }
+        return loadCommands
     }
 }
