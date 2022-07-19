@@ -6,12 +6,18 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <HexFiend/HexFiend.h>
+#import <HexFiend/HFRepresenterTextView.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface HexFiendUtil : NSObject
 
 + (void)doSwizzleOnce;
+
+@end
+
+@interface HFUntouchableLineCountingRepresenter : HFLineCountingRepresenter
 
 @end
 

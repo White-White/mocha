@@ -16,66 +16,82 @@ struct CStringModel {
 
 class CStringComponent: MachoComponent {
     
-    private let demanglingCString: Bool
-    private let virtualAddress: UInt64
     private(set) var cStrings: [CStringModel] = []
-    
-    init(_ data: Data, title: String, subTitle: String, virtualAddress: UInt64, demanglingCString: Bool) {
-        self.demanglingCString = demanglingCString
-        self.virtualAddress = virtualAddress
-        super.init(data, title: title, subTitle: subTitle)
-    }
+    private(set) var cStringOffsetIndexMap: [Int:Int] = [:]
     
     override func initialize() {
-        var nextStringStartIndex: Int = 0
-        for (currentIndex, byte) in self.data.enumerated() {
-            guard byte == 0 else { continue /* skip non null */ }
-            let nextStringEndIndex = currentIndex + 1
-            let nextCStringDataLength = nextStringEndIndex - nextStringStartIndex
-            let string = self.data.subSequence(from: nextStringStartIndex, count: nextCStringDataLength).utf8String
-            let demangled = self.demanglingCString ? swift_demangle(string) : nil
-            self.cStrings.append(CStringModel(startOffset: nextStringStartIndex, length: nextCStringDataLength, content: string, demangled: demangled))
-            nextStringStartIndex = nextStringEndIndex
+        var currentIndex: Int = 0
+        while currentIndex < self.data.count {
+            var byte = self.data[self.data.startIndex + currentIndex];
+            if byte == 0 {
+                let continuousSpaceStartIndex = currentIndex; currentIndex += 1
+                var more = true
+                while (currentIndex < self.data.count && more) {
+                    byte = self.data[self.data.startIndex + currentIndex]
+                    if byte != 0 { more = false; break }
+                    currentIndex += 1
+                }
+                let nextStringEndIndex = currentIndex
+                let nextCStringDataLength = nextStringEndIndex - continuousSpaceStartIndex
+                self.cStrings.append(CStringModel(startOffset: continuousSpaceStartIndex, length: nextCStringDataLength, content: "", demangled: nil))
+            } else {
+                let validStringStartIndex = currentIndex
+                while (byte != 0 && currentIndex < self.data.count) {
+                    byte = self.data[self.data.startIndex + currentIndex]
+                    currentIndex += 1
+                }
+                let nextStringEndIndex = currentIndex
+                let nextCStringDataLength = nextStringEndIndex - validStringStartIndex
+                let string = self.data.subSequence(from: validStringStartIndex, count: nextCStringDataLength).utf8String
+                let demangled: String? = nil // swift_demangle(string) TODO: should disable mangling?
+                self.cStrings.append(CStringModel(startOffset: validStringStartIndex, length: nextCStringDataLength, content: string, demangled: demangled))
+            }
+        }
+        for (index, cString) in self.cStrings.enumerated() {
+            cStringOffsetIndexMap[cString.startOffset] = index
         }
     }
     
     override func createTranslations() -> [Translation] {
         return self.cStrings.map {
-            Translation(description: $0.content == nil ? "Unable to decode" : "UTF8-String",
-                        explanation: $0.content ?? "🙅‍♂️ Invalid UTF8 String",
-                        bytesCount: $0.length,
-                        extraDescription: self.demanglingCString ? "Demangled" : nil,
-                        extraExplanation: $0.demangled )
+            Translation(definition: $0.content == nil ? "Unable to decode" : "UTF8-String",
+                        humanReadable: $0.content ?? "🙅‍♂️ Invalid UTF8 String",
+                        bytesCount: $0.length, translationType: .utf8String,
+                        extraDefinition: $0.demangled != nil ? "Demangled" : nil,
+                        extraHumanReadable: $0.demangled )
         }
     }
     
-}
-
-extension CStringComponent {
-    
-    func findString(at offset: Int) -> String? {
-        var ret: String?
-        self.withInitializationDone {
-            let searchedIndex = self.cStrings.binarySearch { $0.startOffset < offset }
-            ret = self.cStrings[searchedIndex].startOffset == offset ? self.cStrings[searchedIndex].content : nil
-        }
-        return ret
-    }
-    
-    func findString(virtualAddress: Swift.UInt64) -> String? {
-        let virtualAddressBegin = self.virtualAddress
-        let virtualAddressEnd = virtualAddressBegin + UInt64(self.dataSize)
-        if virtualAddress < virtualAddressBegin || virtualAddress >= virtualAddressEnd { return nil }
+    func findString(atDataOffset offset: Int) -> String? {
         var finded: String?
         self.withInitializationDone {
-            for cString in self.cStrings {
-                if UInt64(cString.startOffset) + virtualAddressBegin == virtualAddress {
-                    finded = cString.content
-                    break;
-                }
+            if let index = self.cStringOffsetIndexMap[offset] {
+                finded = self.cStrings[index].content
             }
         }
         return finded
     }
     
 }
+
+class CStringSectionComponent: CStringComponent {
+    
+    private let baseVirtualAddress: UInt64
+    
+    init(_ data: Data, title: String, virtualAddress: UInt64) {
+        self.baseVirtualAddress = virtualAddress
+        super.init(data, title: title)
+    }
+    
+    func findString(virtualAddress: Swift.UInt64) -> String? {
+        let virtualAddressBegin = self.baseVirtualAddress
+        let virtualAddressEnd = virtualAddressBegin + UInt64(self.dataSize)
+        if virtualAddress < virtualAddressBegin || virtualAddress >= virtualAddressEnd { return nil }
+        let dataOffset = Int(virtualAddress - self.baseVirtualAddress)
+        return self.findString(atDataOffset: dataOffset)
+    }
+    
+}
+
+
+

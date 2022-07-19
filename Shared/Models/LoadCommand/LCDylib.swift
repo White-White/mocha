@@ -25,16 +25,16 @@ class LCDylib: LoadCommand {
         self.compatibilityVersion = LCDylib.version(for: dataShifter.shiftUInt32())
         self.libPathDataCount = data.count - Int(self.libPathOffset)
         self.libPath = dataShifter.shift(.rawNumber(self.libPathDataCount)).utf8String?.spaceRemoved ?? Log.warning("Failed to parse dylib path. Debug me.")
-        super.init(data, type: type, subTitle: type.name + " (\(libPath.components(separatedBy: "/").last ?? ""))")
+        super.init(data, type: type, title: type.name + " (\(libPath.components(separatedBy: "/").last ?? ""))")
     }
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Path Offset", explanation: "\(self.libPathOffset)", bytesCount: 4))
-        translations.append(Translation(description: "Build Time", explanation: "\(self.timestamp)", bytesCount: 4))
-        translations.append(Translation(description: "Version", explanation: self.currentVersion, bytesCount: 4))
-        translations.append(Translation(description: "Comtatible Version", explanation: self.compatibilityVersion, bytesCount: 4))
-        translations.append(Translation(description: "Path", explanation: self.libPath, bytesCount: self.libPathDataCount))
+        translations.append(Translation(definition: "Path Offset", humanReadable: "\(self.libPathOffset)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Build Time", humanReadable: "\(self.timestamp)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Version", humanReadable: self.currentVersion, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Comtatible Version", humanReadable: self.compatibilityVersion, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Path", humanReadable: self.libPath, bytesCount: self.libPathDataCount, translationType: .utf8String))
         return translations
     }
     

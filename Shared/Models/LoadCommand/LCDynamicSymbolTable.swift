@@ -60,24 +60,24 @@ class LCDynamicSymbolTable: LoadCommand {
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Start Index of Local Symbols ", explanation: "\(self.ilocalsym)", bytesCount: 4))
-        translations.append(Translation(description: "Number of Local Symbols ", explanation: "\(self.nlocalsym)", bytesCount: 4))
-        translations.append(Translation(description: "Start Index of External Defined Symbols ", explanation: "\(self.iextdefsym)", bytesCount: 4))
-        translations.append(Translation(description: "Number of External Defined Symbols ", explanation: "\(self.nextdefsym )", bytesCount: 4))
-        translations.append(Translation(description: "Start Index of Undefined Symbols ", explanation: "\(self.iundefsym)", bytesCount: 4))
-        translations.append(Translation(description: "Number of Undefined Symbols ", explanation: "\(self.nundefsym)", bytesCount: 4))
-        translations.append(Translation(description: "file offset to table of contents ", explanation: "\(self.tocoff.hex)", bytesCount: 4))
-        translations.append(Translation(description: "number of entries in table of contents ", explanation: "\(self.ntoc)", bytesCount: 4))
-        translations.append(Translation(description: "file offset to module table ", explanation: "\(self.modtaboff.hex)", bytesCount: 4))
-        translations.append(Translation(description: "number of module table entries ", explanation: "\(self.nmodtab)", bytesCount: 4))
-        translations.append(Translation(description: "offset to referenced symbol table ", explanation: "\(self.extrefsymoff.hex)", bytesCount: 4))
-        translations.append(Translation(description: "number of referenced symbol table entries ", explanation: "\(self.nextrefsyms)", bytesCount: 4))
-        translations.append(Translation(description: "file offset to the indirect symbol table ", explanation: "\(self.indirectsymoff.hex)", bytesCount: 4))
-        translations.append(Translation(description: "number of indirect symbol table entries ", explanation: "\(self.nindirectsyms)", bytesCount: 4))
-        translations.append(Translation(description: "offset to external relocation entries ", explanation: "\(self.extreloff.hex)", bytesCount: 4))
-        translations.append(Translation(description: "number of external relocation entries ", explanation: "\(self.nextrel)", bytesCount: 4))
-        translations.append(Translation(description: "offset to local relocation entries ", explanation: "\(self.locreloff.hex)", bytesCount: 4))
-        translations.append(Translation(description: "number of local relocation entries ", explanation: "\(self.nlocrel)", bytesCount: 4))
+        translations.append(Translation(definition: "Start Index of Local Symbols ", humanReadable: "\(self.ilocalsym)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Number of Local Symbols ", humanReadable: "\(self.nlocalsym)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Start Index of External Defined Symbols ", humanReadable: "\(self.iextdefsym)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Number of External Defined Symbols ", humanReadable: "\(self.nextdefsym )", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Start Index of Undefined Symbols ", humanReadable: "\(self.iundefsym)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Number of Undefined Symbols ", humanReadable: "\(self.nundefsym)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "file offset to table of contents ", humanReadable: "\(self.tocoff.hex)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "number of entries in table of contents ", humanReadable: "\(self.ntoc)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "file offset to module table ", humanReadable: "\(self.modtaboff.hex)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "number of module table entries ", humanReadable: "\(self.nmodtab)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "offset to referenced symbol table ", humanReadable: "\(self.extrefsymoff.hex)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "number of referenced symbol table entries ", humanReadable: "\(self.nextrefsyms)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "file offset to the indirect symbol table ", humanReadable: "\(self.indirectsymoff.hex)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "number of indirect symbol table entries ", humanReadable: "\(self.nindirectsyms)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "offset to external relocation entries ", humanReadable: "\(self.extreloff.hex)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "number of external relocation entries ", humanReadable: "\(self.nextrel)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "offset to local relocation entries ", humanReadable: "\(self.locreloff.hex)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "number of local relocation entries ", humanReadable: "\(self.nlocrel)", bytesCount: 4, translationType: .number))
         return translations
     }
     
@@ -87,7 +87,7 @@ class LCDynamicSymbolTable: LoadCommand {
         let indirectSymbolTableSize = Int(self.nindirectsyms * 4)
         if indirectSymbolTableSize == .zero { return nil }
         let indirectSymbolTableData = machoData.subSequence(from: indirectSymbolTableStartOffset, count: indirectSymbolTableSize)
-        return IndirectSymbolTable(indirectSymbolTableData, title: "Indirect Symbol Table", subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+        return IndirectSymbolTable(indirectSymbolTableData, title: "Indirect Symbol Table", is64Bit: is64Bit)
     }
     
 }

@@ -53,9 +53,9 @@ struct RelocationEntry {
     
     var translations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Address", explanation: self.address.hex, bytesCount: 4))
-        translations.append(Translation(description: "SymbolNum", explanation: self.symbolNum.hex, bytesCount: 3))
-        translations.append(Translation(description: "extra", explanation: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)", bytesCount: 1))
+        translations.append(Translation(definition: "Address", humanReadable: self.address.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "SymbolNum", humanReadable: self.symbolNum.hex, bytesCount: 3, translationType: .number))
+        translations.append(Translation(definition: "extra", humanReadable: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)", bytesCount: 1, translationType: .flags))
         return translations
     }
     

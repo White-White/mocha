@@ -18,6 +18,8 @@ struct FunctionStart {
 
 class FunctionStartsComponent: MachoComponent {
     
+    override var initDependencies: [MachoComponent?] { [macho?.symbolTable] }
+    
     let textSegmentVirtualAddress: Swift.UInt64
     let functionStarts: [FunctionStart]
     
@@ -47,7 +49,7 @@ class FunctionStartsComponent: MachoComponent {
             } while (more)
         }
         self.functionStarts = functionStarts
-        super.init(data, title: title, subTitle: Constants.segmentNameLINKEDIT)
+        super.init(data, title: title)
     }
     
     override func createTranslations() -> [Translation] {
@@ -55,20 +57,19 @@ class FunctionStartsComponent: MachoComponent {
     }
     
     private func translation(for functionStart: FunctionStart) -> Translation {
-        var symbolName: String?
+        var symbolName: String = ""
         let functionVirtualAddress = functionStart.address + textSegmentVirtualAddress
         
-        if let functionSymbol = macho?.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress),
-           let _symbolName = macho?.stringTable?.findString(at: Int(functionSymbol.indexInStringTable)) {
-            symbolName = _symbolName
-        }
+        macho?.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress)?.forEach({ symbolTableEntry in
+            guard symbolTableEntry.symbolType == .section else { return }
+            symbolName += symbolTableEntry.symbolName
+        })
         
-        return Translation(description: "Vitual Address",
-                           explanation: (functionStart.address + textSegmentVirtualAddress).hex,
-                           bytesCount: functionStart.byteLength,
-                           extraDescription: symbolName != nil ? "Referred Symbol Name" : nil,
-                           extraExplanation: symbolName,
-                           hasDivider: true)
+        return Translation(definition: "Vitual Address",
+                           humanReadable: (functionStart.address + textSegmentVirtualAddress).hex,
+                           bytesCount: functionStart.byteLength, translationType: .number,
+                           extraDefinition: "Referred Symbol Name",
+                           extraHumanReadable: symbolName)
     }
     
 }

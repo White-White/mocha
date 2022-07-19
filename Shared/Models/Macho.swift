@@ -29,11 +29,11 @@ enum MachoType {
     var readable: String {
         switch self {
         case .object:
-            return "MH_OBJECT" // : Relocatable object file
+            return "Relocatable object file (MH_OBJECT)" // : Relocatable object file
         case .execute:
-            return "MH_EXECUTE" // : Demand paged executable file
+            return " Demand paged executable file (MH_EXECUTE)" // : Demand paged executable file
         case .dylib:
-            return "MH_DYLIB" // : Dynamically bound shared library
+            return "Dynamically bound shared library (MH_DYLIB)" // : Dynamically bound shared library
         case .unknown(let value):
             return "unknown macho file: (\(value)"
         }
@@ -42,6 +42,7 @@ enum MachoType {
 
 class MachoHeader: MachoComponent {
     
+    let magicData: Data
     let is64Bit: Bool
     let cpuType: CPUType
     let cpuSubtype: CPUSubtype
@@ -53,12 +54,9 @@ class MachoHeader: MachoComponent {
     
     init(from machoData: Data, is64Bit: Bool) {
         self.is64Bit = is64Bit
-        
         let headerData = machoData.subSequence(from: .zero, count: is64Bit ? 32 : 28)
-        
         var dataShifter = DataShifter(headerData)
-        // skip magic
-        dataShifter.skip(.doubleWords)
+        self.magicData = dataShifter.shift(.doubleWords)
         self.cpuType = CPUType(dataShifter.shiftUInt32())
         self.cpuSubtype = CPUSubtype(dataShifter.shiftUInt32(), cpuType: self.cpuType)
         self.machoType = MachoType(with: dataShifter.shiftUInt32())
@@ -66,19 +64,19 @@ class MachoHeader: MachoComponent {
         self.sizeOfAllLoadCommand = dataShifter.shiftUInt32()
         self.flags = dataShifter.shiftUInt32()
         self.reserved = is64Bit ? dataShifter.shiftUInt32() : nil
-        super.init(headerData, title: "Macho Header", subTitle: "Macho Header")
+        super.init(headerData, title: "Mach Header")
     }
     
     override func createTranslations() -> [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "File Magic", explanation: "File Magic", bytesCount: 4))
-        translations.append(Translation(description: "CPU Type", explanation: self.cpuType.name, bytesCount: 4))
-        translations.append(Translation(description: "CPU Sub Type", explanation: self.cpuSubtype.name, bytesCount: 4))
-        translations.append(Translation(description: "Macho Type", explanation: self.machoType.readable, bytesCount: 4))
-        translations.append(Translation(description: "Number of Load Commands", explanation: "\(self.numberOfLoadCommands)", bytesCount: 4))
-        translations.append(Translation(description: "Size of all Load Commands", explanation: self.sizeOfAllLoadCommand.hex, bytesCount: 4))
-        translations.append(Translation(description: "Valid Flags", explanation: MachoHeader.flagsDescriptionFrom(self.flags), bytesCount: 4))
-        if let reserved = self.reserved { translations.append(Translation(description: "Reversed", explanation: reserved.hex, bytesCount: 4)) }
+        translations.append(Translation(definition: "Magic", humanReadable: String.init(format: "%0X%0X%0X%0X", magicData[0], magicData[1], magicData[2], magicData[3]), bytesCount: 4, translationType: .rawData))
+        translations.append(Translation(definition: "CPU Type", humanReadable: self.cpuType.name, bytesCount: 4, translationType: .numberEnum))
+        translations.append(Translation(definition: "CPU Sub Type", humanReadable: self.cpuSubtype.name, bytesCount: 4, translationType: .numberEnum))
+        translations.append(Translation(definition: "Macho Type", humanReadable: self.machoType.readable, bytesCount: 4, translationType: .numberEnum))
+        translations.append(Translation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), bytesCount: 4, translationType: .flags))
+        if let reserved = self.reserved { translations.append(Translation(definition: "Reverved", humanReadable: reserved.hex, bytesCount: 4, translationType: .number)) }
         return translations
     }
     
@@ -137,7 +135,7 @@ class Macho: Equatable {
     let dyldInfoComponents: [MachoComponent]
     
     let allComponents: [MachoComponent]
-    let allCStringComponents: [CStringComponent]
+    lazy var cStringSectionComponents: [CStringSectionComponent] = { allComponents.compactMap { $0 as? CStringSectionComponent } }()
     
     let stringTable: StringTable?
     let symbolTable: SymbolTable?
@@ -172,7 +170,7 @@ class Macho: Equatable {
         let sectionComponents = sectionHeaders.compactMap { $0.sectionComponent(machoData: machoData, machoHeader: machoHeader) }
         self.sectionComponents = sectionComponents
         
-        let linkedITDataLoadCommands = ((loadCommands.compactMap { $0 as? LCLinkedITData }).filter { $0.containedDataSize.isNotZero })
+        let linkedITDataLoadCommands = loadCommands.compactMap { $0 as? LCLinkedITData }
         let linkedITComponents = linkedITDataLoadCommands.map { $0.linkedITComponent(machoData: machoData, machoHeader: machoHeader, textSegmentLoadCommand: textSegmentLoadCommand) }
         self.linkedITComponents = linkedITComponents
         
@@ -184,20 +182,38 @@ class Macho: Equatable {
         allComponents.append(contentsOf: loadCommands)
         allComponents.append(contentsOf: sectionComponents)
         allComponents.append(contentsOf: relocationTables)
-        if let symbolTable = self.symbolTable { allComponents.append(symbolTable) }
-        if let stringTable = self.stringTable { allComponents.append(stringTable) }
-        if let indirectSymbolTable = self.indirectSymbolTable { allComponents.append(indirectSymbolTable) }
         allComponents.append(contentsOf: linkedITComponents)
         allComponents.append(contentsOf: dyldInfoComponents)
+        if let symbolTable = self.symbolTable { allComponents.append(symbolTable) }
+        if let indirectSymbolTable = self.indirectSymbolTable { allComponents.append(indirectSymbolTable) }
+        if let stringTable = self.stringTable { allComponents.append(stringTable) }
         self.allComponents = allComponents
-        self.allCStringComponents = allComponents.compactMap { $0 as? CStringComponent }
-        
+        self.allComponents.forEach { $0.macho = self }
         tick.tock("Macho Init Completed")
         
-        self.allComponents.forEach {
-            $0.macho = self
-            $0.startInitialization()
-        }
+        self.triggerInit(for: self.allComponents)
+        self.triggerTanslationInit(for: self.allComponents)
+        tick.tock("Macho Trigger Component Init Completed")
     }
     
+    func triggerInit(for components: [MachoComponent]) {
+        if components.isEmpty { return }
+        let dependencies = (components.flatMap { $0.initDependencies }).compactMap { $0 }
+        self.triggerInit(for: dependencies)
+        
+        let mainThreadSemaphore = DispatchSemaphore(value: 0)
+        let taskGroup = DispatchGroup()
+        components.forEach { component in
+            taskGroup.enter()
+            component.startInitialization(onLocked: { taskGroup.leave() })
+        }
+        taskGroup.notify(queue: .global()) { mainThreadSemaphore.signal() }
+        mainThreadSemaphore.wait()
+    }
+    
+    func triggerTanslationInit(for components: [MachoComponent]) {
+        components.forEach { component in
+            component.startTranslationInitialization()
+        }
+    }
 }

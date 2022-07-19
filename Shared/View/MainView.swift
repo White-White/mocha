@@ -120,7 +120,13 @@ struct MainView: View {
                     openPanel.begin {
                         if $0 == .OK, let fileURL = openPanel.url {
                             self.selectedFileURL = fileURL
-                            self.machoMetaDatas = (try? MochaDocument(fileURL: fileURL))?.machoMetaDatas
+                            if let machoMetaDatas = (try? MochaDocument(fileURL: fileURL))?.machoMetaDatas {
+                                if machoMetaDatas.count == 1 {
+                                    self.selectedMacho = machoMetaDatas.first?.macho
+                                } else {
+                                    self.machoMetaDatas = machoMetaDatas
+                                }
+                            }
                         }
                     }
                 } label: {

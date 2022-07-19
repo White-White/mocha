@@ -9,11 +9,10 @@ import Foundation
 
 class OperationCodeComponent<Code: OperationCodeMetadataProtocol>: MachoComponent {
     
-    let operationCodes: [OperationCode<Code>]
+    private(set) var operationCodes: [OperationCode<Code>] = []
     
-    override init(_ data: Data, title: String, subTitle: String) {
+    override func initialize() {
         self.operationCodes = OperationCodeComponent.operationCodes(from: data)
-        super.init(data, title: title, subTitle: subTitle)
     }
     
     override func createTranslations() -> [Translation] {

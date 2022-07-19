@@ -20,10 +20,10 @@ class ModelBasedComponent<Model: InterpretableModel>: MachoComponent {
     let modelSize: Int
     let is64Bit: Bool
     
-    init(_ data: Data, title: String, subTitle: String, is64Bit: Bool) {
+    init(_ data: Data, title: String, is64Bit: Bool) {
         self.is64Bit = is64Bit
         self.modelSize = is64Bit ? Model.modelSizeFor64Bit : Model.modelSizeFor32Bit
-        super.init(data, title: title, subTitle: subTitle)
+        super.init(data, title: title)
     }
     
     override func initialize() {

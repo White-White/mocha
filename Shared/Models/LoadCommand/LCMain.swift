@@ -19,8 +19,8 @@ class LCMain: LoadCommand {
     }
     
     override var commandTranslations: [Translation] {
-        return [Translation(description: "Entry Offset (relative to __TEXT)", explanation: entryOffset.hex, bytesCount: 8),
-                Translation(description: "Entry Offset (relative to __TEXT)", explanation: entryOffset.hex, bytesCount: 8)]
+        return [Translation(definition: "Entry Offset (relative to __TEXT)", humanReadable: entryOffset.hex, bytesCount: 8, translationType: .number),
+                Translation(definition: "Entry Offset (relative to __TEXT)", humanReadable: entryOffset.hex, bytesCount: 8, translationType: .number)]
     }
     
 }

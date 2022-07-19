@@ -41,16 +41,16 @@ class LCDyldInfo: LoadCommand {
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Rebase Info File Offset", explanation: rebaseOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Rebase Info Size", explanation: rebaseSize.hex, bytesCount: 4))
-        translations.append(Translation(description: "Binding Info File Offset", explanation: bindOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Binding Info Size", explanation: bindSize.hex, bytesCount: 4))
-        translations.append(Translation(description: "Weak Binding Info File Offset", explanation: weakBindOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Weak Binding Info Size", explanation: weakBindSize.hex, bytesCount: 4))
-        translations.append(Translation(description: "Lazy Binding Info File Offset", explanation: lazyBindOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Lazy Binding Info Size", explanation: lazyBindSize.hex, bytesCount: 4))
-        translations.append(Translation(description: "Export Info File Offset", explanation: exportOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Export Info Size", explanation: exportSize.hex, bytesCount: 4))
+        translations.append(Translation(definition: "Rebase Info File Offset", humanReadable: rebaseOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Rebase Info Size", humanReadable: rebaseSize.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Binding Info File Offset", humanReadable: bindOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Binding Info Size", humanReadable: bindSize.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Weak Binding Info File Offset", humanReadable: weakBindOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Weak Binding Info Size", humanReadable: weakBindSize.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Lazy Binding Info File Offset", humanReadable: lazyBindOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Lazy Binding Info Size", humanReadable: lazyBindSize.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Export Info File Offset", humanReadable: exportOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Export Info Size", humanReadable: exportSize.hex, bytesCount: 4, translationType: .number))
         return translations
     }
     
@@ -61,9 +61,7 @@ class LCDyldInfo: LoadCommand {
         let rebaseInfoSize = Int(self.rebaseSize)
         if rebaseInfoStart.isNotZero && rebaseInfoSize.isNotZero {
             let rebaseInfoData = machoData.subSequence(from: rebaseInfoStart, count: rebaseInfoSize)
-            let rebaseInfoComponent = OperationCodeComponent<RebaseOperationCodeMetadata>(rebaseInfoData,
-                                                                                          title: "Rebase Opcode",
-                                                                                          subTitle: Constants.segmentNameLINKEDIT)
+            let rebaseInfoComponent = OperationCodeComponent<RebaseOperationCodeMetadata>(rebaseInfoData, title: "Rebase Opcode")
             components.append(rebaseInfoComponent)
         }
         
@@ -72,9 +70,7 @@ class LCDyldInfo: LoadCommand {
         let bindInfoSize = Int(self.bindSize)
         if bindInfoStart.isNotZero && bindInfoSize.isNotZero {
             let bindInfoData = machoData.subSequence(from: bindInfoStart, count: bindInfoSize)
-            let bindingInfoComponent = OperationCodeComponent<BindOperationCodeMetadata>(bindInfoData,
-                                                                                         title: "Binding Opcode",
-                                                                                         subTitle: Constants.segmentNameLINKEDIT)
+            let bindingInfoComponent = OperationCodeComponent<BindOperationCodeMetadata>(bindInfoData, title: "Binding Opcode")
             components.append(bindingInfoComponent)
         }
         
@@ -82,9 +78,7 @@ class LCDyldInfo: LoadCommand {
         let weakBindSize = Int(self.weakBindSize)
         if weakBindInfoStart.isNotZero && weakBindSize.isNotZero {
             let weakBindData = machoData.subSequence(from: weakBindInfoStart, count: weakBindSize)
-            let weakBindingInfoComponent = OperationCodeComponent<BindOperationCodeMetadata>(weakBindData,
-                                                                                             title: "Weak Binding Opcode",
-                                                                                             subTitle: Constants.segmentNameLINKEDIT)
+            let weakBindingInfoComponent = OperationCodeComponent<BindOperationCodeMetadata>(weakBindData, title: "Weak Binding Opcode")
             components.append(weakBindingInfoComponent)
         }
         
@@ -92,9 +86,7 @@ class LCDyldInfo: LoadCommand {
         let lazyBindSize = Int(self.lazyBindSize)
         if lazyBindInfoStart.isNotZero && lazyBindSize.isNotZero {
             let lazyBindData = machoData.subSequence(from: lazyBindInfoStart, count: lazyBindSize)
-            let lazyBindingInfoComponent = OperationCodeComponent<BindOperationCodeMetadata>(lazyBindData,
-                                                                                             title: "Lazy Binding Opcode",
-                                                                                             subTitle: Constants.segmentNameLINKEDIT)
+            let lazyBindingInfoComponent = OperationCodeComponent<BindOperationCodeMetadata>(lazyBindData, title: "Lazy Binding Opcode")
             components.append(lazyBindingInfoComponent)
         }
         
@@ -102,9 +94,7 @@ class LCDyldInfo: LoadCommand {
         let exportInfoSize = Int(self.exportSize)
         if exportInfoStart.isNotZero && exportInfoSize.isNotZero {
             let exportInfoData = machoData.subSequence(from: exportInfoStart, count: exportInfoSize)
-            let exportInfoComponent = ExportInfoComponent(exportInfoData,
-                                                          title: "Export Info",
-                                                          subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+            let exportInfoComponent = ExportInfoComponent(exportInfoData, title: "Export Info", is64Bit: is64Bit)
             components.append(exportInfoComponent)
         }
         

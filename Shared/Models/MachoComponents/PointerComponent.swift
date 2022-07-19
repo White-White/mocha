@@ -12,7 +12,7 @@ class PointerComponent: MachoComponent {
     let pointerSize: Int
     let pointerValues: [UInt64]
     
-    init(_ data: Data, is64Bit: Bool, title: String, subTitle: String) {
+    init(_ data: Data, is64Bit: Bool, title: String) {
         let pointerSize = is64Bit ? 8 : 4
         self.pointerSize = pointerSize
         
@@ -27,7 +27,7 @@ class PointerComponent: MachoComponent {
         }
         self.pointerValues = pointerValues
         
-        super.init(data, title: title, subTitle: subTitle)
+        super.init(data, title: title)
     }
     
 }
@@ -37,20 +37,19 @@ class LiteralPointerComponent: PointerComponent {
     override func createTranslations() -> [Translation] {
         return self.pointerValues.map { self.translation(for: $0) }
     }
-
+    
     func translation(for pointerValue: UInt64) -> Translation {
-        guard let searchedString = (macho?.allCStringComponents.reduce(nil) { partialResult, component in
+        guard let searchedString = (macho?.cStringSectionComponents.reduce(nil) { partialResult, component in
             partialResult ?? component.findString(virtualAddress: pointerValue)
         }) else {
             fatalError()
         }
         
-        let translation = Translation(description: "Pointer Value (Virtual Address)",
-                                      explanation: pointerValue.hex,
-                                      bytesCount: self.pointerSize,
-                                      extraDescription: "Referenced String Symbol",
-                                      extraExplanation: searchedString,
-                                      hasDivider: true)
+        let translation = Translation(definition: "Pointer Value (Virtual Address)",
+                                      humanReadable: pointerValue.hex,
+                                      bytesCount: self.pointerSize, translationType: .number,
+                                      extraDefinition: "Referenced String Symbol",
+                                      extraHumanReadable: searchedString)
         return translation
     }
     
@@ -58,13 +57,14 @@ class LiteralPointerComponent: PointerComponent {
 
 class SymbolPointerComponent: PointerComponent {
     
+    override var initDependencies: [MachoComponent?] { [macho?.indirectSymbolTable, macho?.symbolTable] }
     let sectionType: SectionType
     let startIndexInIndirectSymbolTable: Int
-
-    init(_ data: Data, is64Bit: Bool, title: String, subTitle: String, sectionHeader: SectionHeader) {
+    
+    init(_ data: Data, is64Bit: Bool, title: String, sectionHeader: SectionHeader) {
         self.sectionType = sectionHeader.sectionType
         self.startIndexInIndirectSymbolTable = Int(sectionHeader.reserved1)
-        super.init(data, is64Bit: is64Bit, title: title, subTitle: subTitle)
+        super.init(data, is64Bit: is64Bit, title: title)
     }
     
     override func createTranslations() -> [Translation] {
@@ -73,11 +73,14 @@ class SymbolPointerComponent: PointerComponent {
     
     func translation(for pointerValue: UInt64, index: Int) -> Translation {
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
+        
         var symbolName: String?
-        if let indirectSymbolTableEntry = macho?.indirectSymbolTable?.indirectSymbol(atIndex: indirectSymbolTableIndex),
-           let symbolTableEntry = macho?.symbolTable?.symbol(atIndex: Int(indirectSymbolTableEntry.symbolTableIndex)),
-           let _symbolName = macho?.stringTable?.findString(at: Int(symbolTableEntry.indexInStringTable)) {
-            symbolName = _symbolName
+        if let indirectSymbolTableEntry = macho?.indirectSymbolTable?.findIndirectSymbol(atIndex: indirectSymbolTableIndex) {
+            if indirectSymbolTableEntry.isSymbolLocal || indirectSymbolTableEntry.isSymbolAbsolute {
+                symbolName = "Local Symbol. Absolute: \(indirectSymbolTableEntry.isSymbolAbsolute)"
+            } else {
+                symbolName = macho?.symbolTable?.findSymbol(atIndex: Int(indirectSymbolTableEntry.symbolTableIndex)).symbolName
+            }
         }
         
         var description = "Pointer Raw Value"
@@ -87,11 +90,11 @@ class SymbolPointerComponent: PointerComponent {
             description += " (To be fixed by dyld)"
         }
         
-        let translation = Translation(description: description,
-                                      explanation: pointerValue.hex,
-                                      bytesCount: self.pointerSize,
-                                      extraDescription: "Symbol Name of the Corresponding Indirect Symbol Table Entry",
-                                      extraExplanation: symbolName)
+        let translation = Translation(definition: description,
+                                      humanReadable: pointerValue.hex,
+                                      bytesCount: self.pointerSize, translationType: .number,
+                                      extraDefinition: "Symbol Name of the Corresponding Indirect Symbol Table Entry",
+                                      extraHumanReadable: symbolName)
         
         return translation
     }

@@ -21,7 +21,7 @@ struct VMProtection {
         self.executable = raw & 0x04 != 0
     }
     
-    var explanation: String {
+    var humanReadable: String {
         if readable && writable && executable { return "VM_PROT_ALL" }
         if readable && writable { return "VM_PROT_DEFAULT" }
         var ret: [String] = []
@@ -74,15 +74,15 @@ class LCSegment: LoadCommand {
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Segment Name", explanation: self.segmentName, bytesCount: 16))
-        translations.append(Translation(description: "Virtual Memory Start Address", explanation: self.vmaddr.hex, bytesCount: self.is64Bit ? 8 : 4))
-        translations.append(Translation(description: "Virtual Memory Size", explanation: self.vmsize.hex, bytesCount: self.is64Bit ? 8 : 4))
-        translations.append(Translation(description: "File Offset", explanation: self.segmentFileOff.hex, bytesCount: self.is64Bit ? 8 : 4))
-        translations.append(Translation(description: "Size to Map into Memory", explanation: self.segmentSize.hex, bytesCount: self.is64Bit ? 8 : 4))
-        translations.append(Translation(description: "Maximum VM Protection", explanation: VMProtection(raw: self.maxprot).explanation, bytesCount: 4))
-        translations.append(Translation(description: "Initial VM Protection", explanation: VMProtection(raw: self.initprot).explanation, bytesCount: 4))
-        translations.append(Translation(description: "Number of Sections", explanation: "\(self.numberOfSections)", bytesCount: 4))
-        translations.append(Translation(description: "Flags", explanation: LCSegment.flags(for: self.flags), bytesCount: 4))
+        translations.append(Translation(definition: "Segment Name", humanReadable: self.segmentName, bytesCount: 16, translationType: .utf8String))
+        translations.append(Translation(definition: "Virtual Memory Start Address", humanReadable: self.vmaddr.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: .number))
+        translations.append(Translation(definition: "Virtual Memory Size", humanReadable: self.vmsize.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: .number))
+        translations.append(Translation(definition: "File Offset", humanReadable: self.segmentFileOff.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: .number))
+        translations.append(Translation(definition: "Size to Map into Memory", humanReadable: self.segmentSize.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: .number))
+        translations.append(Translation(definition: "Maximum VM Protection", humanReadable: VMProtection(raw: self.maxprot).humanReadable, bytesCount: 4, translationType: .flags))
+        translations.append(Translation(definition: "Initial VM Protection", humanReadable: VMProtection(raw: self.initprot).humanReadable, bytesCount: 4, translationType: .flags))
+        translations.append(Translation(definition: "Number of Sections", humanReadable: "\(self.numberOfSections)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Flags", humanReadable: LCSegment.flags(for: self.flags), bytesCount: 4, translationType: .flags))
         return translations + self.sectionHeaders.flatMap { $0.getTranslations() }
     }
     
@@ -106,7 +106,7 @@ class LCSegment: LoadCommand {
         guard let startOffsetInMacho = startOffsetInMacho, !relocationInfos.isEmpty else { return nil }
         
         let relocationData = machoData.subSequence(from: startOffsetInMacho, count: RelocationEntry.entrySize * numberOfAllEntries)
-        return RelocationTable(data: relocationData, segmentTitle: self.segmentName, relocationInfos: relocationInfos)
+        return RelocationTable(data: relocationData, relocationInfos: relocationInfos)
     }
     
     static func flags(for flags: UInt32) -> String {
@@ -134,7 +134,6 @@ class LCSegment: LoadCommand {
         if (flags & 0x4 != 0) { ret.append("SG_NORELOC") }
         if (flags & 0x8 != 0) { ret.append("SG_PROTECTED_VERSION_1") }
         if (flags & 0x10 != 0) { ret.append("SG_READ_ONLY") }
-        if ret.isEmpty { ret.append("NONE") }
         return ret.joined(separator: "\n")
     }
 }

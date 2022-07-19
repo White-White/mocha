@@ -9,9 +9,15 @@ import Foundation
 
 class IndirectSymbolTable: ModelBasedComponent<IndirectSymbolTableEntry> {
     
-    func indirectSymbol(atIndex index: Int) -> IndirectSymbolTableEntry {
-        guard index < self.models.count else { fatalError() }
-        return self.models[index]
+    override var initDependencies: [MachoComponent?] { [macho?.symbolTable] }
+    
+    func findIndirectSymbol(atIndex index: Int) -> IndirectSymbolTableEntry {
+        var indirectSymbolTableEntry: IndirectSymbolTableEntry!
+        self.withInitializationDone {
+            guard index < self.models.count else { fatalError() }
+            indirectSymbolTableEntry = self.models[index]
+        }
+        return indirectSymbolTableEntry
     }
     
 }

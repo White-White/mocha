@@ -39,18 +39,18 @@ struct OperationCode<CodeMetadata: OperationCodeMetadataProtocol> {
         
         var translations: [Translation] = []
         
-        translations.append(Translation(description: "Operation Code (Upper 4 bits)", explanation: codeMetadata.operationReadable(),
-                                        bytesCount: 1,
-                                        extraDescription: "Immediate Value Used As (Lower 4 bits)", extraExplanation: codeMetadata.immediateReadable()))
+        translations.append(Translation(definition: "Operation Code (Upper 4 bits)", humanReadable: codeMetadata.operationReadable(),
+                                        bytesCount: 1, translationType: .number,
+                                        extraDefinition: "Immediate Value Used As (Lower 4 bits)", extraHumanReadable: codeMetadata.immediateReadable()))
         
         translations.append(contentsOf: lebValues.map { ulebValue in
-            Translation(description: "LEB Value", explanation: ulebValue.isSigned ? "\(Int(bitPattern: UInt(ulebValue.raw)))" : "\(ulebValue.raw)",
-                        bytesCount: ulebValue.byteCount)
+            Translation(definition: "LEB Value", humanReadable: ulebValue.isSigned ? "\(Int(bitPattern: UInt(ulebValue.raw)))" : "\(ulebValue.raw)",
+                        bytesCount: ulebValue.byteCount, translationType: .uleb)
         })
         
         if let cstringData = cstringData {
             let cstring = cstringData.utf8String ?? "🙅‍♂️ Invalid CString"
-            translations.append(Translation(description: "String", explanation: cstring, bytesCount: cstringData.count))
+            translations.append(Translation(definition: "String", humanReadable: cstring, bytesCount: cstringData.count, translationType: .utf8String))
         }
         
         return translations

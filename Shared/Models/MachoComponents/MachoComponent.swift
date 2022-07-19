@@ -7,72 +7,86 @@
 
 import Foundation
 
-class MachoComponent: Equatable, Identifiable {
-    
+class MachoComponent: Equatable, Identifiable, Hashable {
     static func == (lhs: MachoComponent, rhs: MachoComponent) -> Bool {
         return lhs.id == rhs.id
     }
     
     let id = UUID()
     
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    let title: String
     let data: Data
     var dataSize: Int { data.count }
     var offsetInMacho: Int { data.startIndex }
     
-    let title: String
-    let subTitle: String
-    
-    private var rwLock = pthread_rwlock_t()
-    
-    init(_ data: Data, title: String, subTitle: String) {
-        self.data = data
-        self.title = title
-        self.subTitle = subTitle
-        pthread_rwlock_init(&self.rwLock, nil)
-    }
+    var initTriggered: Bool = false
+    var initDependencies: [MachoComponent?] { [] }
+    private var rwLockInitialization = pthread_rwlock_t()
+    private var rwLockTranslation = pthread_rwlock_t()
     
     weak var macho: Macho?
+    private(set) var translations: [Translation] = []
     
-    private var initialized: Bool = false
+    init(_ data: Data, title: String) {
+        self.data = data
+        self.title = title
+        pthread_rwlock_init(&self.rwLockInitialization, nil)
+        pthread_rwlock_init(&self.rwLockTranslation, nil)
+    }
+    
     func initialize() {
         
     }
     
-    private(set) var translations: [Translation] = []
     func createTranslations() -> [Translation] {
-        fatalError()
+        fatalError() // must override
     }
     
-    final func startInitialization(async: Bool = true) {
-        let initBlock = {
-            pthread_rwlock_wrlock(&self.rwLock)
-            if self.initialized { pthread_rwlock_unlock(&self.rwLock); return }
+    final func startInitialization(onLocked: @escaping () -> Void) {
+        if self.initTriggered { DispatchQueue.global().async { onLocked() }; return }
+        DispatchQueue.global().async {
+            pthread_rwlock_wrlock(&self.rwLockInitialization)
+            onLocked()
             let tick = TickTock()
             self.initialize()
-            tick.tock("Macho Component Async Init - \(self.title),\(self.subTitle)")
-            self.translations = self.createTranslations()
-            tick.tock("Generate \(self.translations.count) translations - \(self.title),\(self.subTitle)")
-            self.initialized = true
-            pthread_rwlock_unlock(&self.rwLock)
+            tick.tock("Macho Component Init - \(self.title)")
+            pthread_rwlock_unlock(&self.rwLockInitialization)
         }
-        if async {
-            DispatchQueue.global().async { initBlock() }
-        } else {
-            initBlock()
+        self.initTriggered = true
+    }
+    
+    final func startTranslationInitialization() {
+        DispatchQueue.global().async {
+            pthread_rwlock_wrlock(&self.rwLockTranslation)
+            self.withInitializationDone {
+                let tickTranslation = TickTock()
+                self.translations = self.createTranslations()
+                tickTranslation.tock("Generate \(self.translations.count) translations - \(self.title)")
+            }
+            pthread_rwlock_unlock(&self.rwLockTranslation)
         }
     }
     
     final func withInitializationDone(_ block: () -> Void) {
-        self.startInitialization(async: false)
-        pthread_rwlock_rdlock(&self.rwLock)
+        pthread_rwlock_rdlock(&self.rwLockInitialization)
         block()
-        pthread_rwlock_unlock(&self.rwLock)
+        pthread_rwlock_unlock(&self.rwLockInitialization)
     }
     
-    final var translationGroup: TranslationGroup {
-        var translations: [Translation] = []
-        self.withInitializationDone { translations = self.translations }
-        return TranslationGroup(translations, startOffsetInMacho: self.offsetInMacho)
+    final func withTranslationInitializationDone(_ block: () -> Void) {
+        pthread_rwlock_rdlock(&self.rwLockTranslation)
+        block()
+        pthread_rwlock_unlock(&self.rwLockTranslation)
+    }
+    
+    final var translationGroupViewModel: TranslationGroupViewModel {
+        var viewModel: TranslationGroupViewModel!
+        self.withTranslationInitializationDone { viewModel = TranslationGroupViewModel(self) }
+        return viewModel
     }
     
 }
@@ -80,7 +94,7 @@ class MachoComponent: Equatable, Identifiable {
 class MachoUnknownCodeComponent: MachoComponent {
     
     override func createTranslations() -> [Translation] {
-        return [Translation(description: "Unknow", explanation: "Mocha doesn's know how to parse this section yet.", bytesCount: .zero)]
+        return [Translation(definition: "Unknow", humanReadable: "Mocha doesn's know how to parse this section yet.", bytesCount: .zero, translationType: .rawData)]
     }
     
 }
@@ -88,15 +102,13 @@ class MachoUnknownCodeComponent: MachoComponent {
 class MachoZeroFilledComponent: MachoComponent {
     
     let runtimeSize: Int
-    //TODO: zero fill component out of order
-    init(runtimeSize: Int, title: String, subTitle: String) {
+    init(runtimeSize: Int, title: String) {
         self.runtimeSize = runtimeSize
-        super.init(Data(), /* dummy data */ title: title, subTitle: subTitle)
+        super.init(Data(), /* dummy data */ title: title)
     }
     
     override func createTranslations() -> [Translation] {
-        return [Translation(description: "Zero Filled Section", explanation: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)", bytesCount: .zero,
-                            explanationStyle: ExplanationStyle.extraDetail)]
+        return [Translation(definition: "Zero Filled Section", humanReadable: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)", bytesCount: .zero, translationType: .rawData)]
     }
     
 }

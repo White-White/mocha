@@ -45,9 +45,9 @@ struct DataInCodeModel: InterpretableModel {
     
     var translations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "File Offset", explanation: self.offset.hex, bytesCount: Straddle.doubleWords.raw))
-        translations.append(Translation(description: "Size", explanation: "\(self.length)", bytesCount: Straddle.word.raw))
-        translations.append(Translation(description: "Kind", explanation: self.kind.name, bytesCount: Straddle.word.raw))
+        translations.append(Translation(definition: "File Offset", humanReadable: self.offset.hex, bytesCount: Straddle.doubleWords.raw, translationType: .number))
+        translations.append(Translation(definition: "Size", humanReadable: "\(self.length)", bytesCount: Straddle.word.raw, translationType: .number))
+        translations.append(Translation(definition: "Kind", humanReadable: self.kind.name, bytesCount: Straddle.word.raw, translationType: .numberEnum))
         return translations
     }
     

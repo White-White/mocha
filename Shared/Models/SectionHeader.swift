@@ -152,26 +152,26 @@ struct SectionHeader {
     
     func getTranslations() -> [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Section Name", explanation: self.section, bytesCount: 16))
-        translations.append(Translation(description: "Segment Name", explanation: self.segment, bytesCount: 16))
-        translations.append(Translation(description: "Virtual Address", explanation: self.addr.hex, bytesCount: self.is64Bit ? 8 : 4))
-        translations.append(Translation(description: "Section Size", explanation: self.size.hex, bytesCount: self.is64Bit ? 8 : 4))
-        translations.append(Translation(description: "File Offset", explanation: self.offset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Align", explanation: "\(self.align)", bytesCount: 4))
-        translations.append(Translation(description: "Reloc Entry Offset / Number", explanation: self.fileOffsetOfRelocationEntries.hex + " / \(self.numberOfRelocatioEntries)", bytesCount: 8))
-        translations.append(Translation(description: "Section Type", explanation: "\(self.sectionType)", bytesCount: 1))
-        translations.append(Translation(description: "Section Attributes", explanation: self.sectionAttributes.descriptions.joined(separator: "\n"), bytesCount: 7))
-        translations.append(Translation(description: self.sectionType.hasIndirectSymbolTableEntries ? "Indirect Symbol Table Index" : "reserved1", explanation: self.reserved1.hex, bytesCount: 4))
-        translations.append(Translation(description: self.sectionType == .S_SYMBOL_STUBS ? "Stub Size" : "reserved2", explanation: self.reserved2.hex, bytesCount: 4))
-        if let reserved3 = self.reserved3 { translations.append(Translation(description: "reserved3", explanation: reserved3.hex, bytesCount: 4)) }
+        translations.append(Translation(definition: "Section Name", humanReadable: self.section, bytesCount: 16, translationType: .utf8String))
+        translations.append(Translation(definition: "Segment Name", humanReadable: self.segment, bytesCount: 16, translationType: .utf8String))
+        translations.append(Translation(definition: "Virtual Address", humanReadable: self.addr.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: .number))
+        translations.append(Translation(definition: "Section Size", humanReadable: self.size.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: .number))
+        translations.append(Translation(definition: "File Offset", humanReadable: self.offset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Align", humanReadable: "\(self.align)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Reloc Entry Offset", humanReadable: self.fileOffsetOfRelocationEntries.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Reloc Entry Number", humanReadable: "\(self.numberOfRelocatioEntries)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Section Type", humanReadable: "\(self.sectionType)", bytesCount: 1, translationType: .numberEnum))
+        translations.append(Translation(definition: "Section Attributes", humanReadable: self.sectionAttributes.descriptions.joined(separator: "\n"), bytesCount: 3, translationType: .flags))
+        translations.append(Translation(definition: self.sectionType.hasIndirectSymbolTableEntries ? "Indirect Symbol Table Index" : "reserved1", humanReadable: self.reserved1.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: self.sectionType == .S_SYMBOL_STUBS ? "Stub Size" : "reserved2", humanReadable: self.reserved2.hex, bytesCount: 4, translationType: .number))
+        if let reserved3 = self.reserved3 { translations.append(Translation(definition: "reserved3", humanReadable: reserved3.hex, bytesCount: 4, translationType: .number)) }
         return translations
     }
     
     func sectionComponent(machoData: Data, machoHeader: MachoHeader) -> MachoComponent {
         
         let is64Bit = machoHeader.is64Bit
-        let title = "Section"
-        let subTitle = self.segment + "," + self.section
+        let title = self.segment + "," + self.section
         
         // recognize section by section type
         switch self.sectionType {
@@ -183,18 +183,18 @@ struct SectionHeader {
              T == llvm::MachO::S_THREAD_LOCAL_ZEROFILL);
              }
              */
-            return MachoZeroFilledComponent(runtimeSize: Int(self.size), title: title, subTitle: subTitle)
+            return MachoZeroFilledComponent(runtimeSize: Int(self.size), title: title)
             
         case .S_CSTRING_LITERALS:
             let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
-            let cStringComponent = CStringComponent(data, title: title, subTitle: subTitle, virtualAddress: self.addr, demanglingCString: true)
+            let cStringComponent = CStringSectionComponent(data, title: title, virtualAddress: self.addr)
             return cStringComponent
         case .S_LITERAL_POINTERS:
             let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
-            return LiteralPointerComponent(data, is64Bit: is64Bit, title: title, subTitle: subTitle)
+            return LiteralPointerComponent(data, is64Bit: is64Bit, title: title)
         case .S_LAZY_SYMBOL_POINTERS, .S_NON_LAZY_SYMBOL_POINTERS, .S_LAZY_DYLIB_SYMBOL_POINTERS:
             let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
-            return SymbolPointerComponent(data, is64Bit: is64Bit, title: title, subTitle: subTitle, sectionHeader: self)
+            return SymbolPointerComponent(data, is64Bit: is64Bit, title: title, sectionHeader: self)
         default:
             break
         }
@@ -202,25 +202,25 @@ struct SectionHeader {
         // recognize section by section attributes
         if self.sectionAttributes.hasAttribute(.S_ATTR_PURE_INSTRUCTIONS) {
             let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
-            return InstructionComponent(data, title: title, subTitle: subTitle, cpuType: machoHeader.cpuType)
+            return InstructionComponent(data, title: title, cpuType: machoHeader.cpuType)
         }
         
         // recognize section by section name
-        let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size))
+        let data = machoData.subSequence(from: Int(self.offset), count: Int(self.size), allowZeroLength: true)
         switch self.segment {
         case Constants.sectionNameTEXT:
             switch self.section {
             case Constants.sectionNameUString:
-                return UStringComponent(data, title: title, subTitle: subTitle)
+                return UStringComponent(data, title: title)
             case "__swift5_reflstr":
                 // https://knight.sc/reverse%20engineering/2019/07/17/swift-metadata.html
                 // a great article on introducing swift metadata sections
-                return CStringComponent(data, title: title, subTitle: subTitle, virtualAddress: self.addr, demanglingCString: false)
+                return CStringSectionComponent(data, title: title, virtualAddress: self.addr)
             default:
-                return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+                return MachoUnknownCodeComponent(data, title: title)
             }
         default:
-            return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+            return MachoUnknownCodeComponent(data, title: title)
         }
     }
     

@@ -16,7 +16,7 @@ class UStringComponent: MachoComponent {
     
     let uStringPositions: [UStringPosition]
     
-    override init(_ data: Data, title: String, subTitle: String) {
+    override init(_ data: Data, title: String) {
         let dataLength = data.count
         let utf16UnitCount = dataLength / 2
         var uStringPositions: [UStringPosition] = []
@@ -37,7 +37,7 @@ class UStringComponent: MachoComponent {
         }
         self.uStringPositions = uStringPositions
         
-        super.init(data, title: title, subTitle: subTitle)
+        super.init(data, title: title)
     }
     
     override func createTranslations() -> [Translation] {
@@ -46,9 +46,9 @@ class UStringComponent: MachoComponent {
     
     private func translation(at uStringPosition: UStringPosition) -> Translation {
         if let string = String(data: self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length), encoding: .utf16LittleEndian) {
-            return Translation(description: "UTF16-String", explanation: string, bytesCount: uStringPosition.length)
+            return Translation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
         } else {
-            return Translation(description: "Unable to decode", explanation: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length)
+            return Translation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
         }
     }
     

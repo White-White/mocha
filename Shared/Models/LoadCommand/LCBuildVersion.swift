@@ -93,16 +93,19 @@ class LCBuildVersion: LoadCommand {
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Target Platform",
-                                        explanation: platform?.readable ?? "⚠️ Unknown Platform. Contact the author.",
-                                        bytesCount: 4))
-        translations.append(Translation(description: "Min OS Version", explanation: self.minOSVersion, bytesCount: 4))
-        translations.append(Translation(description: "Min SDK Version", explanation: self.sdkVersion, bytesCount: 4))
-        translations.append(contentsOf: self.buildTools.map { tool in
-            Translation(description: "Build Tool",
-                        explanation: tool.toolType.readable + "(\(tool.version)",
-                        bytesCount: 8)
-        })
+        translations.append(Translation(definition: "Target Platform",
+                                        humanReadable: platform?.readable ?? "⚠️ Unknown Platform. Contact the author.",
+                                        bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Min OS Version", humanReadable: self.minOSVersion, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Min SDK Version", humanReadable: self.sdkVersion, bytesCount: 4, translationType: .number))
+        for tool in self.buildTools {
+            translations.append(Translation(definition: "Build Tool Name",
+                                            humanReadable: tool.toolType.readable,
+                                            bytesCount: 4, translationType: .number))
+            translations.append(Translation(definition: "Build Tool Version",
+                                            humanReadable: "(\(tool.version)",
+                                            bytesCount: 4, translationType: .number))
+        }
         return translations
     }
     

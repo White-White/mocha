@@ -25,10 +25,10 @@ class LCSymbolTable: LoadCommand {
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(description: "Symbol table offset", explanation: self.symbolTableOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Number of entries", explanation: "\(self.numberOfSymbolTableEntries)", bytesCount: 4))
-        translations.append(Translation(description: "String table offset", explanation: self.stringTableOffset.hex, bytesCount: 4))
-        translations.append(Translation(description: "Size of string table", explanation: self.sizeOfStringTable.hex, bytesCount: 4))
+        translations.append(Translation(definition: "Symbol table offset", humanReadable: self.symbolTableOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Number of entries", humanReadable: "\(self.numberOfSymbolTableEntries)", bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "String table offset", humanReadable: self.stringTableOffset.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Size of string table", humanReadable: self.sizeOfStringTable.hex, bytesCount: 4, translationType: .number))
         return translations
     }
     
@@ -38,14 +38,14 @@ class LCSymbolTable: LoadCommand {
         let numberOfEntries = Int(self.numberOfSymbolTableEntries)
         let entrySize = is64Bit ? 16 : 12
         let symbolTableData = machoData.subSequence(from: symbolTableStartOffset, count: numberOfEntries * entrySize)
-        return SymbolTable(symbolTableData, title: "Symbol Table", subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+        return SymbolTable(symbolTableData, title: "Symbol Table", is64Bit: is64Bit)
     }
     
     func stringTable(machoData: Data) -> StringTable {
         let stringTableStartOffset = Int(self.stringTableOffset)
         let stringTableSize = Int(self.sizeOfStringTable)
         let stringTableData = machoData.subSequence(from: stringTableStartOffset, count: stringTableSize)
-        return StringTable(stringTableData, title: "String Table", subTitle: Constants.segmentNameLINKEDIT, virtualAddress: 0, demanglingCString: false)
+        return StringTable(stringTableData, title: "String Table")
     }
     
 }

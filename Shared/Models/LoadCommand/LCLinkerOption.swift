@@ -22,8 +22,8 @@ class LCLinkerOption: LoadCommand {
     
     override var commandTranslations: [Translation] {
         return [
-            Translation(description: "Number of options", explanation: "\(self.numberOfOptions)", bytesCount: 4),
-            Translation(description: "Options(s)", explanation: self.options.joined(separator: " "), bytesCount: self.optionDataLength)
+            Translation(definition: "Number of options", humanReadable: "\(self.numberOfOptions)", bytesCount: 4, translationType: .number),
+            Translation(definition: "Options(s)", humanReadable: self.options.joined(separator: " "), bytesCount: self.optionDataLength, translationType: .utf8String)
         ]
     }
     

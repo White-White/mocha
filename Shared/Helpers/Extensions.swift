@@ -29,17 +29,15 @@ extension Data {
         }
     }
     
-    func subSequence(from: Int, count: Int? = nil) -> Data {
-        if let count = count {
-            if count == .zero {
-                Log.error("Trying to fetch zero-length data. Crash is around the corner.")
-            }
-            guard from + count <= self.count else { fatalError() }
-            return self[self.startIndex+from..<self.startIndex+from+count]
-        } else {
-            guard from < self.count else { fatalError() }
-            return self[self.startIndex+from..<self.endIndex]
-        }
+    func subSequence(from: Int) -> Data {
+        guard from < self.count else { fatalError() }
+        return self[self.startIndex+from..<self.endIndex]
+    }
+    
+    func subSequence(from: Int, count: Int, allowZeroLength: Bool = false) -> Data {
+        if !allowZeroLength && count == .zero { fatalError() }
+        guard from + count <= self.count else { fatalError() }
+        return self[self.startIndex+from..<self.startIndex+from+count]
     }
     
 }
@@ -75,24 +73,3 @@ extension UInt64 {
     var isNotZero: Bool { self != .zero }
     func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
-
-extension RandomAccessCollection {
-    /// Finds such index N that predicate is true for all elements up to
-    /// but not including the index N, and is false for all elements
-    /// starting with index N.
-    /// Behavior is undefined if there is no such N.
-    func binarySearch(predicate: (Element) -> Bool) -> Index {
-        var low = startIndex
-        var high = endIndex
-        while low != high {
-            let mid = index(low, offsetBy: distance(from: low, to: high)/2)
-            if predicate(self[mid]) {
-                low = index(after: mid)
-            } else {
-                high = mid
-            }
-        }
-        return low
-    }
-}
-

@@ -11,9 +11,9 @@ import AppKit
 class HexFiendViewController: NSViewController {
     
     let data: Data
-    let inMemoryController: HFController
+    let hfController: HFController
     let layoutRep: HFLayoutRepresenter
-     
+    
     override func loadView() {
         view = NSView(frame: .zero)
         let layoutView = layoutRep.view()
@@ -26,35 +26,34 @@ class HexFiendViewController: NSViewController {
         HexFiendUtil.doSwizzleOnce()
         
         self.data = data
-        self.inMemoryController = HFController()
-        self.inMemoryController.bytesPerColumn = 4
-        self.inMemoryController.editable = false
-        self.inMemoryController.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        self.hfController = HFController()
+        self.hfController.bytesPerColumn = 1
+        self.hfController.editable = false
+        self.hfController.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         
         let byteSlice = HFSharedMemoryByteSlice(unsharedData: data)
         let byteArray = HFBTreeByteArray()
         byteArray.insertByteSlice(byteSlice, in: HFRangeMake(0, 0))
-        inMemoryController.byteArray = byteArray
+        hfController.byteArray = byteArray
         
         self.layoutRep = HFLayoutRepresenter()
         let hexRep = HFHexTextRepresenter()
         let scrollRep = HFVerticalScrollerRepresenter()
-        let lineCounting = HFLineCountingRepresenter()
+        let lineCounting = HFUntouchableLineCountingRepresenter()
+        lineCounting.lineNumberFormat = HFLineNumberFormat.hexadecimal
         if let lineCountingView = lineCounting.view() as? HFLineCountingView {
             lineCountingView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-            lineCountingView.lineNumberFormat = HFLineNumberFormat.hexadecimal
-            lineCountingView.allowedTouchTypes = NSTouch.TouchTypeMask(rawValue: 0)
         }
         let asciiRep = HFStringEncodingTextRepresenter()
         if let asciiView = asciiRep.view() as? HFRepresenterTextView {
             asciiView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         }
         
-        inMemoryController.addRepresenter(lineCounting)
-        inMemoryController.addRepresenter(self.layoutRep)
-        inMemoryController.addRepresenter(hexRep)
-        inMemoryController.addRepresenter(scrollRep)
-        inMemoryController.addRepresenter(asciiRep)
+        hfController.addRepresenter(lineCounting)
+        hfController.addRepresenter(self.layoutRep)
+        hfController.addRepresenter(hexRep)
+        hfController.addRepresenter(scrollRep)
+        hfController.addRepresenter(asciiRep)
         
         self.layoutRep.addRepresenter(lineCounting)
         self.layoutRep.addRepresenter(hexRep)
@@ -82,9 +81,10 @@ private struct ViewControllerRepresentable: NSViewControllerRepresentable {
 
 struct HexFiendView: View {
     
-    static let bytesPerLine = 24
+    static let bytesPerLine = 16
     
-    @Binding var selectedRange: Range<UInt64>
+    @Binding var selectedRange: Range<UInt64>?
+    @Binding var currentMachoComponentRange: Range<UInt64>
     @State var hexFiendViewController: HexFiendViewController
     
     var body: some View {
@@ -93,31 +93,49 @@ struct HexFiendView: View {
                 .frame(width: hexFiendViewController.layoutRep.minimumViewWidth(forBytesPerLine: UInt(HexFiendView.bytesPerLine)))
                 .border(.separator, width: 1)
                 .onChange(of: selectedRange) { newValue in
-                    self.hexFiendViewController.inMemoryController.selectedContentsRanges = HexFiendView.hfRangeWrappers(from: newValue)
-                    
-                    // 24 bytes per line, as a result of fixed hex view width
-                    let targetLineIndex = Float80(newValue.lowerBound / 24)
-                    let visableLineRange = self.hexFiendViewController.inMemoryController.displayedLineRange
-                    if targetLineIndex < (visableLineRange.location + 5)
-                        || targetLineIndex > (visableLineRange.location + visableLineRange.length - 5) {
-                        let visableRangeMid = visableLineRange.location + visableLineRange.length / 2
-                        let scrollingDistance = targetLineIndex - visableRangeMid
-                        self.hexFiendViewController.inMemoryController.scroll(byLines: scrollingDistance)
+                    if let selectedRange = newValue {
+                        self.hexFiendViewController.hfController.selectedContentsRanges = [HexFiendView.hfRangeWrapper(from: selectedRange)]
+                        self.scrollHexView(basedOn: selectedRange)
                     }
                 }
+                .onChange(of: currentMachoComponentRange) { newValue in
+                    self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: newValue)]
+                }
         }
-        .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
     }
     
-    init(data: Data, selectedRange: Binding<Range<UInt64>>) {
+    init(data: Data, selectedRange: Binding<Range<UInt64>?>, currentMachoComponentRange: Binding<Range<UInt64>>) {
         _selectedRange = selectedRange
+        _currentMachoComponentRange = currentMachoComponentRange
         _hexFiendViewController = State(initialValue: HexFiendViewController(data: data))
-        self.hexFiendViewController.inMemoryController.selectedContentsRanges = HexFiendView.hfRangeWrappers(from: selectedRange.wrappedValue)
+        if let selectedRange = selectedRange.wrappedValue {
+            self.hexFiendViewController.hfController.selectedContentsRanges = [HexFiendView.hfRangeWrapper(from: selectedRange)]
+            self.scrollHexView(basedOn: selectedRange)
+        }
+        self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: currentMachoComponentRange.wrappedValue)]
     }
     
-    static func hfRangeWrappers(from range: Range<UInt64>) -> [Any] {
+    func scrollHexView(basedOn selectedRange: Range<UInt64>) {
+        let targetLineIndex = Float80(selectedRange.lowerBound / UInt64(HexFiendView.bytesPerLine))
+        let visableLineRange = self.hexFiendViewController.hfController.displayedLineRange
+        if targetLineIndex < (visableLineRange.location + 5)
+            || targetLineIndex > (visableLineRange.location + visableLineRange.length - 5) {
+            let visableRangeMid = visableLineRange.location + visableLineRange.length / 2
+            let scrollingDistance = targetLineIndex - visableRangeMid
+            self.hexFiendViewController.hfController.scroll(byLines: scrollingDistance)
+        }
+    }
+    
+    static func hfRangeWrapper(from range: Range<UInt64>) -> HFRangeWrapper {
         let hfRange = HFRangeMake(range.lowerBound, range.upperBound - range.lowerBound)
-        return [HFRangeWrapper.withRange(hfRange)]
+        return HFRangeWrapper.withRange(hfRange)
+    }
+    
+    static func colorRange(from range: Range<UInt64>) -> HFColorRange {
+        let colorRange = HFColorRange()
+        colorRange.range = self.hfRangeWrapper(from: range)
+        colorRange.color = NSColor.init(calibratedWhite: 212.0/255.0, alpha: 1)
+        return colorRange
     }
     
 }

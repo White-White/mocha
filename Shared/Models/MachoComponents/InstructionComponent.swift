@@ -15,7 +15,7 @@ class InstructionComponent: MachoComponent {
     let capStoneArchType: CapStoneArchType
     private var instructions: [CapStoneInstruction] = []
     
-    init(_ data: Data, title: String, subTitle: String, cpuType: CPUType) {
+    init(_ data: Data, title: String, cpuType: CPUType) {
         let capStoneArchType: CapStoneArchType
         switch cpuType {
         case .x86:
@@ -32,7 +32,7 @@ class InstructionComponent: MachoComponent {
             fatalError() /* unknown code */
         }
         self.capStoneArchType = capStoneArchType
-        super.init(data, title: title, subTitle: subTitle)
+        super.init(data, title: title)
     }
     
     override func initialize() {
@@ -40,7 +40,7 @@ class InstructionComponent: MachoComponent {
     }
     
     override func createTranslations() -> [Translation] {
-        return self.instructions.map { Translation(description: "Assembly", explanation: $0.mnemonic + "  " + $0.operand, bytesCount: $0.length) }
+        return self.instructions.map { Translation(definition: "Assembly", humanReadable: $0.mnemonic + " " + $0.operand, bytesCount: $0.length, translationType: .code) }
     }
     
 }

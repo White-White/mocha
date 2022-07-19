@@ -188,14 +188,14 @@ class LoadCommand: MachoComponent {
     
     let type: LoadCommandType
     
-    init(_ data: Data, type: LoadCommandType, title: String? = nil, subTitle: String? = nil) {
+    init(_ data: Data, type: LoadCommandType, title: String? = nil) {
         self.type = type
-        super.init(data, title: title ?? "Load Command", subTitle: subTitle ?? type.name)
+        super.init(data, title: title ?? type.name)
     }
     
     override func createTranslations() -> [Translation] {
-        let typeTranslation = Translation(description: "Load Command Type", explanation: type.name, bytesCount: 4)
-        let sizeTranslation = Translation(description: "Load Command Size", explanation: data.count.hex, bytesCount: 4)
+        let typeTranslation = Translation(definition: "Load Command Type", humanReadable: type.name, bytesCount: 4, translationType: .numberEnum)
+        let sizeTranslation = Translation(definition: "Load Command Size", humanReadable: data.count.hex, bytesCount: 4, translationType: .number)
         return [typeTranslation, sizeTranslation] + self.commandTranslations
     }
     var commandTranslations: [Translation] { fatalError() }

@@ -17,9 +17,9 @@ class RelocationTable: MachoComponent {
     var relocationEntries: [RelocationEntry] = []
     let relocationInfos: [RelocationInfo]
     
-    init(data: Data, segmentTitle: String, relocationInfos: [RelocationInfo]) {
+    init(data: Data, relocationInfos: [RelocationInfo]) {
         self.relocationInfos = relocationInfos
-        super.init(data, title: "Relocation Table", subTitle: segmentTitle)
+        super.init(data, title: "Relocation Table")
     }
     
     override func initialize() {

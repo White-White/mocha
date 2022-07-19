@@ -191,8 +191,6 @@ struct SymbolTableEntry: InterpretableModel {
         var dataShifter = DataShifter(data)
         
         self.indexInStringTable = dataShifter.shiftUInt32()
-        guard let symbolName = macho.stringTable?.findString(at: Int(self.indexInStringTable)) else { fatalError() /* unexpected */ }
-        self.symbolName = symbolName
         
         /*
          * n_type
@@ -206,7 +204,8 @@ struct SymbolTableEntry: InterpretableModel {
         
         
         let nTypeValue = dataShifter.shiftUInt8()
-        self.symbolType = SymbolType(rawValue: nTypeValue)
+        let symbolType = SymbolType(rawValue: nTypeValue)
+        self.symbolType = symbolType
         
         let isPrivateExternalSymbol = (nTypeValue & 0x10) != 0 // 0x10 == N_PEXT mask == 00010000 /* private external symbol bit */
         self.isPrivateExternalSymbol = isPrivateExternalSymbol
@@ -222,17 +221,28 @@ struct SymbolTableEntry: InterpretableModel {
         self.nSect = dataShifter.shiftUInt8()
         self.nDesc = dataShifter.shiftUInt16()
         self.nValue = is64Bit ? dataShifter.shiftUInt64() : UInt64(dataShifter.shiftUInt32())
+        
+        switch symbolType {
+        case .stab(_):
+            //TODO: make sure for stab symbol, it's normal to fail to find symbol name
+            if let foundName = macho.stringTable?.findString(atDataOffset: Int(self.indexInStringTable)) {
+                self.symbolName = foundName
+            } else {
+                self.symbolName = "Not found"
+            }
+        default:
+            guard let foundName = macho.stringTable?.findString(atDataOffset: Int(self.indexInStringTable)) else { fatalError() }
+            self.symbolName = foundName
+        }
     }
     
     var translations: [Translation] {
         
         var translations: [Translation] = []
-        
-        
-        
-        translations.append(Translation(description: "String table offset", explanation: self.indexInStringTable.hex,
-                                        bytesCount: 4,
-                                        extraDescription: "Symbol Name", extraExplanation: self.symbolName))
+
+        translations.append(Translation(definition: "String Table Offset", humanReadable: self.indexInStringTable.hex,
+                                        bytesCount: 4, translationType: .number,
+                                        extraDefinition: "Symbol Name from String Table", extraHumanReadable: self.symbolName))
         
         var symbolTypeExplanation: String = self.symbolType.readable
         var nSectExplanation: String = "\(nSect)"
@@ -256,25 +266,24 @@ struct SymbolTableEntry: InterpretableModel {
             nValueDesp = "String table offset"
             nValueExplanation = nValue.hex
             nValueExtraDesp = "Referred string"
-            nValueExtraExplanation = macho.stringTable?.findString(at: Int(nValue))
+            nValueExtraExplanation = macho.stringTable?.findString(atDataOffset: Int(nValue))
         default:
             break
         }
         
-        translations.append(Translation(description: "Symbol Type",
-                                        explanation: symbolTypeExplanation + " (Private External:\(self.isPrivateExternalSymbol), External:\(self.isExternalSymbol)",
-                                        bytesCount: 1))
+        translations.append(Translation(definition: "Symbol Type",
+                                        humanReadable: symbolTypeExplanation + " (Private External:\(self.isPrivateExternalSymbol), External:\(self.isExternalSymbol)",
+                                        bytesCount: 1, translationType: .numberEnum))
         
-        translations.append(Translation(description: "Section Ordinal", explanation: nSectExplanation,
-                                        bytesCount: 1))
+        translations.append(Translation(definition: "Section Ordinal", humanReadable: nSectExplanation,
+                                        bytesCount: 1, translationType: .number))
         
-        translations.append(Translation(description: "Descriptions", explanation: SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n"),
-                                        bytesCount: 2))
+        translations.append(Translation(definition: "Descriptions", humanReadable: SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n"),
+                                        bytesCount: 2, translationType: .flags))
         
-        translations.append(Translation(description: nValueDesp, explanation: nValueExplanation,
-                                        bytesCount: self.is64Bit ? 8 : 4,
-                                        extraDescription: nValueExtraDesp, extraExplanation: nValueExtraExplanation,
-                                        hasDivider: true))
+        translations.append(Translation(definition: nValueDesp, humanReadable: nValueExplanation,
+                                        bytesCount: self.is64Bit ? 8 : 4, translationType: .number,
+                                        extraDefinition: nValueExtraDesp, extraHumanReadable: nValueExtraExplanation))
         
         return translations
     }

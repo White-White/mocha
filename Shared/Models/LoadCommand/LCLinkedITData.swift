@@ -50,29 +50,29 @@ class LCLinkedITData: LoadCommand {
     
     override var commandTranslations: [Translation] {
         return [
-            Translation(description: "File Offset", explanation: self.containedDataFileOffset.hex, bytesCount: 4),
-            Translation(description: "Size", explanation: self.containedDataSize.hex, bytesCount: 4)
+            Translation(definition: "File Offset", humanReadable: self.containedDataFileOffset.hex, bytesCount: 4, translationType: .number),
+            Translation(definition: "Size", humanReadable: self.containedDataSize.hex, bytesCount: 4, translationType: .number)
         ]
     }
     
     func linkedITComponent(machoData:Data, machoHeader: MachoHeader, textSegmentLoadCommand: LCSegment?) -> MachoComponent {
         let is64Bit = machoHeader.is64Bit
-        let data = machoData.subSequence(from: Int(self.containedDataFileOffset), count: Int(self.containedDataSize))
+        let data = machoData.subSequence(from: Int(self.containedDataFileOffset), count: Int(self.containedDataSize), allowZeroLength: true)
         switch self.type {
         case .dataInCode:
-            return ModelBasedComponent<DataInCodeModel>(data, title: self.dataName, subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+            return ModelBasedComponent<DataInCodeModel>(data, title: self.dataName, is64Bit: is64Bit)
         case .codeSignature:
             // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
             // FIXME: better parsing
-            return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+            return MachoUnknownCodeComponent(data, title: self.dataName)
         case .functionStarts:
             guard let textSegment = textSegmentLoadCommand else { fatalError() /* where there is function starts, there must be text segment */ }
             return FunctionStartsComponent(data, title: self.dataName, textSegmentVirtualAddress: textSegment.vmaddr)
         case .dyldExportsTrie:
-            return ExportInfoComponent(data, title: self.dataName, subTitle: Constants.segmentNameLINKEDIT, is64Bit: is64Bit)
+            return ExportInfoComponent(data, title: self.dataName, is64Bit: is64Bit)
         default:
             print("Unknow how to parse \(self.type.name). Please contact the author.") // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
-            return MachoUnknownCodeComponent(data, title: title, subTitle: subTitle)
+            return MachoUnknownCodeComponent(data, title: title)
         }
     }
 }

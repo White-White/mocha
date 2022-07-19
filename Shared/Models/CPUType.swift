@@ -19,15 +19,15 @@ enum CPUType {
     var name: String {
         switch self {
         case .x86:
-            return "CPU_TYPE_X86"
+            return "x86 (CPU_TYPE_X86)"
         case .x86_64:
-            return "CPU_TYPE_X86_64"
+            return "x86_64 (CPU_TYPE_X86_64)"
         case .arm:
-            return "CPU_TYPE_ARM"
+            return "arm (CPU_TYPE_ARM)"
         case .arm64:
-            return "CPU_TYPE_ARM64"
+            return "arm64 (CPU_TYPE_ARM64)"
         case .arm64_32:
-            return "CPU_TYPE_ARM64_32"
+            return "arm64_32 (CPU_TYPE_ARM64_32)"
         case .unknown(let raw):
             return "UNKNOWN(\(raw.hex))"
         }

@@ -6,8 +6,6 @@
 //
 
 #import "HexFiendUtil.h"
-#import <HexFiend/HexFiend.h>
-#import <HexFiend/HFRepresenterTextView.h>
 #import <objc/runtime.h>
 
 @implementation HFRepresenterTextView (Mocha)
@@ -44,5 +42,11 @@
         }
     });
 }
+
+@end
+
+@implementation HFUntouchableLineCountingRepresenter
+
+- (void)cycleLineNumberFormat { return; }
 
 @end
