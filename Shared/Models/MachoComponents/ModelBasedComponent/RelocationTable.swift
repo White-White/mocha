@@ -12,7 +12,7 @@ struct RelocationInfo {
     let sectionName: String
 }
 
-class RelocationTable: MachoComponent {
+class RelocationTable: ModeledTranslationComponent {
     
     var relocationEntries: [RelocationEntry] = []
     let relocationInfos: [RelocationInfo]
@@ -22,7 +22,7 @@ class RelocationTable: MachoComponent {
         super.init(data, title: "Relocation Table")
     }
     
-    override func initialize() {
+    override func asyncInitialize() {
         var dataShifter = DataShifter(self.data)
         self.relocationInfos.forEach { info in
             for _ in 0..<info.numberOfEntries {
@@ -32,8 +32,8 @@ class RelocationTable: MachoComponent {
         }
     }
     
-    override func createTranslations() -> [Translation] {
-        return self.relocationEntries.flatMap { $0.translations }
+    override func createTranslationSections() -> [TranslationSection] {
+        return self.relocationEntries.map { TranslationSection(translations: $0.translations) }
     }
     
 }

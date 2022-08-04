@@ -13,8 +13,8 @@ class SymbolTable: ModelBasedComponent<SymbolTableEntry> {
     
     private var symbolTableEntryMap: [UInt64: [Int]] = [:]
     
-    override func initialize() {
-        super.initialize()
+    override func asyncInitialize() {
+        super.asyncInitialize()
         for (index, symbolEntry) in self.models.enumerated() {
             
             /* comments from LinkEdit.m in MachoOView code base

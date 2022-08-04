@@ -7,12 +7,14 @@
 
 import Foundation
 
-class PointerComponent: MachoComponent {
+class PointerComponent: MachoComponentWithTranslations {
     
+    let is64Bit: Bool
     let pointerSize: Int
     let pointerValues: [UInt64]
     
     init(_ data: Data, is64Bit: Bool, title: String) {
+        self.is64Bit = is64Bit
         let pointerSize = is64Bit ? 8 : 4
         self.pointerSize = pointerSize
         
@@ -30,24 +32,26 @@ class PointerComponent: MachoComponent {
         super.init(data, title: title)
     }
     
+    override func createTranslations() -> [Translation] {
+        return self.pointerValues.enumerated().map { (index, pointerValue) in self.translation(for: pointerValue, index: index) }
+    }
+    
+    func translation(for pointerValue: UInt64, index: Int) -> Translation {
+        fatalError()
+    }
+    
 }
 
 class LiteralPointerComponent: PointerComponent {
     
-    override func createTranslations() -> [Translation] {
-        return self.pointerValues.map { self.translation(for: $0) }
-    }
-    
-    func translation(for pointerValue: UInt64) -> Translation {
-        guard let searchedString = (macho?.cStringSectionComponents.reduce(nil) { partialResult, component in
+    override func translation(for pointerValue: UInt64, index: Int) -> Translation {
+        let searchedString = (macho?.cStringSectionComponents.reduce(nil) { partialResult, component in
             partialResult ?? component.findString(virtualAddress: pointerValue)
-        }) else {
-            fatalError()
-        }
+        })
         
         let translation = Translation(definition: "Pointer Value (Virtual Address)",
                                       humanReadable: pointerValue.hex,
-                                      bytesCount: self.pointerSize, translationType: .number,
+                                      bytesCount: self.pointerSize, translationType: self.is64Bit ? .uint64 : .uint32,
                                       extraDefinition: "Referenced String Symbol",
                                       extraHumanReadable: searchedString)
         return translation
@@ -67,11 +71,7 @@ class SymbolPointerComponent: PointerComponent {
         super.init(data, is64Bit: is64Bit, title: title)
     }
     
-    override func createTranslations() -> [Translation] {
-        return self.pointerValues.enumerated().map { (index, pointerValue) in self.translation(for: pointerValue, index: index) }
-    }
-    
-    func translation(for pointerValue: UInt64, index: Int) -> Translation {
+    override func translation(for pointerValue: UInt64, index: Int) -> Translation {
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
         
         var symbolName: String?
@@ -92,7 +92,7 @@ class SymbolPointerComponent: PointerComponent {
         
         let translation = Translation(definition: description,
                                       humanReadable: pointerValue.hex,
-                                      bytesCount: self.pointerSize, translationType: .number,
+                                      bytesCount: self.pointerSize, translationType: self.is64Bit ? .uint64 : .uint32,
                                       extraDefinition: "Symbol Name of the Corresponding Indirect Symbol Table Entry",
                                       extraHumanReadable: symbolName)
         

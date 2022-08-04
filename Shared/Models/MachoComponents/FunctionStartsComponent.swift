@@ -16,12 +16,13 @@ struct FunctionStart {
 // a great description for function start section data format
 // https://stackoverflow.com/questions/9602438/mach-o-file-lc-function-starts-load-command
 
-class FunctionStartsComponent: MachoComponent {
+class FunctionStartsComponent: MachoComponentWithTranslations {
     
     override var initDependencies: [MachoComponent?] { [macho?.symbolTable] }
     
     let textSegmentVirtualAddress: Swift.UInt64
     let functionStarts: [FunctionStart]
+    var defaultComponentViewModel: ModeledTranslationsViewModel!
     
     init(_ data: Data, title: String, textSegmentVirtualAddress: UInt64) {
         self.textSegmentVirtualAddress = textSegmentVirtualAddress
@@ -65,11 +66,12 @@ class FunctionStartsComponent: MachoComponent {
             symbolName += symbolTableEntry.symbolName
         })
         
-        return Translation(definition: "Vitual Address",
-                           humanReadable: (functionStart.address + textSegmentVirtualAddress).hex,
-                           bytesCount: functionStart.byteLength, translationType: .number,
-                           extraDefinition: "Referred Symbol Name",
-                           extraHumanReadable: symbolName)
+        let translation = Translation(definition: "Vitual Address",
+                                      humanReadable: (functionStart.address + textSegmentVirtualAddress).hex,
+                                      bytesCount: functionStart.byteLength, translationType: .uleb128,
+                                      extraDefinition: "Referred Symbol Name",
+                                      extraHumanReadable: symbolName)
+        return translation
     }
     
 }

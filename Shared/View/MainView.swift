@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
     
     let unixArchiveType = UTType(filenameExtension: "a")
+    let dylibType = UTType(filenameExtension: "dylib")
     
     func panel(_ sender: Any, shouldEnable url: URL) -> Bool {
         
@@ -26,7 +27,7 @@ class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
             }
             
             if let contentType = resourceValues.contentType {
-                if (contentType == .unixExecutable || contentType == self.unixArchiveType) {
+                if (contentType == .unixExecutable || contentType == self.unixArchiveType || contentType == self.dylibType) {
                     return true
                 }
             }

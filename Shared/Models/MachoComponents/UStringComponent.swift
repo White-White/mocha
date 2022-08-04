@@ -12,11 +12,11 @@ struct UStringPosition {
     let length: Int
 }
 
-class UStringComponent: MachoComponent {
+class UStringComponent: MachoComponentWithTranslations {
     
     let uStringPositions: [UStringPosition]
     
-    override init(_ data: Data, title: String) {
+    init(_ data: Data, title: String) {
         let dataLength = data.count
         let utf16UnitCount = dataLength / 2
         var uStringPositions: [UStringPosition] = []
@@ -45,11 +45,13 @@ class UStringComponent: MachoComponent {
     }
     
     private func translation(at uStringPosition: UStringPosition) -> Translation {
+        var translation: Translation
         if let string = String(data: self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length), encoding: .utf16LittleEndian) {
-            return Translation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
+            translation = Translation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
         } else {
-            return Translation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
+            translation = Translation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
         }
+        return translation
     }
     
 }

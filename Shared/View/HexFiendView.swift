@@ -83,36 +83,36 @@ struct HexFiendView: View {
     
     static let bytesPerLine = 16
     
-    @Binding var selectedRange: Range<UInt64>?
-    @Binding var currentMachoComponentRange: Range<UInt64>
-    @State var hexFiendViewController: HexFiendViewController
+    @ObservedObject var selectedDataRangeWrapper: ObserableValueWrapper<Range<UInt64>?>
+    @ObservedObject var currentMachoComponentRangeWrapper: ObserableValueWrapper<Range<UInt64>>
+    let hexFiendViewController: HexFiendViewController
     
     var body: some View {
         HStack {
             ViewControllerRepresentable(viewController: self.hexFiendViewController)
                 .frame(width: hexFiendViewController.layoutRep.minimumViewWidth(forBytesPerLine: UInt(HexFiendView.bytesPerLine)))
                 .border(.separator, width: 1)
-                .onChange(of: selectedRange) { newValue in
+                .onChange(of: selectedDataRangeWrapper.value) { newValue in
                     if let selectedRange = newValue {
                         self.hexFiendViewController.hfController.selectedContentsRanges = [HexFiendView.hfRangeWrapper(from: selectedRange)]
                         self.scrollHexView(basedOn: selectedRange)
                     }
                 }
-                .onChange(of: currentMachoComponentRange) { newValue in
+                .onChange(of: currentMachoComponentRangeWrapper.value) { newValue in
                     self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: newValue)]
                 }
         }
     }
     
-    init(data: Data, selectedRange: Binding<Range<UInt64>?>, currentMachoComponentRange: Binding<Range<UInt64>>) {
-        _selectedRange = selectedRange
-        _currentMachoComponentRange = currentMachoComponentRange
-        _hexFiendViewController = State(initialValue: HexFiendViewController(data: data))
-        if let selectedRange = selectedRange.wrappedValue {
+    init(macho: Macho, machoViewState: MachoViewState) {
+        self.hexFiendViewController = HexFiendViewController(data: macho.machoData)
+        self.selectedDataRangeWrapper = machoViewState.selectedDataRangeWrapper
+        self.currentMachoComponentRangeWrapper = machoViewState.currentMachoComponentRangeWrapper
+        if let selectedRange = self.selectedDataRangeWrapper.value {
             self.hexFiendViewController.hfController.selectedContentsRanges = [HexFiendView.hfRangeWrapper(from: selectedRange)]
             self.scrollHexView(basedOn: selectedRange)
         }
-        self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: currentMachoComponentRange.wrappedValue)]
+        self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: self.currentMachoComponentRangeWrapper.value)]
     }
     
     func scrollHexView(basedOn selectedRange: Range<UInt64>) {

@@ -50,8 +50,8 @@ class LCLinkedITData: LoadCommand {
     
     override var commandTranslations: [Translation] {
         return [
-            Translation(definition: "File Offset", humanReadable: self.containedDataFileOffset.hex, bytesCount: 4, translationType: .number),
-            Translation(definition: "Size", humanReadable: self.containedDataSize.hex, bytesCount: 4, translationType: .number)
+            Translation(definition: "File Offset", humanReadable: self.containedDataFileOffset.hex, bytesCount: 4, translationType: .uint32),
+            Translation(definition: "Size", humanReadable: self.containedDataSize.hex, bytesCount: 4, translationType: .uint32)
         ]
     }
     
@@ -64,7 +64,7 @@ class LCLinkedITData: LoadCommand {
         case .codeSignature:
             // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
             // FIXME: better parsing
-            return MachoUnknownCodeComponent(data, title: self.dataName)
+            return UnknownComponent(data, title: self.dataName)
         case .functionStarts:
             guard let textSegment = textSegmentLoadCommand else { fatalError() /* where there is function starts, there must be text segment */ }
             return FunctionStartsComponent(data, title: self.dataName, textSegmentVirtualAddress: textSegment.vmaddr)
@@ -72,7 +72,7 @@ class LCLinkedITData: LoadCommand {
             return ExportInfoComponent(data, title: self.dataName, is64Bit: is64Bit)
         default:
             print("Unknow how to parse \(self.type.name). Please contact the author.") // FIXME: LC_SEGMENT_SPLIT_INFO not parsed
-            return MachoUnknownCodeComponent(data, title: title)
+            return UnknownComponent(data, title: title)
         }
     }
 }

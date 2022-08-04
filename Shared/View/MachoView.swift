@@ -10,34 +10,20 @@ import SwiftUI
 struct MachoView: View {
     
     let macho: Macho
-    @State var selectedMachoComponentIndex: Int
-    @State var translationGroupViewModel: TranslationGroupViewModel
-    
-    @State var selectedDataRange: Range<UInt64>?
-    @State var currentMachoComponentRange: Range<UInt64>
+    let machoViewState: MachoViewState
     
     var body: some View {
         HStack(spacing: 4) {
-            ComponentListView(macho: macho, selectedMachoComponentIndex: $selectedMachoComponentIndex)
-            TranslationGroupView(translationGroupViewModel: translationGroupViewModel, selectedRange: $selectedDataRange)
-            HexFiendView(data: macho.machoData, selectedRange: $selectedDataRange, currentMachoComponentRange: $currentMachoComponentRange)
+            ComponentListView(machoViewState: machoViewState)
+            TranslationsViewContainer(machoViewState: machoViewState)
+            HexFiendView(macho: macho, machoViewState: machoViewState)
         }
-        .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 0))
-        .onChange(of: selectedMachoComponentIndex) { newValue in
-            self.translationGroupViewModel = macho.allComponents[newValue].translationGroupViewModel
-            self.selectedDataRange = self.translationGroupViewModel.dataRangeFirstTranslation
-            self.currentMachoComponentRange = self.translationGroupViewModel.dataRangeAllTranslation
-        }
+        .padding(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
     }
     
     init(_ macho: Macho) {
         self.macho = macho
-        let initiaSelectedMachoComponentIndex = 0
-        _selectedMachoComponentIndex = State(initialValue: initiaSelectedMachoComponentIndex)
-        let translationGroupViewModel = macho.allComponents[initiaSelectedMachoComponentIndex].translationGroupViewModel
-        _translationGroupViewModel = State(initialValue: translationGroupViewModel)
-        _selectedDataRange = State(initialValue: translationGroupViewModel.dataRangeFirstTranslation)
-        _currentMachoComponentRange = State(initialValue: translationGroupViewModel.dataRangeAllTranslation)
+        self.machoViewState = MachoViewState(macho: macho)
     }
     
 }

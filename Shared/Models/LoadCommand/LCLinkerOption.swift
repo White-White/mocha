@@ -9,12 +9,12 @@ import Foundation
 
 class LCLinkerOption: LoadCommand {
     
-    let numberOfOptions: Int
+    let numberOfOptions: UInt32
     let optionDataLength: Int
     let options: [String]
     
     init(with type: LoadCommandType, data: Data) {
-        self.numberOfOptions = Int(data.subSequence(from: 8, count: 4).UInt32)
+        self.numberOfOptions = data.subSequence(from: 8, count: 4).UInt32
         self.optionDataLength = data.count - 12
         self.options = LCLinkerOption.options(from: data.subSequence(from: 12))
         super.init(data, type: type)
@@ -22,7 +22,7 @@ class LCLinkerOption: LoadCommand {
     
     override var commandTranslations: [Translation] {
         return [
-            Translation(definition: "Number of options", humanReadable: "\(self.numberOfOptions)", bytesCount: 4, translationType: .number),
+            Translation(definition: "Number of options", humanReadable: "\(self.numberOfOptions)", bytesCount: 4, translationType: .uint32),
             Translation(definition: "Options(s)", humanReadable: self.options.joined(separator: " "), bytesCount: self.optionDataLength, translationType: .utf8String)
         ]
     }

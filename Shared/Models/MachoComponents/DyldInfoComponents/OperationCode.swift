@@ -40,7 +40,7 @@ struct OperationCode<CodeMetadata: OperationCodeMetadataProtocol> {
         var translations: [Translation] = []
         
         translations.append(Translation(definition: "Operation Code (Upper 4 bits)", humanReadable: codeMetadata.operationReadable(),
-                                        bytesCount: 1, translationType: .number,
+                                        bytesCount: 1, translationType: .flags,
                                         extraDefinition: "Immediate Value Used As (Lower 4 bits)", extraHumanReadable: codeMetadata.immediateReadable()))
         
         translations.append(contentsOf: lebValues.map { ulebValue in

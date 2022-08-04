@@ -31,7 +31,7 @@ enum MachoType {
         case .object:
             return "Relocatable object file (MH_OBJECT)" // : Relocatable object file
         case .execute:
-            return " Demand paged executable file (MH_EXECUTE)" // : Demand paged executable file
+            return "Demand paged executable file (MH_EXECUTE)" // : Demand paged executable file
         case .dylib:
             return "Dynamically bound shared library (MH_DYLIB)" // : Dynamically bound shared library
         case .unknown(let value):
@@ -40,7 +40,7 @@ enum MachoType {
     }
 }
 
-class MachoHeader: MachoComponent {
+class MachoHeader: MachoComponentWithTranslations {
     
     let magicData: Data
     let is64Bit: Bool
@@ -73,10 +73,10 @@ class MachoHeader: MachoComponent {
         translations.append(Translation(definition: "CPU Type", humanReadable: self.cpuType.name, bytesCount: 4, translationType: .numberEnum))
         translations.append(Translation(definition: "CPU Sub Type", humanReadable: self.cpuSubtype.name, bytesCount: 4, translationType: .numberEnum))
         translations.append(Translation(definition: "Macho Type", humanReadable: self.machoType.readable, bytesCount: 4, translationType: .numberEnum))
-        translations.append(Translation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", bytesCount: 4, translationType: .number))
-        translations.append(Translation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", bytesCount: 4, translationType: .uint32))
+        translations.append(Translation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, bytesCount: 4, translationType: .uint32))
         translations.append(Translation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), bytesCount: 4, translationType: .flags))
-        if let reserved = self.reserved { translations.append(Translation(definition: "Reverved", humanReadable: reserved.hex, bytesCount: 4, translationType: .number)) }
+        if let reserved = self.reserved { translations.append(Translation(definition: "Reverved", humanReadable: reserved.hex, bytesCount: 4, translationType: .uint32)) }
         return translations
     }
     
@@ -140,6 +140,7 @@ class Macho: Equatable {
     let stringTable: StringTable?
     let symbolTable: SymbolTable?
     let indirectSymbolTable: IndirectSymbolTable?
+    let textConstComponent: TextConstComponent?
     
     init(with machoData: Data, machoFileName: String, machoHeader: MachoHeader) {
         self.machoData = machoData
@@ -153,7 +154,7 @@ class Macho: Equatable {
         self.loadCommands = loadCommands
         
         let segmentCommands = loadCommands.compactMap { $0 as? LCSegment }
-        let textSegmentLoadCommand = segmentCommands.first { $0.segmentName == Constants.segmentNameTEXT }
+        let textSegmentLoadCommand = segmentCommands.first { $0.segmentName == "__TEXT" }
         let sectionHeaders = segmentCommands.flatMap { $0.sectionHeaders }
         self.sectionHeaders = sectionHeaders
         
@@ -167,7 +168,8 @@ class Macho: Equatable {
         let indirectSymbolTableLoadCommand = (loadCommands.compactMap { $0 as? LCDynamicSymbolTable }).first
         self.indirectSymbolTable = indirectSymbolTableLoadCommand?.indirectSymbolTable(machoData: machoData, machoHeader: machoHeader)
         
-        let sectionComponents = sectionHeaders.compactMap { $0.sectionComponent(machoData: machoData, machoHeader: machoHeader) }
+        let sectionComponents = sectionHeaders.compactMap { SectionComponent.createComponent(machoData: machoData, machoHeader: machoHeader, sectionHeader: $0) }
+        self.textConstComponent = (sectionComponents.first { $0 is TextConstComponent }) as? TextConstComponent
         self.sectionComponents = sectionComponents
         
         let linkedITDataLoadCommands = loadCommands.compactMap { $0 as? LCLinkedITData }
@@ -204,16 +206,29 @@ class Macho: Equatable {
         let mainThreadSemaphore = DispatchSemaphore(value: 0)
         let taskGroup = DispatchGroup()
         components.forEach { component in
+            if component.initTriggered { return }
+            component.initTriggered = true
             taskGroup.enter()
-            component.startInitialization(onLocked: { taskGroup.leave() })
+            component.startAsyncInitialization(onLocked: { taskGroup.leave() })
         }
         taskGroup.notify(queue: .global()) { mainThreadSemaphore.signal() }
         mainThreadSemaphore.wait()
     }
     
     func triggerTanslationInit(for components: [MachoComponent]) {
+        if components.isEmpty { return }
+        let dependencies = (components.flatMap { $0.translationInitDependencies }).compactMap { $0 }
+        self.triggerTanslationInit(for: dependencies)
+        
+        let mainThreadSemaphore = DispatchSemaphore(value: 0)
+        let taskGroup = DispatchGroup()
         components.forEach { component in
-            component.startTranslationInitialization()
+            if component.translationInitTriggered { return }
+            component.translationInitTriggered = true
+            taskGroup.enter()
+            component.startAsyncInitializeTranslation(onLocked: { taskGroup.leave() })
         }
+        taskGroup.notify(queue: .global()) { mainThreadSemaphore.signal() }
+        mainThreadSemaphore.wait()
     }
 }

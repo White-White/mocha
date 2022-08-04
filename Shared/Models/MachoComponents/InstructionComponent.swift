@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // ARMv8 (AArch64) Instruction Encoding
 // http://kitoslab-eng.blogspot.com/2012/10/armv8-aarch64-instruction-encoding.html
@@ -13,9 +14,13 @@ import Foundation
 class InstructionComponent: MachoComponent {
 
     let capStoneArchType: CapStoneArchType
-    private var instructions: [CapStoneInstruction] = []
+    let virtualAddress: UInt64
     
-    init(_ data: Data, title: String, cpuType: CPUType) {
+    private(set) var instructions: [CapStoneInstruction] = []
+    
+    var instructionComponentViewModel: InstructionTranslationsViewModel!
+    
+    init(_ data: Data, title: String, cpuType: CPUType, virtualAddress: UInt64) {
         let capStoneArchType: CapStoneArchType
         switch cpuType {
         case .x86:
@@ -32,15 +37,33 @@ class InstructionComponent: MachoComponent {
             fatalError() /* unknown code */
         }
         self.capStoneArchType = capStoneArchType
+        self.virtualAddress = virtualAddress
         super.init(data, title: title)
     }
     
-    override func initialize() {
-        self.instructions = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType)
+    override func asyncInitialize() {
+        let disasmResult = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType, codeStartAddress: virtualAddress) { progress in
+            self.initProgress.updateInitializeProgress(progress)
+        }
+        if let _ = disasmResult.error {
+            //TODO: handle error
+        }
+        if let instructions = disasmResult.instructions {
+            self.instructions = instructions
+        }
     }
     
-    override func createTranslations() -> [Translation] {
-        return self.instructions.map { Translation(definition: "Assembly", humanReadable: $0.mnemonic + " " + $0.operand, bytesCount: $0.length, translationType: .code) }
+    override func asyncInitializeTranslations() {
+        var instructionViewModels: [InstructionTranslationViewModel] = []
+        var nextStartOffset = self.offsetInMacho
+        let maxIndex = self.instructions.count - 1
+        for (index, instruction) in self.instructions.enumerated() {
+            instructionViewModels.append(InstructionTranslationViewModel(offsetInMacho:nextStartOffset, index: index, instruction: instruction))
+            nextStartOffset += instruction.length
+            self.initProgress.updateTranslationInitializeProgress(Float(index) / Float(maxIndex))
+        }
+        self.initProgress.updateTranslationInitializeProgress(1)
+        self.instructionComponentViewModel = InstructionTranslationsViewModel(instructionViewModels)
     }
     
 }

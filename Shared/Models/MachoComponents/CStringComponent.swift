@@ -14,12 +14,12 @@ struct CStringModel {
     let demangled: String?
 }
 
-class CStringComponent: MachoComponent {
+class CStringComponent: MachoComponentWithTranslations {
     
     private(set) var cStrings: [CStringModel] = []
     private(set) var cStringOffsetIndexMap: [Int:Int] = [:]
     
-    override func initialize() {
+    override func asyncInitialize() {
         var currentIndex: Int = 0
         while currentIndex < self.data.count {
             var byte = self.data[self.data.startIndex + currentIndex];
@@ -54,11 +54,12 @@ class CStringComponent: MachoComponent {
     
     override func createTranslations() -> [Translation] {
         return self.cStrings.map {
-            Translation(definition: $0.content == nil ? "Unable to decode" : "UTF8-String",
-                        humanReadable: $0.content ?? "🙅‍♂️ Invalid UTF8 String",
-                        bytesCount: $0.length, translationType: .utf8String,
-                        extraDefinition: $0.demangled != nil ? "Demangled" : nil,
-                        extraHumanReadable: $0.demangled )
+            let translation = Translation(definition: nil,
+                                          humanReadable: $0.content ?? "🙅‍♂️ Invalid UTF8 String",
+                                          bytesCount: $0.length, translationType: .utf8String,
+                                          extraDefinition: $0.demangled != nil ? "Demangled" : nil,
+                                          extraHumanReadable: $0.demangled )
+            return translation
         }
     }
     

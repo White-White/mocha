@@ -20,8 +20,8 @@ class LCMinOSVersion: LoadCommand {
     
     override var commandTranslations: [Translation] {
         return [
-            Translation(definition: "Required min \(LCMinOSVersion.osName(for: type)) version", humanReadable: self.osVersion, bytesCount: 4, translationType: .number),
-            Translation(definition: "Required min \(LCMinOSVersion.osName(for: type)) SDK version", humanReadable: self.sdkVersion, bytesCount: 4, translationType: .number)
+            Translation(definition: "Required min \(LCMinOSVersion.osName(for: type)) version", humanReadable: self.osVersion, bytesCount: 4, translationType: .versionString),
+            Translation(definition: "Required min \(LCMinOSVersion.osName(for: type)) SDK version", humanReadable: self.sdkVersion, bytesCount: 4, translationType: .versionString)
         ]
     }
     

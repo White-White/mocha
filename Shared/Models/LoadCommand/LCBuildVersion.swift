@@ -95,16 +95,16 @@ class LCBuildVersion: LoadCommand {
         var translations: [Translation] = []
         translations.append(Translation(definition: "Target Platform",
                                         humanReadable: platform?.readable ?? "⚠️ Unknown Platform. Contact the author.",
-                                        bytesCount: 4, translationType: .number))
-        translations.append(Translation(definition: "Min OS Version", humanReadable: self.minOSVersion, bytesCount: 4, translationType: .number))
-        translations.append(Translation(definition: "Min SDK Version", humanReadable: self.sdkVersion, bytesCount: 4, translationType: .number))
+                                        bytesCount: 4, translationType: .numberEnum))
+        translations.append(Translation(definition: "Min OS Version", humanReadable: self.minOSVersion, bytesCount: 4, translationType: .versionString))
+        translations.append(Translation(definition: "Min SDK Version", humanReadable: self.sdkVersion, bytesCount: 4, translationType: .versionString))
         for tool in self.buildTools {
             translations.append(Translation(definition: "Build Tool Name",
                                             humanReadable: tool.toolType.readable,
-                                            bytesCount: 4, translationType: .number))
+                                            bytesCount: 4, translationType: .numberEnum))
             translations.append(Translation(definition: "Build Tool Version",
                                             humanReadable: "(\(tool.version)",
-                                            bytesCount: 4, translationType: .number))
+                                            bytesCount: 4, translationType: .versionString))
         }
         return translations
     }

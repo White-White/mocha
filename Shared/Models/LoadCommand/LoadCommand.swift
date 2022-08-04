@@ -184,20 +184,21 @@ enum LoadCommandType: UInt32 {
     }
 }
 
-class LoadCommand: MachoComponent {
+class LoadCommand: MachoComponentWithTranslations {
     
     let type: LoadCommandType
     
-    init(_ data: Data, type: LoadCommandType, title: String? = nil) {
+    init(_ data: Data, type: LoadCommandType, title: String? = nil, subTitle: String? = nil) {
         self.type = type
-        super.init(data, title: title ?? type.name)
+        super.init(data, title: title ?? type.name, subTitle: subTitle)
     }
     
     override func createTranslations() -> [Translation] {
         let typeTranslation = Translation(definition: "Load Command Type", humanReadable: type.name, bytesCount: 4, translationType: .numberEnum)
-        let sizeTranslation = Translation(definition: "Load Command Size", humanReadable: data.count.hex, bytesCount: 4, translationType: .number)
+        let sizeTranslation = Translation(definition: "Load Command Size", humanReadable: data.count.hex, bytesCount: 4, translationType: .uint32)
         return [typeTranslation, sizeTranslation] + self.commandTranslations
     }
+    
     var commandTranslations: [Translation] { fatalError() }
 
     static func loadCommands(from data: Data) -> [LoadCommand] {

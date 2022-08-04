@@ -57,6 +57,7 @@ struct DataShifter {
     
     mutating func shiftUInt64() -> UInt64 { self.shift(.quadWords).UInt64 }
     mutating func shiftUInt32() -> UInt32 { self.shift(.doubleWords).UInt32 }
+    mutating func shiftInt32() -> Int32 { self.shift(.doubleWords).Int32 }
     mutating func shiftUInt16() -> UInt16 { self.shift(.word).UInt16 }
     mutating func shiftUInt8() -> UInt8 { self.shift(.rawNumber(1)).UInt8 }
     

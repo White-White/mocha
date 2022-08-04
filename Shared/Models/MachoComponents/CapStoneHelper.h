@@ -26,9 +26,16 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
 
 @end
 
+@interface CapStoneDisasmResult : NSObject
+
+@property (nonatomic, strong) NSArray<CapStoneInstruction *> * _Nullable instructions;
+@property (nonatomic, strong) NSError * _Nullable error;
+
+@end
+
 @interface CapStoneHelper : NSObject
 
-+ (NSArray <CapStoneInstruction*>*)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch;
++ (CapStoneDisasmResult *)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch codeStartAddress:(uint64_t)codeStartAddress progressBlock:(void (^)(float))progressBlock;
 
 @end
 

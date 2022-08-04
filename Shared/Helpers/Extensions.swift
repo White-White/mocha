@@ -18,6 +18,7 @@ extension Data {
     var UInt8: Swift.UInt8 { if (self.count == 1) { return self.first! } else { fatalError() } }
     var UInt16: Swift.UInt16 { cast(to: Swift.UInt16.self) }
     var UInt32: Swift.UInt32 { cast(to: Swift.UInt32.self) }
+    var Int32: Swift.Int32 { cast(to: Swift.Int32.self) }
     var UInt64: Swift.UInt64 { cast(to: Swift.UInt64.self) }
     var utf8String: String? { String(data: self, encoding: .utf8) }
     
@@ -63,6 +64,12 @@ extension UInt16 {
 }
 
 extension UInt32 {
+    var hex: String { String(format: "0x%0X", self) }
+    var isNotZero: Bool { self != .zero }
+    func bitAnd(_ v: Self) -> Bool { self & v != 0}
+}
+
+extension Int32 {
     var hex: String { String(format: "0x%0X", self) }
     var isNotZero: Bool { self != .zero }
     func bitAnd(_ v: Self) -> Bool { self & v != 0}

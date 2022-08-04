@@ -101,7 +101,7 @@ class ExportInfoNode {
         self.edges = edges
     }
     
-    var transIations: [Translation] {
+    var translations: [Translation] {
         
         var transIations: [Translation] = []
         
@@ -137,7 +137,7 @@ class ExportInfoNode {
     }
 }
 
-class ExportInfoComponent: MachoComponent {
+class ExportInfoComponent: ModeledTranslationComponent {
     
     private(set) var exportInfoNodes: [ExportInfoNode] = []
     let is64Bit: Bool
@@ -147,13 +147,13 @@ class ExportInfoComponent: MachoComponent {
         super.init(data, title: title)
     }
     
-    override func initialize() {
+    override func asyncInitialize() {
         let root = ExportInfoComponent.generateNode(from: data, for: nil, parentNode: nil)
         self.exportInfoNodes = ExportInfoComponent.allNodes(from: root, in: data).sorted { $0.startOffsetInMacho < $1.startOffsetInMacho }
     }
 
-    override func createTranslations() -> [Translation] {
-        return self.exportInfoNodes.flatMap { $0.transIations }
+    override func createTranslationSections() -> [TranslationSection] {
+        return self.exportInfoNodes.map { TranslationSection(translations: $0.translations) }
     }
     
     private static func allNodes(from root: ExportInfoNode, in data: Data) -> [ExportInfoNode] {

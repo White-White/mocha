@@ -14,7 +14,7 @@ protocol InterpretableModel {
     static var modelSizeFor32Bit: Int { get }
 }
 
-class ModelBasedComponent<Model: InterpretableModel>: MachoComponent {
+class ModelBasedComponent<Model: InterpretableModel>: ModeledTranslationComponent {
     
     private(set) var models: [Model] = []
     let modelSize: Int
@@ -26,7 +26,7 @@ class ModelBasedComponent<Model: InterpretableModel>: MachoComponent {
         super.init(data, title: title)
     }
     
-    override func initialize() {
+    override func asyncInitialize() {
         var dataShifter = DataShifter(self.data)
         while dataShifter.shiftable {
             let modelData = dataShifter.shift(.rawNumber(self.modelSize))
@@ -34,8 +34,15 @@ class ModelBasedComponent<Model: InterpretableModel>: MachoComponent {
         }
     }
     
-    override func createTranslations() -> [Translation] {
-        return self.models.flatMap { $0.translations }
+    override func createTranslationSections() -> [TranslationSection] {
+        var translationSections: [TranslationSection] = []
+        let maxIndex = self.models.count - 1
+        for (index, model) in self.models.enumerated() {
+            translationSections.append(TranslationSection(translations: model.translations))
+            self.initProgress.updateTranslationInitializeProgress(Float(index) / Float(maxIndex))
+        }
+        self.initProgress.updateTranslationInitializeProgress(1)
+        return translationSections
     }
     
 }

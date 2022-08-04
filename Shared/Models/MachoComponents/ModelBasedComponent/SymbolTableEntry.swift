@@ -241,7 +241,7 @@ struct SymbolTableEntry: InterpretableModel {
         var translations: [Translation] = []
 
         translations.append(Translation(definition: "String Table Offset", humanReadable: self.indexInStringTable.hex,
-                                        bytesCount: 4, translationType: .number,
+                                        bytesCount: 4, translationType: .uint32,
                                         extraDefinition: "Symbol Name from String Table", extraHumanReadable: self.symbolName))
         
         var symbolTypeExplanation: String = self.symbolType.readable
@@ -276,13 +276,13 @@ struct SymbolTableEntry: InterpretableModel {
                                         bytesCount: 1, translationType: .numberEnum))
         
         translations.append(Translation(definition: "Section Ordinal", humanReadable: nSectExplanation,
-                                        bytesCount: 1, translationType: .number))
+                                        bytesCount: 1, translationType: .uint8))
         
         translations.append(Translation(definition: "Descriptions", humanReadable: SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n"),
                                         bytesCount: 2, translationType: .flags))
         
         translations.append(Translation(definition: nValueDesp, humanReadable: nValueExplanation,
-                                        bytesCount: self.is64Bit ? 8 : 4, translationType: .number,
+                                        bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32,
                                         extraDefinition: nValueExtraDesp, extraHumanReadable: nValueExtraExplanation))
         
         return translations

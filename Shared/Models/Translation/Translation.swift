@@ -7,21 +7,46 @@
 
 import Foundation
 
-enum TranslationType {
+enum TranslationDataType {
     
-    case number
+    case uint8
+    case uint16
+    case uint32
+    case uint64
+    case int8
+    case int16
+    case int32
+    case int64
+    case versionString
     case numberEnum
     case utf8String
     case utf16String
     case rawData
     case uleb
+    case uleb128
     case flags
     case code
     
     var description: String {
         switch self {
-        case .number:
-            return "Number"
+        case .uint8:
+            return "Unsigned Int-8"
+        case .uint16:
+            return "Unsigned Int-16"
+        case .uint32:
+            return "Unsigned Int-32"
+        case .uint64:
+            return "Unsigned Int-64"
+        case .int8:
+            return "Signed Int-8"
+        case .int16:
+            return "Signed Int-16"
+        case .int32:
+            return "Signed Int-32"
+        case .int64:
+            return "Signed Int-64"
+        case .versionString:
+            return "Semantic Version"
         case .numberEnum:
             return "Number Enum"
         case .utf8String:
@@ -32,6 +57,8 @@ enum TranslationType {
             return "Raw Data"
         case .uleb:
             return "ULEB"
+        case .uleb128:
+            return "ULEB-128"
         case .flags:
             return "Bit Flags"
         case .code:
@@ -43,19 +70,19 @@ enum TranslationType {
 
 struct Translation {
     
-    let definition: String
+    let definition: String?
     let humanReadable: String
 
     let extraDefinition: String?
     let extraHumanReadable: String?
     
-    let translationType: TranslationType
+    let translationType: TranslationDataType
     let bytesCount: UInt64
     
-    init(definition: String,
+    init(definition: String?,
          humanReadable: String,
          bytesCount: Int,
-         translationType: TranslationType,
+         translationType: TranslationDataType,
          extraDefinition: String? = nil,
          extraHumanReadable: String? = nil) {
         

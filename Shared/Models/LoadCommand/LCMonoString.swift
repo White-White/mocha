@@ -22,7 +22,7 @@ class LCMonoString: LoadCommand {
     
     override var commandTranslations: [Translation] {
         return [
-            Translation(definition: "String Offset", humanReadable: self.stringOffset.hex, bytesCount: 4, translationType: .number),
+            Translation(definition: "String Offset", humanReadable: self.stringOffset.hex, bytesCount: 4, translationType: .uint32),
             Translation(definition: "Content", humanReadable: string, bytesCount: self.stringLength, translationType: .utf8String)
         ]
     }

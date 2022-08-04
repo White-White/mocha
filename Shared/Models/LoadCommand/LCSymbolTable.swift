@@ -25,10 +25,10 @@ class LCSymbolTable: LoadCommand {
     
     override var commandTranslations: [Translation] {
         var translations: [Translation] = []
-        translations.append(Translation(definition: "Symbol table offset", humanReadable: self.symbolTableOffset.hex, bytesCount: 4, translationType: .number))
-        translations.append(Translation(definition: "Number of entries", humanReadable: "\(self.numberOfSymbolTableEntries)", bytesCount: 4, translationType: .number))
-        translations.append(Translation(definition: "String table offset", humanReadable: self.stringTableOffset.hex, bytesCount: 4, translationType: .number))
-        translations.append(Translation(definition: "Size of string table", humanReadable: self.sizeOfStringTable.hex, bytesCount: 4, translationType: .number))
+        translations.append(Translation(definition: "Symbol table offset", humanReadable: self.symbolTableOffset.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(Translation(definition: "Number of entries", humanReadable: "\(self.numberOfSymbolTableEntries)", bytesCount: 4, translationType: .uint32))
+        translations.append(Translation(definition: "String table offset", humanReadable: self.stringTableOffset.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(Translation(definition: "Size of string table", humanReadable: self.sizeOfStringTable.hex, bytesCount: 4, translationType: .uint32))
         return translations
     }
     

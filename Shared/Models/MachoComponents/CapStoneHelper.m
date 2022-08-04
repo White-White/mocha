@@ -15,13 +15,17 @@
 
 @end
 
+@implementation CapStoneDisasmResult
+
+@end
+
 @implementation CapStoneHelper
 
-+ (NSArray<CapStoneInstruction *> *)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch {
++ (CapStoneDisasmResult *)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch codeStartAddress:(uint64_t)codeStartAddress progressBlock:(void (^)(float))progressBlock {
+    
+    CapStoneDisasmResult *disasmResult = [[CapStoneDisasmResult alloc] init];
     
     csh cs_handle;
-    cs_insn *cs_insn = NULL;
-    size_t disasm_count = 0;
     cs_err cserr;
     /* open capstone */
     cs_arch target_arch;
@@ -51,7 +55,8 @@
     }
     
     if ( (cserr = cs_open(target_arch, target_mode, &cs_handle)) != CS_ERR_OK ) {
-        @throw @"Fatal error."; // unexpected. failed to init capstore
+        disasmResult.error = [NSError errorWithDomain:@"Capstore" code:cserr userInfo:nil];
+        return disasmResult;
     }
     
     switch (arch) {
@@ -71,27 +76,48 @@
     cs_option(cs_handle, CS_OPT_DETAIL, CS_OPT_ON);
     cs_option(cs_handle, CS_OPT_SKIPDATA, CS_OPT_ON);
     
-    disasm_count = cs_disasm(cs_handle, (uint8_t *)[data bytes], (uint32_t)[data length], 0, 0, &cs_insn);
-    NSMutableArray <CapStoneInstruction *>* instructions = [NSMutableArray arrayWithCapacity:disasm_count];
+    
+    
+    
+    NSMutableArray <CapStoneInstruction *>* instructions = [NSMutableArray array];
+    struct cs_insn *insn = cs_malloc(cs_handle);
     
     uint64_t startOffset = 0;
-    for (size_t i = 0; i < disasm_count; i++) {
-        struct cs_insn *instruction = cs_insn + i;
-        NSString *mnemonic = [NSString stringWithCString:instruction->mnemonic encoding:NSUTF8StringEncoding];
-        NSString *operand = [NSString stringWithCString:instruction->op_str encoding:NSUTF8StringEncoding];
+    size_t initial_code_size = (size_t)[data length];
+    float progress = 0;
+    
+    uint64_t codeAddress = codeStartAddress; // value will be updated in iteration
+    uint8_t *code = (uint8_t *)[data bytes]; // value will be updated in iteration
+    size_t code_size = (size_t)[data length]; // value will be updated in iteration
+    
+    while(cs_disasm_iter(cs_handle, (const uint8_t **)&code, &code_size, &codeAddress, insn)) {
+        NSString *mnemonic = [NSString stringWithCString:insn->mnemonic encoding:NSUTF8StringEncoding];
+        NSString *operand = [NSString stringWithCString:insn->op_str encoding:NSUTF8StringEncoding];
         CapStoneInstruction *ins = [[CapStoneInstruction alloc] init];
         ins.mnemonic = mnemonic;
         ins.operand = operand;
         ins.startOffset = startOffset;
-        ins.length = instruction->size;
+        ins.length = insn->size;
         [instructions addObject:ins];
-        startOffset += instruction->size;
+        startOffset += insn->size;
+        
+        float newProgress = (float)startOffset / (float)initial_code_size;
+        if (newProgress - progress > 0.02) {
+            progressBlock(newProgress);
+            progress = newProgress;
+        }
     }
+    cs_free(insn, 1);
     
-    cs_free(cs_insn, disasm_count);
+    cs_err err_handle = cs_errno(cs_handle);
+    if (err_handle != CS_ERR_OK) {
+        disasmResult.error = [NSError errorWithDomain:@"Capstone" code:cserr userInfo:nil];
+    }
     cs_close(&cs_handle);
     
-    return instructions;
+    disasmResult.instructions = instructions;
+    
+    return disasmResult;
     
 }
 
