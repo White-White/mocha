@@ -8,37 +8,40 @@
 import Foundation
 
 protocol InitProgressDelegate: AnyObject {
-    func iniProgressUpdate(with updated: Float, done: Bool)
+    func progressDidUpdate(with updated: Float, done: Bool, shouldWithAnimation: Bool)
 }
 
 class InitProgress {
     
     weak var delegate: InitProgressDelegate?
-    private(set) var progress: Float
+    private(set) var progress: Float = 0
+    private let timeCreated: Double = CACurrentMediaTime()
     
-    init(progress: Float = 0) {
-        self.progress = progress
+    func updateProgressForInitialize(with progress: Float) {
+        self.update(progress / 2, done: false)
     }
     
-    func updateInitializeProgress(_ progress: Float) {
-        self.update(progress / 2)
+    func updateProgressForInitialize(finishedItems: Int, total: Int) {
+        self.update(Float(finishedItems) / Float(total) / 2, done: false)
     }
     
-    func updateTranslationInitializeProgress(_ progress: Float) {
-        self.update(0.5 + progress / 2)
+    func updateProgressForTranslationInitialize(finishedItems: Int, total: Int) {
+        if finishedItems == total {
+            self.update(1, done: true)
+        } else {
+            self.update((0.5 + Float(finishedItems) / Float(total) / 2), done: false)
+        }
     }
     
-    private func update(_ progress: Float) {
-        let shouldUpdate = progress - self.progress > 0.02 || progress == 1
-        guard shouldUpdate else { return }
+    func finishProgress() {
+        self.update(1, done: true, shouldWithAnimation: CACurrentMediaTime() - self.timeCreated > 0.5)
+    }
+    
+    private func update(_ progress: Float, done: Bool, shouldWithAnimation: Bool = true) {
+        guard progress - self.progress > 0.02 || done else { return }
         self.progress = progress
         DispatchQueue.main.async {
-            self.delegate?.iniProgressUpdate(with: self.progress, done: false)
-        }
-        if progress == 1 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self.delegate?.iniProgressUpdate(with: self.progress, done: true)
-            }
+            self.delegate?.progressDidUpdate(with: self.progress, done: done, shouldWithAnimation: shouldWithAnimation)
         }
     }
 }

@@ -43,7 +43,7 @@ class InstructionComponent: MachoComponent {
     
     override func asyncInitialize() {
         let disasmResult = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType, codeStartAddress: virtualAddress) { progress in
-            self.initProgress.updateInitializeProgress(progress)
+            self.initProgress.updateProgressForInitialize(with: progress)
         }
         if let _ = disasmResult.error {
             //TODO: handle error
@@ -60,9 +60,8 @@ class InstructionComponent: MachoComponent {
         for (index, instruction) in self.instructions.enumerated() {
             instructionViewModels.append(InstructionTranslationViewModel(offsetInMacho:nextStartOffset, index: index, instruction: instruction))
             nextStartOffset += instruction.length
-            self.initProgress.updateTranslationInitializeProgress(Float(index) / Float(maxIndex))
+            self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: maxIndex)
         }
-        self.initProgress.updateTranslationInitializeProgress(1)
         self.instructionComponentViewModel = InstructionTranslationsViewModel(instructionViewModels)
     }
     

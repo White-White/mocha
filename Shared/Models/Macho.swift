@@ -193,42 +193,10 @@ class Macho: Equatable {
         self.allComponents.forEach { $0.macho = self }
         tick.tock("Macho Init Completed")
         
-        self.triggerInit(for: self.allComponents)
-        self.triggerTanslationInit(for: self.allComponents)
+        let dependentComponents = Array(Set(self.allComponents.reduce([]) { $0 + $1.dependentComponent }))
+        let componentsToTriggerInit = self.allComponents.filter { !dependentComponents.contains($0) }
+        componentsToTriggerInit.forEach { $0.startAsyncInitialization() }
         tick.tock("Macho Trigger Component Init Completed")
     }
     
-    func triggerInit(for components: [MachoComponent]) {
-        if components.isEmpty { return }
-        let dependencies = (components.flatMap { $0.initDependencies }).compactMap { $0 }
-        self.triggerInit(for: dependencies)
-        
-        let mainThreadSemaphore = DispatchSemaphore(value: 0)
-        let taskGroup = DispatchGroup()
-        components.forEach { component in
-            if component.initTriggered { return }
-            component.initTriggered = true
-            taskGroup.enter()
-            component.startAsyncInitialization(onLocked: { taskGroup.leave() })
-        }
-        taskGroup.notify(queue: .global()) { mainThreadSemaphore.signal() }
-        mainThreadSemaphore.wait()
-    }
-    
-    func triggerTanslationInit(for components: [MachoComponent]) {
-        if components.isEmpty { return }
-        let dependencies = (components.flatMap { $0.translationInitDependencies }).compactMap { $0 }
-        self.triggerTanslationInit(for: dependencies)
-        
-        let mainThreadSemaphore = DispatchSemaphore(value: 0)
-        let taskGroup = DispatchGroup()
-        components.forEach { component in
-            if component.translationInitTriggered { return }
-            component.translationInitTriggered = true
-            taskGroup.enter()
-            component.startAsyncInitializeTranslation(onLocked: { taskGroup.leave() })
-        }
-        taskGroup.notify(queue: .global()) { mainThreadSemaphore.signal() }
-        mainThreadSemaphore.wait()
-    }
 }

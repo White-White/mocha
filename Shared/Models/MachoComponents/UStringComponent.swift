@@ -14,12 +14,11 @@ struct UStringPosition {
 
 class UStringComponent: MachoComponentWithTranslations {
     
-    let uStringPositions: [UStringPosition]
+    private(set) var uStringPositions: [UStringPosition] = []
     
-    init(_ data: Data, title: String) {
+    override func asyncInitialize() {
         let dataLength = data.count
         let utf16UnitCount = dataLength / 2
-        var uStringPositions: [UStringPosition] = []
         var indexOfLastNull = -2
         for index in 0..<utf16UnitCount {
             let curNullIndex = index * 2
@@ -32,26 +31,26 @@ class UStringComponent: MachoComponentWithTranslations {
             
             let uStringPosition = UStringPosition(relativeStartOffset: uStringStartIndex,
                                                   length: uStringDataLength)
-            uStringPositions.append(uStringPosition)
+            self.uStringPositions.append(uStringPosition)
             indexOfLastNull = curNullIndex
+            
+            self.initProgress.updateProgressForInitialize(finishedItems: index, total: utf16UnitCount)
         }
-        self.uStringPositions = uStringPositions
-        
-        super.init(data, title: title)
     }
     
     override func createTranslations() -> [Translation] {
-        return self.uStringPositions.map { self.translation(at: $0) }
-    }
-    
-    private func translation(at uStringPosition: UStringPosition) -> Translation {
-        var translation: Translation
-        if let string = String(data: self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length), encoding: .utf16LittleEndian) {
-            translation = Translation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
-        } else {
-            translation = Translation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
+        var translations: [Translation] = []
+        for (index, uStringPosition) in self.uStringPositions.enumerated() {
+            var translation: Translation
+            if let string = String(data: self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length), encoding: .utf16LittleEndian) {
+                translation = Translation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
+            } else {
+                translation = Translation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
+            }
+            translations.append(translation)
+            self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: self.uStringPositions.count)
         }
-        return translation
+        return translations
     }
-    
+
 }

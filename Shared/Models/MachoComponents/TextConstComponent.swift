@@ -19,9 +19,6 @@ protocol TextConstParser: MachoComponent {
 class TextConstComponent: ModeledTranslationComponent {
     
     private(set) var parsers: [TextConstParser] = []
-    let serialQueue = DispatchQueue(label: "TextConstComponent")
-    
-    override var translationInitDependencies: [MachoComponent?] { self.parsers }
     
     override func createTranslationSections() -> [TranslationSection] {
         let textConstModels = self.parsers.flatMap { $0.textConstModel }

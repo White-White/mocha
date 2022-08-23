@@ -9,7 +9,11 @@ import Foundation
 
 class SymbolTable: ModelBasedComponent<SymbolTableEntry> {
     
-    override var initDependencies: [MachoComponent?] { [macho?.stringTable] }
+    override var macho: Macho? {
+        didSet {
+            macho?.stringTable?.dependentComponent.append(self)
+        }
+    }
     
     private var symbolTableEntryMap: [UInt64: [Int]] = [:]
     
@@ -32,21 +36,15 @@ class SymbolTable: ModelBasedComponent<SymbolTableEntry> {
     
     func findSymbol(byVirtualAddress virtualAddress: UInt64) -> [SymbolTableEntry]? {
         var symbolTableEntrys: [SymbolTableEntry] = []
-        self.withInitializationDone {
-            if let symbolTableEntryIndexs = symbolTableEntryMap[virtualAddress] {
-                symbolTableEntrys = symbolTableEntryIndexs.map { self.models[$0] }
-            }
+        if let symbolTableEntryIndexs = symbolTableEntryMap[virtualAddress] {
+            symbolTableEntrys = symbolTableEntryIndexs.map { self.models[$0] }
         }
         return symbolTableEntrys
     }
     
     func findSymbol(atIndex index: Int) -> SymbolTableEntry {
-        var symbolTableEntry: SymbolTableEntry!
-        self.withInitializationDone {
-            guard index < self.models.count else { fatalError() }
-            symbolTableEntry = self.models[index]
-        }
-        return symbolTableEntry
+        guard index < self.models.count else { fatalError() }
+        return self.models[index]
     }
     
 }

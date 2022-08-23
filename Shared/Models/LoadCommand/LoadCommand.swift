@@ -199,7 +199,7 @@ class LoadCommand: MachoComponentWithTranslations {
         return [typeTranslation, sizeTranslation] + self.commandTranslations
     }
     
-    var commandTranslations: [Translation] { fatalError() }
+    var commandTranslations: [Translation] { [] }
 
     static func loadCommands(from data: Data) -> [LoadCommand] {
         var loadCommands: [LoadCommand] = []

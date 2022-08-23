@@ -31,14 +31,12 @@ struct TranslationsViewContainer: View {
             }
         }
         .onChange(of: selectedMachoComponentWrapper.value, perform: { newValue in
-            if selectedMachoComponentWrapper.value.hasMonsterSizedTranslations || newValue.hasMonsterSizedTranslations {
+            withAnimation {
                 self.showBlankPage = true
                 DispatchQueue.main.async {
                     self.machoComponent = newValue
                     self.showBlankPage = false
                 }
-            } else {
-                self.machoComponent = newValue
             }
         })
         .background(.white)

@@ -18,7 +18,11 @@ struct FunctionStart {
 
 class FunctionStartsComponent: MachoComponentWithTranslations {
     
-    override var initDependencies: [MachoComponent?] { [macho?.symbolTable] }
+    override var macho: Macho? {
+        didSet {
+            macho?.stringTable?.dependentComponent.append(self)
+        }
+    }
     
     let textSegmentVirtualAddress: Swift.UInt64
     let functionStarts: [FunctionStart]

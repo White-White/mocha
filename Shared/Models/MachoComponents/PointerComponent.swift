@@ -11,25 +11,23 @@ class PointerComponent: MachoComponentWithTranslations {
     
     let is64Bit: Bool
     let pointerSize: Int
-    let pointerValues: [UInt64]
+    private(set) var pointerValues: [UInt64] = []
     
     init(_ data: Data, is64Bit: Bool, title: String) {
         self.is64Bit = is64Bit
         let pointerSize = is64Bit ? 8 : 4
         self.pointerSize = pointerSize
-        
         /* section of type S_LITERAL_POINTERS should be in align of pointerSize */
         guard data.count % pointerSize == 0 else { fatalError() }
-        
-        var pointerValues: [UInt64] = []
+        super.init(data, title: title)
+    }
+    
+    override func asyncInitialize() {
         var dataShifter = DataShifter(data)
         while dataShifter.shiftable {
-            let pointerData = dataShifter.shift(.rawNumber(pointerSize))
-            pointerValues.append(is64Bit ? pointerData.UInt64 : UInt64(pointerData.UInt32))
+            let pointerData = dataShifter.shift(.rawNumber(self.pointerSize))
+            self.pointerValues.append(self.is64Bit ? pointerData.UInt64 : UInt64(pointerData.UInt32))
         }
-        self.pointerValues = pointerValues
-        
-        super.init(data, title: title)
     }
     
     override func createTranslations() -> [Translation] {
@@ -61,7 +59,12 @@ class LiteralPointerComponent: PointerComponent {
 
 class SymbolPointerComponent: PointerComponent {
     
-    override var initDependencies: [MachoComponent?] { [macho?.indirectSymbolTable, macho?.symbolTable] }
+    override var macho: Macho? {
+        didSet {
+            macho?.indirectSymbolTable?.dependentComponent.append(self)
+        }
+    }
+    
     let sectionType: SectionType
     let startIndexInIndirectSymbolTable: Int
     

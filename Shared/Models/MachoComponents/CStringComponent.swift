@@ -50,27 +50,27 @@ class CStringComponent: MachoComponentWithTranslations {
         for (index, cString) in self.cStrings.enumerated() {
             cStringOffsetIndexMap[cString.startOffset] = index
         }
+        self.initProgress.updateProgressForInitialize(finishedItems: currentIndex, total: self.data.count)
     }
     
     override func createTranslations() -> [Translation] {
-        return self.cStrings.map {
-            let translation = Translation(definition: nil,
-                                          humanReadable: $0.content ?? "🙅‍♂️ Invalid UTF8 String",
-                                          bytesCount: $0.length, translationType: .utf8String,
-                                          extraDefinition: $0.demangled != nil ? "Demangled" : nil,
-                                          extraHumanReadable: $0.demangled )
-            return translation
+        var translations: [Translation] = []
+        for (index, cString) in self.cStrings.enumerated() {
+            translations.append(Translation(definition: nil,
+                                            humanReadable: cString.content ?? "🙅‍♂️ Invalid UTF8 String",
+                                            bytesCount: cString.length, translationType: .utf8String,
+                                            extraDefinition: cString.demangled != nil ? "Demangled" : nil,
+                                            extraHumanReadable: cString.demangled ))
+            self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: self.cStrings.count)
         }
+        return translations
     }
     
     func findString(atDataOffset offset: Int) -> String? {
-        var finded: String?
-        self.withInitializationDone {
-            if let index = self.cStringOffsetIndexMap[offset] {
-                finded = self.cStrings[index].content
-            }
+        if let index = self.cStringOffsetIndexMap[offset] {
+            return self.cStrings[index].content
         }
-        return finded
+        return nil
     }
     
 }

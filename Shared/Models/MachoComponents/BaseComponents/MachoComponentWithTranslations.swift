@@ -11,10 +11,6 @@ class MachoComponentWithTranslations: MachoComponent {
     
     var simpleTranslationsViewModel: SimpleTranslationsViewModel!
     
-    override var hasMonsterSizedTranslations: Bool {
-        return self.simpleTranslationsViewModel.translationViewModels.count > 100000
-    }
-    
     override func asyncInitializeTranslations() {
         self.simpleTranslationsViewModel = SimpleTranslationsViewModel(translations: self.createTranslations(), startOffsetInMacho: self.offsetInMacho)
     }

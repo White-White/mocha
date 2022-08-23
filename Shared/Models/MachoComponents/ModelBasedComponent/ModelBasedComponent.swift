@@ -27,10 +27,11 @@ class ModelBasedComponent<Model: InterpretableModel>: ModeledTranslationComponen
     }
     
     override func asyncInitialize() {
-        var dataShifter = DataShifter(self.data)
-        while dataShifter.shiftable {
-            let modelData = dataShifter.shift(.rawNumber(self.modelSize))
+        let numberOfModels = self.dataSize/self.modelSize
+        for index in 0..<numberOfModels {
+            let modelData = self.data.subSequence(from: index * self.modelSize, count: self.modelSize)
             self.models.append(Model(with: modelData, is64Bit: self.is64Bit, macho: self.macho!))
+            self.initProgress.updateProgressForInitialize(finishedItems: index, total: numberOfModels)
         }
     }
     
@@ -39,9 +40,8 @@ class ModelBasedComponent<Model: InterpretableModel>: ModeledTranslationComponen
         let maxIndex = self.models.count - 1
         for (index, model) in self.models.enumerated() {
             translationSections.append(TranslationSection(translations: model.translations))
-            self.initProgress.updateTranslationInitializeProgress(Float(index) / Float(maxIndex))
+            self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: maxIndex)
         }
-        self.initProgress.updateTranslationInitializeProgress(1)
         return translationSections
     }
     

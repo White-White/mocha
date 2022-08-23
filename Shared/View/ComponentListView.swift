@@ -18,8 +18,8 @@ class ComponentListCellModel: ObservableObject, Identifiable, InitProgressDelega
     let offsetInMacho: Int
     let dataSize: Int
     
-    @Published var done: Bool = true
-    @Published var progress: Float = 1
+    @Published var initDone: Bool = false
+    @Published var progress: Float
     @Published var isSelected: Bool
     
     init(_ component: MachoComponent, index: Int, isSelected: Bool) {
@@ -29,14 +29,28 @@ class ComponentListCellModel: ObservableObject, Identifiable, InitProgressDelega
         self.dataSize = component.dataSize
         self.index = index
         self.isSelected = isSelected
+        
+        self.progress = component.initProgress.progress
         component.initProgress.delegate = self
     }
     
-    func iniProgressUpdate(with updated: Float, done: Bool) {
-        withAnimation {
+    func progressDidUpdate(with updated: Float, done: Bool, shouldWithAnimation: Bool) {
+        if shouldWithAnimation {
+            withAnimation {
+                self.progress = updated
+            }
+            if done {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    withAnimation {
+                        self.initDone = true
+                    }
+                }
+            }
+        } else {
             self.progress = updated
-            self.done = done
+            self.initDone = done
         }
+       
     }
 }
 
@@ -51,7 +65,7 @@ struct ComponentListCell: View {
     
     var body: some View {
         ZStack(alignment: .leading) {
-            if !cellModel.done {
+            if !cellModel.initDone {
                 VStack(alignment: .leading, spacing: 0) {
                     GeometryReader { reader in
                         Spacer()
@@ -83,7 +97,7 @@ struct ComponentListCell: View {
                 .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
                 Divider()
             }
-            .background(cellModel.done ? (isSelected ? Color(nsColor: .selectedTextBackgroundColor) : .white) : .white.opacity(0.5))
+            .background(cellModel.initDone ? (isSelected ? Color(nsColor: .selectedTextBackgroundColor) : .white) : .white.opacity(0.5))
         }
     }
 }
@@ -121,7 +135,7 @@ struct ComponentListView: View {
                 ForEach(viewModel.cellModels) { cellModel in
                     ComponentListCell(cellModel: cellModel)
                         .onTapGesture {
-                            guard cellModel.done else { alertPresented = true; return }
+                            guard cellModel.initDone else { alertPresented = true; return }
                             guard !cellModel.isSelected else { return }
                             self.machoViewState.selectedMachoComponentIndex = cellModel.index
                         }
