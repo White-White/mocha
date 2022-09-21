@@ -8,3 +8,4 @@
 #import <HexFiend/HFLineCountingView.h>
 #import <HexFiend/HFRepresenterTextView.h>
 #import "HexFiendUtil.h"
+#import "HFController+Mocha.h"

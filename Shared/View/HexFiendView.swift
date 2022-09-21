@@ -116,14 +116,7 @@ struct HexFiendView: View {
     }
     
     func scrollHexView(basedOn selectedRange: Range<UInt64>) {
-        let targetLineIndex = Float80(selectedRange.lowerBound / UInt64(HexFiendView.bytesPerLine))
-        let visableLineRange = self.hexFiendViewController.hfController.displayedLineRange
-        if targetLineIndex < (visableLineRange.location + 5)
-            || targetLineIndex > (visableLineRange.location + visableLineRange.length - 5) {
-            let visableRangeMid = visableLineRange.location + visableLineRange.length / 2
-            let scrollingDistance = targetLineIndex - visableRangeMid
-            self.hexFiendViewController.hfController.scroll(byLines: scrollingDistance)
-        }
+        self.hexFiendViewController.hfController.scrollHexViewBased(on: NSMakeRange(Int(selectedRange.lowerBound), Int(selectedRange.upperBound - selectedRange.lowerBound)), bytesPerLine: UInt(HexFiendView.bytesPerLine))
     }
     
     static func hfRangeWrapper(from range: Range<UInt64>) -> HFRangeWrapper {
