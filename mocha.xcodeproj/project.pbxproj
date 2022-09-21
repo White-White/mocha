@@ -42,6 +42,7 @@
 		1F6212EB2796747C009A9154 /* LCMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212EA2796747C009A9154 /* LCMain.swift */; };
 		1F6212ED279693BE009A9154 /* LCBuildVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6212EC279693BE009A9154 /* LCBuildVersion.swift */; };
 		1F68325A276C49AB002609C5 /* RelocationEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F683259276C49AB002609C5 /* RelocationEntry.swift */; };
+		1F6CC86B28DB3947000BEC37 /* HFController+Mocha.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6CC86A28DB3947000BEC37 /* HFController+Mocha.m */; };
 		1F6EB9FC278AE46500590729 /* LCDyldInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB9FB278AE46500590729 /* LCDyldInfo.swift */; };
 		1F6EB9FE278AECB000590729 /* OperationCodeComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB9FD278AECB000590729 /* OperationCodeComponent.swift */; };
 		1F73C6C9275A31F00020E581 /* LoadCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F73C6BC275A31F00020E581 /* LoadCommand.swift */; };
@@ -319,6 +320,8 @@
 		1F6212EA2796747C009A9154 /* LCMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCMain.swift; sourceTree = "<group>"; };
 		1F6212EC279693BE009A9154 /* LCBuildVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCBuildVersion.swift; sourceTree = "<group>"; };
 		1F683259276C49AB002609C5 /* RelocationEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelocationEntry.swift; sourceTree = "<group>"; };
+		1F6CC86928DB3947000BEC37 /* HFController+Mocha.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HFController+Mocha.h"; sourceTree = "<group>"; };
+		1F6CC86A28DB3947000BEC37 /* HFController+Mocha.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "HFController+Mocha.m"; sourceTree = "<group>"; };
 		1F6EB9FB278AE46500590729 /* LCDyldInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCDyldInfo.swift; sourceTree = "<group>"; };
 		1F6EB9FD278AECB000590729 /* OperationCodeComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationCodeComponent.swift; sourceTree = "<group>"; };
 		1F73C6BC275A31F00020E581 /* LoadCommand.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadCommand.swift; sourceTree = "<group>"; };
@@ -555,6 +558,8 @@
 				1F118D38287D94930071C107 /* TickTock.swift */,
 				1F0F1AAD2881389D00C4815B /* HexFiendUtil.h */,
 				1F0F1AAE2881389D00C4815B /* HexFiendUtil.m */,
+				1F6CC86928DB3947000BEC37 /* HFController+Mocha.h */,
+				1F6CC86A28DB3947000BEC37 /* HFController+Mocha.m */,
 				1F0D3E262887F741003826E3 /* ProgressTracker.swift */,
 			);
 			path = Helpers;
@@ -900,6 +905,7 @@
 				1FF28376288A718100F53C69 /* MachoViewState.swift in Sources */,
 				1F118CFB287BD10D0071C107 /* ModelBasedComponent.swift in Sources */,
 				1FFE55FB278030DA00ECD395 /* LCLinkerOption.swift in Sources */,
+				1F6CC86B28DB3947000BEC37 /* HFController+Mocha.m in Sources */,
 				1F6212E327966ED0009A9154 /* LCEncryptionInfo.swift in Sources */,
 				1FFE56022780325D00ECD395 /* LCDylib.swift in Sources */,
 				1F6212ED279693BE009A9154 /* LCBuildVersion.swift in Sources */,
