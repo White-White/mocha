@@ -53,7 +53,7 @@ class InstructionComponent: MachoComponent {
         }
     }
     
-    override func asyncInitializeTranslations() {
+    override func asyncTranslate() {
         var instructionViewModels: [InstructionTranslationViewModel] = []
         var nextStartOffset = self.offsetInMacho
         let maxIndex = self.instructions.count - 1

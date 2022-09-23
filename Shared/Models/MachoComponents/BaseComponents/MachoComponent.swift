@@ -38,21 +38,42 @@ class MachoComponent: Equatable, Identifiable, Hashable {
         
     }
     
-    func asyncInitializeTranslations() {
+    func asyncTranslate() {
         fatalError()
     }
     
-    var dependentComponent: [MachoComponent]  = []
+    private var hasStartedInit: Bool = false
+    private var dependentComponents: [MachoComponent] = []
+    private var dependencyComponents: [MachoComponent]  = []
+    
+    final func addDependency(_ dependency: MachoComponent) {
+        guard Thread.isMainThread else { fatalError() }
+        dependency.dependentComponents.append(self)
+        self.dependencyComponents.append(dependency)
+    }
     
     final func startAsyncInitialization() {
+        guard Thread.isMainThread && !self.hasStartedInit else { fatalError() }
+        guard self.dependencyComponents.isEmpty else { return }
+        self.hasStartedInit = true
         DispatchQueue.global().async {
             let tick = TickTock().disable()
             self.asyncInitialize()
             tick.tock("Macho Component Init - \(self.title)")
-            self.dependentComponent.forEach { $0.startAsyncInitialization() }
-            self.asyncInitializeTranslations()
+            self.dependentComponents.forEach { $0.didInitialize(dependencyComponent: self) }
+            self.asyncTranslate()
             tick.tock("Generate translation view model - \(self.title)")
             self.initProgress.finishProgress()
+        }
+    }
+    
+    private final func didInitialize(dependencyComponent: MachoComponent) {
+        DispatchQueue.main.async {
+            guard let dependentIndex = dependencyComponent.dependentComponents.firstIndex(of: self) else { fatalError() }
+            dependencyComponent.dependentComponents.remove(at: dependentIndex)
+            guard let dependencyIndex = self.dependencyComponents.firstIndex(of: dependencyComponent) else { fatalError() }
+            self.dependencyComponents.remove(at: dependencyIndex)
+            self.startAsyncInitialization()
         }
     }
 }
@@ -61,7 +82,7 @@ class ModeledTranslationComponent: MachoComponent {
     
     private(set) var modeledTranslationsViewModel: ModeledTranslationsViewModel!
 
-    override func asyncInitializeTranslations() {
+    override func asyncTranslate() {
         self.modeledTranslationsViewModel = ModeledTranslationsViewModel(translationSections: self.createTranslationSections(), machoComponentStartOffset: self.offsetInMacho)
     }
     

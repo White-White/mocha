@@ -11,10 +11,13 @@ class MachoComponentWithTranslations: MachoComponent {
     
     var simpleTranslationsViewModel: SimpleTranslationsViewModel!
     
-    override func asyncInitializeTranslations() {
-        self.simpleTranslationsViewModel = SimpleTranslationsViewModel(translations: self.createTranslations(), startOffsetInMacho: self.offsetInMacho)
+    override func asyncTranslate() {
+        self.simpleTranslationsViewModel = SimpleTranslationsViewModel(translations: self.createTranslations(),
+                                                                       startOffsetInMacho: self.offsetInMacho)
     }
     
-    func createTranslations() -> [Translation] { fatalError() }
+    func createTranslations() -> [Translation] {
+        fatalError()
+    }
     
 }

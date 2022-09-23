@@ -11,7 +11,8 @@ class SymbolTable: ModelBasedComponent<SymbolTableEntry> {
     
     override var macho: Macho? {
         didSet {
-            macho?.stringTable?.dependentComponent.append(self)
+            guard let stringTable = self.macho?.stringTable else { fatalError() }
+            self.addDependency(stringTable)
         }
     }
     
