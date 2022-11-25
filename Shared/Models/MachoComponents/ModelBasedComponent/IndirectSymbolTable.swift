@@ -12,7 +12,7 @@ class IndirectSymbolTable: ModelBasedComponent<IndirectSymbolTableEntry> {
     override var macho: Macho? {
         didSet {
             guard let symbolTable = self.macho?.symbolTable else { fatalError() }
-            self.addDependency(symbolTable)
+            self.parentComponent = symbolTable
         }
     }
     

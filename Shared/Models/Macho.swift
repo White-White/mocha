@@ -191,7 +191,7 @@ class Macho: Equatable {
         if let stringTable = self.stringTable { allComponents.append(stringTable) }
         self.allComponents = allComponents
         self.allComponents.forEach { $0.macho = self }
-        self.allComponents.forEach { $0.startAsyncInitialization() }
+        self.allComponents.forEach { if (!$0.hasParentComponent) { $0.startAsyncInitialization() } }
         tick.tock("Macho Init Completed")
     }
     

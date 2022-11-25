@@ -62,7 +62,7 @@ class SymbolPointerComponent: PointerComponent {
     override var macho: Macho? {
         didSet {
             guard let indirectSymbolTable = self.macho?.indirectSymbolTable else { fatalError() }
-            self.addDependency(indirectSymbolTable)
+            self.parentComponent = indirectSymbolTable
         }
     }
     

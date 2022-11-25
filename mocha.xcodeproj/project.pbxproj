@@ -65,7 +65,6 @@
 		1FBC72B0288BA3A2000E321D /* TranslationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC72AF288BA3A2000E321D /* TranslationSection.swift */; };
 		1FBC72D6288BD741000E321D /* InstructionTranslationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC72D5288BD741000E321D /* InstructionTranslationsView.swift */; };
 		1FBC72D8288BE5ED000E321D /* ModeledTranslationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC72D7288BE5ED000E321D /* ModeledTranslationsView.swift */; };
-		1FBC72DB288C007D000E321D /* TrackableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC72DA288C007D000E321D /* TrackableScrollView.swift */; };
 		1FBC747728916E9E000E321D /* SimpleTranslationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC747628916E9E000E321D /* SimpleTranslationsView.swift */; };
 		1FBC74B22893C5A9000E321D /* SwiftMetadataComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC74B12893C5A9000E321D /* SwiftMetadataComponent.swift */; };
 		1FBC74B42893C9D8000E321D /* TextConstComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBC74B32893C9D8000E321D /* TextConstComponent.swift */; };
@@ -349,7 +348,6 @@
 		1FBC72AF288BA3A2000E321D /* TranslationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationSection.swift; sourceTree = "<group>"; };
 		1FBC72D5288BD741000E321D /* InstructionTranslationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionTranslationsView.swift; sourceTree = "<group>"; };
 		1FBC72D7288BE5ED000E321D /* ModeledTranslationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeledTranslationsView.swift; sourceTree = "<group>"; };
-		1FBC72DA288C007D000E321D /* TrackableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackableScrollView.swift; sourceTree = "<group>"; };
 		1FBC747628916E9E000E321D /* SimpleTranslationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleTranslationsView.swift; sourceTree = "<group>"; };
 		1FBC74B12893C5A9000E321D /* SwiftMetadataComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftMetadataComponent.swift; sourceTree = "<group>"; };
 		1FBC74B32893C9D8000E321D /* TextConstComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextConstComponent.swift; sourceTree = "<group>"; };
@@ -415,7 +413,6 @@
 				1FF28375288A718100F53C69 /* MachoViewState.swift */,
 				1F73C6D7275A320D0020E581 /* MachoView.swift */,
 				1FC5CDAB287842FC00F9A09F /* MainView.swift */,
-				1FBC72D9288BFD50000E321D /* BaseView */,
 				1FBC72AE288BA354000E321D /* TranslationView */,
 			);
 			path = View;
@@ -538,14 +535,6 @@
 				1FC11B0B277B2DFD008D42D9 /* TranslationsViewContainer.swift */,
 			);
 			path = TranslationView;
-			sourceTree = "<group>";
-		};
-		1FBC72D9288BFD50000E321D /* BaseView */ = {
-			isa = PBXGroup;
-			children = (
-				1FBC72DA288C007D000E321D /* TrackableScrollView.swift */,
-			);
-			path = BaseView;
 			sourceTree = "<group>";
 		};
 		1FC258C7275C90C4008C2826 /* Helpers */ = {
@@ -953,7 +942,6 @@
 				1F75F8B8275A3151001A4E29 /* mochaApp.swift in Sources */,
 				1FFCA6E6278205CA00634B79 /* MachoComponent.swift in Sources */,
 				1F73C6E8275A32120020E581 /* UnixArchive.swift in Sources */,
-				1FBC72DB288C007D000E321D /* TrackableScrollView.swift in Sources */,
 				1F118D41287EA0800071C107 /* RelocationTable.swift in Sources */,
 				1F6212E527967438009A9154 /* LCMonoString.swift in Sources */,
 				1F118CE7287AD12D0071C107 /* SymbolTable.swift in Sources */,

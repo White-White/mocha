@@ -21,7 +21,7 @@ class FunctionStartsComponent: MachoComponentWithTranslations {
     override var macho: Macho? {
         didSet {
             guard let stringTable = self.macho?.stringTable else { fatalError() }
-            self.addDependency(stringTable)
+            self.parentComponent = stringTable
         }
     }
     
