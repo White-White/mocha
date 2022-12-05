@@ -31,6 +31,20 @@ class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
                     return true
                 }
             }
+            
+            for knownMagic in [FatBinary.magic, MachoMetaData.magic32, MachoMetaData.magic64, UnixArchive.magic] {
+                if let inputStream = InputStream(url: url) {
+                    inputStream.open()
+                    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: knownMagic.count)
+                    defer { buffer.deallocate(); inputStream.close() }
+                    let read = inputStream.read(buffer, maxLength: knownMagic.count)
+                    if read == knownMagic.count {
+                        if ([UInt8](Data(bytes: buffer, count: knownMagic.count)) == knownMagic) {
+                            return true
+                        }
+                    }
+                }
+            }
         }
         
         return false

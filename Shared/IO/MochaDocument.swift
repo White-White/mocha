@@ -10,7 +10,10 @@ import UniformTypeIdentifiers
 
 struct MachoMetaData: Identifiable, Equatable {
     
-    struct MachoMetaDataError: Error {  }
+    struct MachoMetaDataError: Error { }
+    
+    static let magic64: [UInt8] = [0xcf, 0xfa, 0xed, 0xfe]
+    static let magic32: [UInt8] = [0xce, 0xfa, 0xed, 0xfe]
     
     static func == (lhs: MachoMetaData, rhs: MachoMetaData) -> Bool {
         return lhs.id == rhs.id
@@ -30,9 +33,9 @@ struct MachoMetaData: Identifiable, Equatable {
         self.fileName = fileName
         self.machoData = machoData
         let is64Bit: Bool
-        if machoData.starts(with: [0xce, 0xfa, 0xed, 0xfe]) {
+        if machoData.starts(with: MachoMetaData.magic32) {
             is64Bit = false
-        } else if machoData.starts(with: [0xcf, 0xfa, 0xed, 0xfe]) {
+        } else if machoData.starts(with: MachoMetaData.magic64) {
             is64Bit = true
         } else {
             throw MachoMetaDataError()

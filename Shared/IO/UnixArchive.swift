@@ -56,7 +56,9 @@ struct UnixArchiveFileHeader {
 
 struct UnixArchive {
     
-    struct UnixArchiveError: Error {  }
+    struct UnixArchiveError: Error { }
+    
+    static let magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
     
     let machoMetaDatas: [MachoMetaData]
     
@@ -64,7 +66,7 @@ struct UnixArchive {
         
         // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
         // "!<arch>\n"
-        guard fileData.starts(with: [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]) else { throw UnixArchiveError() }
+        guard fileData.starts(with: UnixArchive.magic) else { throw UnixArchiveError() }
         
         var machoMetaDatas: [MachoMetaData] = []
         var dataShifter = DataShifter(fileData); dataShifter.skip(.quadWords) // throw away magic
