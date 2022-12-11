@@ -7,16 +7,16 @@
 
 import Foundation
 
-class OperationCodeComponent<Code: OperationCodeMetadataProtocol>: ModeledTranslationComponent {
+class OperationCodeComponent<Code: OperationCodeMetadataProtocol>: MachoComponent {
     
     private(set) var operationCodes: [OperationCode<Code>] = []
     
-    override func asyncInitialize() {
+    override func runInitializing() {
         self.operationCodes = OperationCodeComponent.operationCodes(from: data)
     }
     
-    override func createTranslationSections() -> [TranslationSection] {
-        return self.operationCodes.map { TranslationSection(translations: $0.translations) }
+    override func runTranslating() -> [TranslationGroup] {
+        self.operationCodes.map { $0.translations }
     }
     
     // parsing

@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ZeroFilledComponent: MachoComponentWithTranslations {
+class ZeroFilledComponent: MachoComponent {
     
     let runtimeSize: Int
     
@@ -16,11 +16,11 @@ class ZeroFilledComponent: MachoComponentWithTranslations {
         super.init(Data(), /* dummy data */ title: title)
     }
     
-    override func createTranslations() -> [Translation] {
-        return [Translation(definition: "Zero Filled Section",
-                            humanReadable: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)",
-                            bytesCount: .zero,
-                            translationType: .rawData)]
+    override func runTranslating() -> [TranslationGroup] {
+        [[GeneralTranslation(definition: "Zero Filled Section",
+                      humanReadable: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)",
+                      bytesCount: .zero,
+                      translationType: .rawData)]]
     }
     
 }

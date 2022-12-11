@@ -21,14 +21,14 @@ struct IndirectSymbolTableEntry: InterpretableModel {
         self.macho = macho
     }
     
-    var translations: [Translation] {
+    var translations: [GeneralTranslation] {
         if self.isSymbolLocal || self.isSymbolAbsolute {
-            return [Translation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex.hex)",
+            return [GeneralTranslation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex.hex)",
                                 bytesCount: 4, translationType: .uint32,
                                 extraDefinition: "Local Symbol", extraHumanReadable: "Local. Abosulte: \(self.isSymbolAbsolute)")]
         } else {
             let symbolName = macho?.symbolTable?.findSymbol(atIndex: Int(self.symbolTableIndex)).symbolName
-            return [Translation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex)",
+            return [GeneralTranslation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex)",
                                 bytesCount: 4, translationType: .uint32,
                                 extraDefinition: "Referrenced Symbol", extraHumanReadable: symbolName)]
         }

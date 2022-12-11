@@ -28,13 +28,13 @@ class LCDylib: LoadCommand {
         super.init(data, type: type, title: type.name, subTitle: libPath.components(separatedBy: "/").last)
     }
     
-    override var commandTranslations: [Translation] {
-        var translations: [Translation] = []
-        translations.append(Translation(definition: "Path Offset", humanReadable: "\(self.libPathOffset)", bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "Build Time", humanReadable: "\(self.timestamp)", bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "Version", humanReadable: self.currentVersion, bytesCount: 4, translationType: .versionString))
-        translations.append(Translation(definition: "Compatible Version", humanReadable: self.compatibilityVersion, bytesCount: 4, translationType: .versionString))
-        translations.append(Translation(definition: "Path", humanReadable: self.libPath, bytesCount: self.libPathDataCount, translationType: .utf8String))
+    override var commandTranslations: [GeneralTranslation] {
+        var translations: [GeneralTranslation] = []
+        translations.append(GeneralTranslation(definition: "Path Offset", humanReadable: "\(self.libPathOffset)", bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "Build Time", humanReadable: "\(self.timestamp)", bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "Version", humanReadable: self.currentVersion, bytesCount: 4, translationType: .versionString))
+        translations.append(GeneralTranslation(definition: "Compatible Version", humanReadable: self.compatibilityVersion, bytesCount: 4, translationType: .versionString))
+        translations.append(GeneralTranslation(definition: "Path", humanReadable: self.libPath, bytesCount: self.libPathDataCount, translationType: .utf8String))
         return translations
     }
     

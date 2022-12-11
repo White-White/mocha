@@ -10,6 +10,7 @@ import AppKit
 
 class HexFiendViewController: NSViewController {
     
+    static let bytesPerLine = 16
     let data: Data
     let hfController: HFController
     let layoutRep: HFLayoutRepresenter
@@ -63,60 +64,43 @@ class HexFiendViewController: NSViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
+    var selectedDataRange: Range<UInt64>? {
+        didSet {
+            if let selectedDataRange {
+                self.hfController.selectedContentsRanges = [HexFiendViewController.hfRangeWrapper(from: selectedDataRange)]
+            } else {
+                self.hfController.selectedContentsRanges = [HFRangeWrapper.withRange(HFRange(location: 0, length: 0))]
+            }
+            self.scrollIfNeeded()
+        }
+    }
+    var selectedComponentDataRange: Range<UInt64>? {
+        didSet {
+            if let selectedComponentDataRange {
+                self.hfController.colorRanges = [HexFiendViewController.colorRange(from: selectedComponentDataRange)]
+            }
+            self.scrollIfNeeded()
+        }
+    }
+    
+    private func scrollIfNeeded() {
+        if let selectedDataRange {
+            self.scrollHexView(basedOn: selectedDataRange)
+            return
+        }
+        
+        if let selectedComponentDataRange {
+            self.scrollHexView(basedOn: selectedComponentDataRange)
+            return
+        }
+    }
+    
+    private func scrollHexView(basedOn selectedRange: Range<UInt64>) {
+        self.hfController.scrollHexViewBased(on: NSMakeRange(Int(selectedRange.lowerBound), Int(selectedRange.upperBound - selectedRange.lowerBound)), bytesPerLine: UInt(HexFiendViewController.bytesPerLine))
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-}
-
-private struct ViewControllerRepresentable: NSViewControllerRepresentable {
-    typealias NSViewControllerType = NSViewController
-    let viewController: NSViewController
-    func makeNSViewController(context: Context) -> NSViewController {
-        return self.viewController
-    }
-    func updateNSViewController(_ nsViewController: NSViewController, context: Context) {
-        
-    }
-}
-
-struct HexFiendView: View {
-    
-    static let bytesPerLine = 16
-    
-    @ObservedObject var selectedDataRangeWrapper: ObserableValueWrapper<Range<UInt64>?>
-    @ObservedObject var currentMachoComponentRangeWrapper: ObserableValueWrapper<Range<UInt64>>
-    let hexFiendViewController: HexFiendViewController
-    
-    var body: some View {
-        HStack {
-            ViewControllerRepresentable(viewController: self.hexFiendViewController)
-                .frame(width: hexFiendViewController.layoutRep.minimumViewWidth(forBytesPerLine: UInt(HexFiendView.bytesPerLine)))
-                .border(.separator, width: 1)
-                .onChange(of: selectedDataRangeWrapper.value) { newValue in
-                    if let selectedRange = newValue {
-                        self.hexFiendViewController.hfController.selectedContentsRanges = [HexFiendView.hfRangeWrapper(from: selectedRange)]
-                        self.scrollHexView(basedOn: selectedRange)
-                    }
-                }
-                .onChange(of: currentMachoComponentRangeWrapper.value) { newValue in
-                    self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: newValue)]
-                }
-        }
-    }
-    
-    init(macho: Macho, machoViewState: MachoViewState) {
-        self.hexFiendViewController = HexFiendViewController(data: macho.machoData)
-        self.selectedDataRangeWrapper = machoViewState.selectedDataRangeWrapper
-        self.currentMachoComponentRangeWrapper = machoViewState.currentMachoComponentRangeWrapper
-        if let selectedRange = self.selectedDataRangeWrapper.value {
-            self.hexFiendViewController.hfController.selectedContentsRanges = [HexFiendView.hfRangeWrapper(from: selectedRange)]
-            self.scrollHexView(basedOn: selectedRange)
-        }
-        self.hexFiendViewController.hfController.colorRanges = [HexFiendView.colorRange(from: self.currentMachoComponentRangeWrapper.value)]
-    }
-    
-    func scrollHexView(basedOn selectedRange: Range<UInt64>) {
-        self.hexFiendViewController.hfController.scrollHexViewBased(on: NSMakeRange(Int(selectedRange.lowerBound), Int(selectedRange.upperBound - selectedRange.lowerBound)), bytesPerLine: UInt(HexFiendView.bytesPerLine))
     }
     
     static func hfRangeWrapper(from range: Range<UInt64>) -> HFRangeWrapper {
@@ -130,5 +114,15 @@ struct HexFiendView: View {
         colorRange.color = NSColor.init(calibratedWhite: 212.0/255.0, alpha: 1)
         return colorRange
     }
-    
+}
+
+struct ViewControllerRepresentable: NSViewControllerRepresentable {
+    typealias NSViewControllerType = NSViewController
+    let viewController: NSViewController
+    func makeNSViewController(context: Context) -> NSViewController {
+        return self.viewController
+    }
+    func updateNSViewController(_ nsViewController: NSViewController, context: Context) {
+        
+    }
 }

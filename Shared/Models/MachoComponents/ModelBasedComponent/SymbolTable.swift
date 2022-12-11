@@ -12,14 +12,14 @@ class SymbolTable: ModelBasedComponent<SymbolTableEntry> {
     override var macho: Macho? {
         didSet {
             guard let stringTable = self.macho?.stringTable else { fatalError() }
-            self.parentComponent = stringTable
+            stringTable.addChildComponent(self)
         }
     }
     
     private var symbolTableEntryMap: [UInt64: [Int]] = [:]
     
-    override func asyncInitialize() {
-        super.asyncInitialize()
+    override func runInitializing() {
+        super.runInitializing()
         for (index, symbolEntry) in self.models.enumerated() {
             
             /* comments from LinkEdit.m in MachoOView code base

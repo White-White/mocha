@@ -17,25 +17,26 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
     CapStoneArchTypeARM64
 };
 
-@interface CapStoneInstruction: NSObject
+@interface CapStoneInstruction : NSObject
 
 @property (nonatomic, strong) NSString *mnemonic;
 @property (nonatomic, strong) NSString *operand;
-@property (nonatomic, assign) NSInteger startOffset;
-@property (nonatomic, assign) NSInteger length;
+@property (nonatomic, assign) NSUInteger codeSize;
 
 @end
 
-@interface CapStoneDisasmResult : NSObject
+@interface CapStoneInstructionBank : NSObject
 
-@property (nonatomic, strong) NSArray<CapStoneInstruction *> * _Nullable instructions;
 @property (nonatomic, strong) NSError * _Nullable error;
+
+- (NSUInteger)numberOfInstructions;
+- (CapStoneInstruction *)instructionAtIndex:(NSUInteger)index;
 
 @end
 
 @interface CapStoneHelper : NSObject
 
-+ (CapStoneDisasmResult *)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch codeStartAddress:(uint64_t)codeStartAddress progressBlock:(void (^)(float))progressBlock;
++ (CapStoneInstructionBank *)instructionsFrom:(NSData *)data arch:(CapStoneArchType)arch codeStartAddress:(uint64_t)codeStartAddress progressBlock:(void (^)(float))progressBlock;
 
 @end
 

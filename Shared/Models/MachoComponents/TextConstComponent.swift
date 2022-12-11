@@ -7,27 +7,9 @@
 
 import Foundation
 
-struct TextConstModel {
-    let targetOffsetInMacho: Int
-    let translations: [Translation]
-}
-
-protocol TextConstParser: MachoComponent {
-    var textConstModel: [TextConstModel] { get }
-}
-
-class TextConstComponent: ModeledTranslationComponent {
+class TextConstComponent: UnknownComponent {
     
-    private(set) var parsers: [TextConstParser] = []
-    
-    override func createTranslationSections() -> [TranslationSection] {
-        let textConstModels = self.parsers.flatMap { $0.textConstModel }
-        return textConstModels.map { TranslationSection(translations: $0.translations) }
-    }
-    
-    func addParser(_ parser: TextConstParser) {
-        self.parsers.append(parser)
-    }
+    //TODO: fix text const component
     
 }
 

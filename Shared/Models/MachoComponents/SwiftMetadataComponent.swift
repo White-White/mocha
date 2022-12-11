@@ -10,7 +10,7 @@ import Foundation
 protocol SwiftMetadata {
     static var dataSize: Int { get }
     init(data: Data)
-    var translations: [Translation] { get }
+    var translations: [GeneralTranslation] { get }
 }
 
 struct ProtocolDescriptor: SwiftMetadata {
@@ -33,14 +33,14 @@ struct ProtocolDescriptor: SwiftMetadata {
         self.associatedTypeNames = dataShifter.shiftInt32()
     }
     
-    var translations: [Translation] {
-        var translations: [Translation] = []
-        translations.append(Translation(definition: "flags", humanReadable: self.flags.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "parent", humanReadable: self.parent.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "name", humanReadable: self.name.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "numRequirementsInSignature", humanReadable: self.numRequirementsInSignature.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "numRequirements", humanReadable: self.numRequirements.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "associatedTypeNames", humanReadable: self.associatedTypeNames.hex, bytesCount: 4, translationType: .uint32))
+    var translations: [GeneralTranslation] {
+        var translations: [GeneralTranslation] = []
+        translations.append(GeneralTranslation(definition: "flags", humanReadable: self.flags.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "parent", humanReadable: self.parent.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "name", humanReadable: self.name.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "numRequirementsInSignature", humanReadable: self.numRequirementsInSignature.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "numRequirements", humanReadable: self.numRequirements.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "associatedTypeNames", humanReadable: self.associatedTypeNames.hex, bytesCount: 4, translationType: .uint32))
         return translations
     }
     
@@ -64,12 +64,12 @@ struct ProtocolConformanceDescriptor: SwiftMetadata {
         self.conformanceFlags = dataShifter.shiftUInt32()
     }
     
-    var translations: [Translation] {
-        var translations: [Translation] = []
-        translations.append(Translation(definition: "protocolDescriptor", humanReadable: self.protocolDescriptor.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "nominalTypeDescriptor", humanReadable: self.nominalTypeDescriptor.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "protocolWitnessTable", humanReadable: self.protocolWitnessTable.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "conformanceFlags", humanReadable: self.conformanceFlags.hex, bytesCount: 4, translationType: .uint32))
+    var translations: [GeneralTranslation] {
+        var translations: [GeneralTranslation] = []
+        translations.append(GeneralTranslation(definition: "protocolDescriptor", humanReadable: self.protocolDescriptor.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "nominalTypeDescriptor", humanReadable: self.nominalTypeDescriptor.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "protocolWitnessTable", humanReadable: self.protocolWitnessTable.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "conformanceFlags", humanReadable: self.conformanceFlags.hex, bytesCount: 4, translationType: .uint32))
         return translations
     }
     
@@ -83,22 +83,16 @@ struct SwiftMetadataContainer<MetaData: SwiftMetadata> {
     let targetOffsetInMacho: Int
     let associatedMetadata: MetaData?
     
-    var translations: [Translation] {
+    var translations: [GeneralTranslation] {
         if let associatedMetadata = associatedMetadata {
             return associatedMetadata.translations
         } else {
-            return [Translation(definition: "FIXME: unknown", humanReadable: "UNKNOWN", bytesCount: MetaData.dataSize, translationType: .flags)]
+            return [GeneralTranslation(definition: "FIXME: unknown", humanReadable: "UNKNOWN", bytesCount: MetaData.dataSize, translationType: .flags)]
         }
     }
 }
 
-class SwiftMetadataComponent<MetaData: SwiftMetadata>: MachoComponentWithTranslations, TextConstParser {
-    
-    override var macho: Macho? {
-        didSet {
-            macho?.textConstComponent?.addParser(self)
-        }
-    }
+class SwiftMetadataComponent<MetaData: SwiftMetadata>: MachoComponent {
     
     private(set) var swiftMetadataContainers: [SwiftMetadataContainer<MetaData>] = []
     
@@ -109,7 +103,7 @@ class SwiftMetadataComponent<MetaData: SwiftMetadata>: MachoComponentWithTransla
         super.init(data, title: title, subTitle: nil)
     }
     
-    override func asyncInitialize() {
+    override func runInitializing() {
         guard self.data.count % 4 == 0 else { fatalError() }
         let offsetInComponent = self.offsetInMacho
         let numberOfOffsets = self.data.count / 4
@@ -133,8 +127,8 @@ class SwiftMetadataComponent<MetaData: SwiftMetadata>: MachoComponentWithTransla
         return swiftMetaData
     }
     
-    override func createTranslations() -> [Translation] {
-        var translations: [Translation] = []
+    override func runTranslating() -> [TranslationGroup] {
+        var offsetTranslations: [GeneralTranslation] = []
         for swiftMetadataContainer in swiftMetadataContainers {
             let extraDefinition: String
             if let _ = swiftMetadataContainer.associatedMetadata {
@@ -142,18 +136,14 @@ class SwiftMetadataComponent<MetaData: SwiftMetadata>: MachoComponentWithTransla
             } else {
                 extraDefinition = "UNKNOWN position" //FIXME
             }
-            translations.append(Translation(definition: "Offset Value",
+            offsetTranslations.append(GeneralTranslation(definition: "Offset Value",
                                             humanReadable: String(format: "%d", swiftMetadataContainer.rawOffsetValue),
                                             bytesCount: 4,
                                             translationType: .int32,
                                             extraDefinition: extraDefinition,
                                             extraHumanReadable: swiftMetadataContainer.targetOffsetInMacho.hex))
         }
-        return translations
-    }
-    
-    var textConstModel: [TextConstModel] {
-        return self.swiftMetadataContainers.map { TextConstModel(targetOffsetInMacho: $0.targetOffsetInMacho, translations: $0.translations) }
+        return [offsetTranslations]
     }
     
 }

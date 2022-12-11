@@ -16,18 +16,17 @@ struct FunctionStart {
 // a great description for function start section data format
 // https://stackoverflow.com/questions/9602438/mach-o-file-lc-function-starts-load-command
 
-class FunctionStartsComponent: MachoComponentWithTranslations {
+class FunctionStartsComponent: MachoComponent {
     
     override var macho: Macho? {
         didSet {
             guard let stringTable = self.macho?.stringTable else { fatalError() }
-            self.parentComponent = stringTable
+            stringTable.addChildComponent(self)
         }
     }
     
     let textSegmentVirtualAddress: Swift.UInt64
     let functionStarts: [FunctionStart]
-    var defaultComponentViewModel: ModeledTranslationsViewModel!
     
     init(_ data: Data, title: String, textSegmentVirtualAddress: UInt64) {
         self.textSegmentVirtualAddress = textSegmentVirtualAddress
@@ -57,12 +56,12 @@ class FunctionStartsComponent: MachoComponentWithTranslations {
         self.functionStarts = functionStarts
         super.init(data, title: title)
     }
-    
-    override func createTranslations() -> [Translation] {
-        return self.functionStarts.map { self.translation(for: $0) }
+   
+    override func runTranslating() -> [TranslationGroup] {
+        [self.functionStarts.map { self.translation(for: $0) }]
     }
     
-    private func translation(for functionStart: FunctionStart) -> Translation {
+    private func translation(for functionStart: FunctionStart) -> GeneralTranslation {
         var symbolName: String = ""
         let functionVirtualAddress = functionStart.address + textSegmentVirtualAddress
         
@@ -71,7 +70,7 @@ class FunctionStartsComponent: MachoComponentWithTranslations {
             symbolName += symbolTableEntry.symbolName
         })
         
-        let translation = Translation(definition: "Vitual Address",
+        let translation = GeneralTranslation(definition: "Vitual Address",
                                       humanReadable: (functionStart.address + textSegmentVirtualAddress).hex,
                                       bytesCount: functionStart.byteLength, translationType: .uleb128,
                                       extraDefinition: "Referred Symbol Name",

@@ -12,11 +12,11 @@ struct UStringPosition {
     let length: Int
 }
 
-class UStringComponent: MachoComponentWithTranslations {
+class UStringComponent: MachoComponent {
     
     private(set) var uStringPositions: [UStringPosition] = []
     
-    override func asyncInitialize() {
+    override func runInitializing() {
         let dataLength = data.count
         let utf16UnitCount = dataLength / 2
         var indexOfLastNull = -2
@@ -38,19 +38,19 @@ class UStringComponent: MachoComponentWithTranslations {
         }
     }
     
-    override func createTranslations() -> [Translation] {
-        var translations: [Translation] = []
+    override func runTranslating() -> [TranslationGroup] {
+        var translations: [GeneralTranslation] = []
         for (index, uStringPosition) in self.uStringPositions.enumerated() {
-            var translation: Translation
+            var translation: GeneralTranslation
             if let string = String(data: self.data.subSequence(from: uStringPosition.relativeStartOffset, count: uStringPosition.length), encoding: .utf16LittleEndian) {
-                translation = Translation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
+                translation = GeneralTranslation(definition: "UTF16-String", humanReadable: string, bytesCount: uStringPosition.length, translationType: .utf16String)
             } else {
-                translation = Translation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
+                translation = GeneralTranslation(definition: "Unable to decode", humanReadable: "🙅‍♂️ Invalid UTF16 String", bytesCount: uStringPosition.length, translationType: .utf16String)
             }
             translations.append(translation)
             self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: self.uStringPositions.count)
         }
-        return translations
+        return [translations]
     }
 
 }

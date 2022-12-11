@@ -7,13 +7,13 @@
 
 import Foundation
 
-class UnknownComponent: MachoComponentWithTranslations {
+class UnknownComponent: MachoComponent {
     
-    override func createTranslations() -> [Translation] {
-        return [Translation(definition: "Unknow",
-                            humanReadable: "Mocha doesn's know how to parse this section yet.",
-                            bytesCount: .zero,
-                            translationType: .rawData)]
+    override func runTranslating() -> [TranslationGroup] {
+        [[GeneralTranslation(definition: "Unknow",
+                      humanReadable: "Mocha doesn's know how to parse this section yet.",
+                      bytesCount: .zero,
+                      translationType: .rawData)]]
     }
     
 }

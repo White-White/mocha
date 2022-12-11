@@ -20,10 +20,10 @@ class LCLinkerOption: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [Translation] {
+    override var commandTranslations: [GeneralTranslation] {
         return [
-            Translation(definition: "Number of options", humanReadable: "\(self.numberOfOptions)", bytesCount: 4, translationType: .uint32),
-            Translation(definition: "Options(s)", humanReadable: self.options.joined(separator: " "), bytesCount: self.optionDataLength, translationType: .utf8String)
+            GeneralTranslation(definition: "Number of options", humanReadable: "\(self.numberOfOptions)", bytesCount: 4, translationType: .uint32),
+            GeneralTranslation(definition: "Options(s)", humanReadable: self.options.joined(separator: " "), bytesCount: self.optionDataLength, translationType: .utf8String)
         ]
     }
     

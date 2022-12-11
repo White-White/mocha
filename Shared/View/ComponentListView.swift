@@ -7,70 +7,30 @@
 
 import SwiftUI
 
-
-class ComponentListCellModel: ObservableObject, Identifiable, InitProgressDelegate {
-    
-    var id: Int { index }
-    let index: Int
-    
-    let title: String
-    let subTitle: String?
-    let offsetInMacho: Int
-    let dataSize: Int
-    
-    @Published var initDone: Bool = false
-    @Published var progress: Float
-    @Published var isSelected: Bool
-    
-    init(_ component: MachoComponent, index: Int, isSelected: Bool) {
-        self.title = component.title
-        self.subTitle = component.subTitle
-        self.offsetInMacho = component.offsetInMacho
-        self.dataSize = component.dataSize
-        self.index = index
-        self.isSelected = isSelected
-        
-        self.progress = component.initProgress.progress
-        component.initProgress.delegate = self
-    }
-    
-    func progressDidUpdate(with updated: Float, done: Bool, shouldWithAnimation: Bool) {
-        if shouldWithAnimation {
-            withAnimation {
-                self.progress = updated
-            }
-            if done {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    withAnimation {
-                        self.initDone = true
-                    }
-                }
-            }
-        } else {
-            self.progress = updated
-            self.initDone = done
-        }
-       
-    }
-}
-
 struct ComponentListCell: View {
     
-    @ObservedObject var cellModel: ComponentListCellModel
-    var isSelected: Bool { cellModel.isSelected }
-    var title: String { cellModel.title }
-    var offsetInMacho: Int { cellModel.offsetInMacho }
-    var dataSize: Int { cellModel.dataSize }
-    var progress: CGFloat { CGFloat(cellModel.progress) }
+    @Binding var selectedMachoComponent: MachoComponent
+    @Binding var alertPresented: Bool
+    
+    let machoComponent: MachoComponent
+    let isSelected: Bool
+    var title: String { machoComponent.title }
+    var offsetInMacho: Int { machoComponent.offsetInMacho }
+    var dataSize: Int { machoComponent.dataSize }
+    
+    @ObservedObject var initProgress: InitProgress
+    @State var isDone: Bool
+    @State var progress: Float
     
     var body: some View {
         ZStack(alignment: .leading) {
-            if !cellModel.initDone {
+            if !isDone {
                 VStack(alignment: .leading, spacing: 0) {
                     GeometryReader { reader in
                         Spacer()
                             .frame(width: reader.size.width * CGFloat(progress))
                             .background(.gray)
+                            .animation(.default, value: progress)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -82,7 +42,7 @@ struct ComponentListCell: View {
                         .font(.system(size: 12).bold())
                         .padding(.bottom, 2)
                     
-                    if let subTitle = cellModel.subTitle {
+                    if let subTitle = machoComponent.subTitle {
                         Text(subTitle)
                             .font(.system(size: 10).bold())
                             .padding(.bottom, 2)
@@ -97,56 +57,69 @@ struct ComponentListCell: View {
                 .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
                 Divider()
             }
-            .background(cellModel.initDone ? (isSelected ? Color(nsColor: .selectedTextBackgroundColor) : .white) : .white.opacity(0.5))
+            .background(isDone ? (isSelected ? Color(nsColor: .selectedTextBackgroundColor) : .white) : .white.opacity(0.5))
+        }
+        .onTapGesture {
+            guard isDone else { alertPresented = true; return }
+            guard !isSelected else { return }
+            self.selectedMachoComponent = self.machoComponent
+        }
+        .onChange(of: initProgress.isDone) { newValue in
+            self.isDone = newValue
+        }
+        .onChange(of: initProgress.progress) { newValue in
+            self.progress = newValue
+        }
+        .onChange(of: machoComponent) { newValue in
+            self.isDone = newValue.initProgress.isDone
+            self.progress = newValue.initProgress.progress
         }
     }
-}
-
-struct ComponentListViewModel {
     
-    var alertPresented: Bool = false
-    var cellModels: [ComponentListCellModel]
-    var widthNeeded: CGFloat
-    
-    init(with macho: Macho, selectedIndex: Int) {
-        var cellModels: [ComponentListCellModel] = []
-        for (index, machoComponent) in macho.allComponents.enumerated() {
-            cellModels.append(ComponentListCellModel(machoComponent, index: index, isSelected: selectedIndex == index))
-        }
-        self.cellModels = cellModels
-        self.widthNeeded = cellModels.reduce(0) { partialResult, cellModel in
-            let attriString = NSAttributedString(string: cellModel.title, attributes: [.font: NSFont.systemFont(ofSize: 12, weight: .bold)])
-            let recommendedWidth = attriString.boundingRect(with: NSSize(width: 1000, height: 0), options: .usesLineFragmentOrigin).size.width
-            return max(partialResult, recommendedWidth)
-        }
+    init(machoComponent: MachoComponent, selectedMachoComponent: Binding<MachoComponent>, alertPresented: Binding<Bool>) {
+        _alertPresented = alertPresented
+        _selectedMachoComponent = selectedMachoComponent
+        self.isDone = machoComponent.initProgress.isDone
+        self.progress = machoComponent.initProgress.progress
+        self.machoComponent = machoComponent
+        self.isSelected = (machoComponent == selectedMachoComponent.wrappedValue)
+        self.initProgress = machoComponent.initProgress
     }
     
 }
 
 struct ComponentListView: View {
     
-    let machoViewState: MachoViewState
-    var viewModel: ComponentListViewModel { machoViewState.componentListViewModel }
+    let macho: Macho
+    @Binding var selectedMachoComponent: MachoComponent
     @State var alertPresented: Bool = false
     
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(viewModel.cellModels) { cellModel in
-                    ComponentListCell(cellModel: cellModel)
-                        .onTapGesture {
-                            guard cellModel.initDone else { alertPresented = true; return }
-                            guard !cellModel.isSelected else { return }
-                            self.machoViewState.selectedMachoComponentIndex = cellModel.index
-                        }
+                ForEach(macho.allComponents) { machoComponent in
+                    ComponentListCell(machoComponent: machoComponent, selectedMachoComponent: $selectedMachoComponent, alertPresented: $alertPresented)
                 }
             }
         }
         .border(.separator, width: 1)
-        .frame(width: viewModel.widthNeeded + 16)
+        .frame(width: self.widthNeede(for: macho))
         .alert("Component is loading", isPresented: $alertPresented) {
             
         }
     }
+    
+    func widthNeede(for macho: Macho) -> CGFloat {
+        return macho.allComponents.reduce(0) { partialResult, component in
+            let attriString = NSAttributedString(string: component.title, attributes: [.font: NSFont.systemFont(ofSize: 12, weight: .bold)])
+            let recommendedWidth = attriString.boundingRect(with: NSSize(width: 1000, height: 0), options: .usesLineFragmentOrigin).size.width
+            return max(partialResult, recommendedWidth)
+        } + 16
+    }
   
+    init(macho: Macho, selectedMachoComponent: Binding<MachoComponent>) {
+        self.macho = macho
+        _selectedMachoComponent = selectedMachoComponent
+    }
+    
 }

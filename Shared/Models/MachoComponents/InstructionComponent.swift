@@ -15,10 +15,7 @@ class InstructionComponent: MachoComponent {
 
     let capStoneArchType: CapStoneArchType
     let virtualAddress: UInt64
-    
-    private(set) var instructions: [CapStoneInstruction] = []
-    
-    var instructionComponentViewModel: InstructionTranslationsViewModel!
+    var instructionBank: CapStoneInstructionBank!
     
     init(_ data: Data, title: String, cpuType: CPUType, virtualAddress: UInt64) {
         let capStoneArchType: CapStoneArchType
@@ -41,28 +38,31 @@ class InstructionComponent: MachoComponent {
         super.init(data, title: title)
     }
     
-    override func asyncInitialize() {
-        let disasmResult = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType, codeStartAddress: virtualAddress) { progress in
+    override func runInitializing() {
+        let instructionBank = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType, codeStartAddress: virtualAddress) { progress in
             self.initProgress.updateProgressForInitialize(with: progress)
         }
-        if let _ = disasmResult.error {
+        if let _ = instructionBank.error {
             //TODO: handle error
         }
-        if let instructions = disasmResult.instructions {
-            self.instructions = instructions
-        }
+        self.instructionBank = instructionBank
     }
     
-    override func asyncTranslate() {
-        var instructionViewModels: [InstructionTranslationViewModel] = []
-        var nextStartOffset = self.offsetInMacho
-        let maxIndex = self.instructions.count - 1
-        for (index, instruction) in self.instructions.enumerated() {
-            instructionViewModels.append(InstructionTranslationViewModel(offsetInMacho:nextStartOffset, index: index, instruction: instruction))
-            nextStartOffset += instruction.length
-            self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: maxIndex)
-        }
-        self.instructionComponentViewModel = InstructionTranslationsViewModel(instructionViewModels)
+    override func runTranslating() -> [TranslationGroup] {
+        return []
+    }
+    
+    override func numberOfTranslations(in section: Int) -> Int {
+        return Int(self.instructionBank.numberOfInstructions())
+    }
+    
+    override func numberOfTranslationGroups() -> Int {
+        return 1
+    }
+    
+    override func translation(at indexPath: IndexPath) -> BaseTranslation {
+        let instruction = self.instructionBank.instruction(at: UInt(indexPath.item))
+        return InstructionTranslation(capstoneInstruction: instruction)
     }
     
 }

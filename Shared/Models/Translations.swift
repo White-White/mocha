@@ -1,11 +1,22 @@
 //
-//  Translation.swift
+//  Translations.swift
 //  mocha (macOS)
 //
 //  Created by white on 2022/7/18.
 //
 
 import Foundation
+
+class BaseTranslation {
+    
+    var dataRangeInMacho: Range<UInt64>!
+    let bytesCount: UInt64
+    
+    init(bytesCount: UInt64) {
+        self.bytesCount = bytesCount
+    }
+    
+}
 
 enum TranslationDataType {
     
@@ -68,16 +79,13 @@ enum TranslationDataType {
     
 }
 
-struct Translation {
+class GeneralTranslation: BaseTranslation {
     
     let definition: String?
     let humanReadable: String
-
     let extraDefinition: String?
     let extraHumanReadable: String?
-    
     let translationType: TranslationDataType
-    let bytesCount: UInt64
     
     init(definition: String?,
          humanReadable: String,
@@ -85,15 +93,23 @@ struct Translation {
          translationType: TranslationDataType,
          extraDefinition: String? = nil,
          extraHumanReadable: String? = nil) {
-        
         self.definition = definition
         self.humanReadable = humanReadable
-        
-        self.bytesCount = UInt64(bytesCount)
         self.translationType = translationType
-        
         self.extraDefinition = extraDefinition
         self.extraHumanReadable = extraHumanReadable
+        super.init(bytesCount: UInt64(bytesCount))
+    }
+    
+}
+
+class InstructionTranslation: BaseTranslation {
+    
+    let capstoneInstruction: CapStoneInstruction
+    
+    init(capstoneInstruction: CapStoneInstruction) {
+        self.capstoneInstruction = capstoneInstruction
+        super.init(bytesCount: UInt64(capstoneInstruction.codeSize))
     }
     
 }

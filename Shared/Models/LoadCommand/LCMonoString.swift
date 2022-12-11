@@ -20,10 +20,10 @@ class LCMonoString: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [Translation] {
+    override var commandTranslations: [GeneralTranslation] {
         return [
-            Translation(definition: "String Offset", humanReadable: self.stringOffset.hex, bytesCount: 4, translationType: .uint32),
-            Translation(definition: "Content", humanReadable: string, bytesCount: self.stringLength, translationType: .utf8String)
+            GeneralTranslation(definition: "String Offset", humanReadable: self.stringOffset.hex, bytesCount: 4, translationType: .uint32),
+            GeneralTranslation(definition: "Content", humanReadable: string, bytesCount: self.stringLength, translationType: .utf8String)
         ]
     }
 }

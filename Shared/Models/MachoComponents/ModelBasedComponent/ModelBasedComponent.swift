@@ -9,12 +9,12 @@ import Foundation
 
 protocol InterpretableModel {
     init(with data: Data, is64Bit: Bool, macho: Macho)
-    var translations: [Translation] { get }
+    var translations: [GeneralTranslation] { get }
     static var modelSizeFor64Bit: Int { get }
     static var modelSizeFor32Bit: Int { get }
 }
 
-class ModelBasedComponent<Model: InterpretableModel>: ModeledTranslationComponent {
+class ModelBasedComponent<Model: InterpretableModel>: MachoComponent {
     
     private(set) var models: [Model] = []
     let modelSize: Int
@@ -26,7 +26,7 @@ class ModelBasedComponent<Model: InterpretableModel>: ModeledTranslationComponen
         super.init(data, title: title)
     }
     
-    override func asyncInitialize() {
+    override func runInitializing() {
         let numberOfModels = self.dataSize/self.modelSize
         for index in 0..<numberOfModels {
             let modelData = self.data.subSequence(from: index * self.modelSize, count: self.modelSize)
@@ -35,14 +35,14 @@ class ModelBasedComponent<Model: InterpretableModel>: ModeledTranslationComponen
         }
     }
     
-    override func createTranslationSections() -> [TranslationSection] {
-        var translationSections: [TranslationSection] = []
+    override func runTranslating() -> [TranslationGroup] {
+        var translations: [[GeneralTranslation]] = []
         let maxIndex = self.models.count - 1
         for (index, model) in self.models.enumerated() {
-            translationSections.append(TranslationSection(translations: model.translations))
+            translations.append(model.translations)
             self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: maxIndex)
         }
-        return translationSections
+        return translations
     }
     
 }

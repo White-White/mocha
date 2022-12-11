@@ -40,7 +40,7 @@ enum MachoType {
     }
 }
 
-class MachoHeader: MachoComponentWithTranslations {
+class MachoHeader: MachoComponent {
     
     let magicData: Data
     let is64Bit: Bool
@@ -67,17 +67,17 @@ class MachoHeader: MachoComponentWithTranslations {
         super.init(headerData, title: "Mach Header")
     }
     
-    override func createTranslations() -> [Translation] {
-        var translations: [Translation] = []
-        translations.append(Translation(definition: "Magic", humanReadable: String.init(format: "%0X%0X%0X%0X", magicData[0], magicData[1], magicData[2], magicData[3]), bytesCount: 4, translationType: .rawData))
-        translations.append(Translation(definition: "CPU Type", humanReadable: self.cpuType.name, bytesCount: 4, translationType: .numberEnum))
-        translations.append(Translation(definition: "CPU Sub Type", humanReadable: self.cpuSubtype.name, bytesCount: 4, translationType: .numberEnum))
-        translations.append(Translation(definition: "Macho Type", humanReadable: self.machoType.readable, bytesCount: 4, translationType: .numberEnum))
-        translations.append(Translation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(Translation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), bytesCount: 4, translationType: .flags))
-        if let reserved = self.reserved { translations.append(Translation(definition: "Reverved", humanReadable: reserved.hex, bytesCount: 4, translationType: .uint32)) }
-        return translations
+    override func runTranslating() -> [TranslationGroup] {
+        var translations: [BaseTranslation] = []
+        translations.append(GeneralTranslation(definition: "Magic", humanReadable: String.init(format: "%0X%0X%0X%0X", magicData[0], magicData[1], magicData[2], magicData[3]), bytesCount: 4, translationType: .rawData))
+        translations.append(GeneralTranslation(definition: "CPU Type", humanReadable: self.cpuType.name, bytesCount: 4, translationType: .numberEnum))
+        translations.append(GeneralTranslation(definition: "CPU Sub Type", humanReadable: self.cpuSubtype.name, bytesCount: 4, translationType: .numberEnum))
+        translations.append(GeneralTranslation(definition: "Macho Type", humanReadable: self.machoType.readable, bytesCount: 4, translationType: .numberEnum))
+        translations.append(GeneralTranslation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, bytesCount: 4, translationType: .uint32))
+        translations.append(GeneralTranslation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), bytesCount: 4, translationType: .flags))
+        if let reserved = self.reserved { translations.append(GeneralTranslation(definition: "Reverved", humanReadable: reserved.hex, bytesCount: 4, translationType: .uint32)) }
+        return [translations]
     }
     
     private static func flagsDescriptionFrom(_ flags: UInt32) -> String {
@@ -191,7 +191,7 @@ class Macho: Equatable {
         if let stringTable = self.stringTable { allComponents.append(stringTable) }
         self.allComponents = allComponents
         self.allComponents.forEach { $0.macho = self }
-        self.allComponents.forEach { if (!$0.hasParentComponent) { $0.startAsyncInitialization() } }
+        self.allComponents.forEach { $0.startAsyncInitialization() }
         tick.tock("Macho Init Completed")
     }
     

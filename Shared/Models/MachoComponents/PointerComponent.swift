@@ -7,7 +7,7 @@
 
 import Foundation
 
-class PointerComponent: MachoComponentWithTranslations {
+class PointerComponent: MachoComponent {
     
     let is64Bit: Bool
     let pointerSize: Int
@@ -22,7 +22,7 @@ class PointerComponent: MachoComponentWithTranslations {
         super.init(data, title: title)
     }
     
-    override func asyncInitialize() {
+    override func runInitializing() {
         var dataShifter = DataShifter(data)
         while dataShifter.shiftable {
             let pointerData = dataShifter.shift(.rawNumber(self.pointerSize))
@@ -30,11 +30,11 @@ class PointerComponent: MachoComponentWithTranslations {
         }
     }
     
-    override func createTranslations() -> [Translation] {
-        return self.pointerValues.enumerated().map { (index, pointerValue) in self.translation(for: pointerValue, index: index) }
+    override func runTranslating() -> [TranslationGroup] {
+        [self.pointerValues.enumerated().map { (index, pointerValue) in self.translation(for: pointerValue, index: index) }]
     }
     
-    func translation(for pointerValue: UInt64, index: Int) -> Translation {
+    func translation(for pointerValue: UInt64, index: Int) -> GeneralTranslation {
         fatalError()
     }
     
@@ -42,12 +42,23 @@ class PointerComponent: MachoComponentWithTranslations {
 
 class LiteralPointerComponent: PointerComponent {
     
-    override func translation(for pointerValue: UInt64, index: Int) -> Translation {
-        let searchedString = (macho?.cStringSectionComponents.reduce(nil) { partialResult, component in
+    private var allCStringComponents: [CStringSectionComponent] = []
+    
+    override var macho: Macho? {
+        didSet {
+            if let allCStringComponents = macho?.cStringSectionComponents {
+                allCStringComponents.forEach { $0.addChildComponent(self) }
+                self.allCStringComponents = allCStringComponents
+            }
+        }
+    }
+    
+    override func translation(for pointerValue: UInt64, index: Int) -> GeneralTranslation {
+        let searchedString = (self.allCStringComponents.reduce(nil) { partialResult, component in
             partialResult ?? component.findString(virtualAddress: pointerValue)
         })
         
-        let translation = Translation(definition: "Pointer Value (Virtual Address)",
+        let translation = GeneralTranslation(definition: "Pointer Value (Virtual Address)",
                                       humanReadable: pointerValue.hex,
                                       bytesCount: self.pointerSize, translationType: self.is64Bit ? .uint64 : .uint32,
                                       extraDefinition: "Referenced String Symbol",
@@ -55,14 +66,15 @@ class LiteralPointerComponent: PointerComponent {
         return translation
     }
     
+    
 }
 
 class SymbolPointerComponent: PointerComponent {
-    
+
     override var macho: Macho? {
         didSet {
             guard let indirectSymbolTable = self.macho?.indirectSymbolTable else { fatalError() }
-            self.parentComponent = indirectSymbolTable
+            indirectSymbolTable.addChildComponent(self)
         }
     }
     
@@ -75,7 +87,7 @@ class SymbolPointerComponent: PointerComponent {
         super.init(data, is64Bit: is64Bit, title: title)
     }
     
-    override func translation(for pointerValue: UInt64, index: Int) -> Translation {
+    override func translation(for pointerValue: UInt64, index: Int) -> GeneralTranslation {
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
         
         var symbolName: String?
@@ -94,7 +106,7 @@ class SymbolPointerComponent: PointerComponent {
             description += " (To be fixed by dyld)"
         }
         
-        let translation = Translation(definition: description,
+        let translation = GeneralTranslation(definition: description,
                                       humanReadable: pointerValue.hex,
                                       bytesCount: self.pointerSize, translationType: self.is64Bit ? .uint64 : .uint32,
                                       extraDefinition: "Symbol Name of the Corresponding Indirect Symbol Table Entry",

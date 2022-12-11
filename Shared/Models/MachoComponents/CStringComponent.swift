@@ -14,12 +14,12 @@ struct CStringModel {
     let demangled: String?
 }
 
-class CStringComponent: MachoComponentWithTranslations {
+class CStringComponent: MachoComponent {
     
     private(set) var cStrings: [CStringModel] = []
     private(set) var cStringOffsetIndexMap: [Int:Int] = [:]
     
-    override func asyncInitialize() {
+    override func runInitializing() {
         var currentIndex: Int = 0
         while currentIndex < self.data.count {
             var byte = self.data[self.data.startIndex + currentIndex];
@@ -53,17 +53,17 @@ class CStringComponent: MachoComponentWithTranslations {
         self.initProgress.updateProgressForInitialize(finishedItems: currentIndex, total: self.data.count)
     }
     
-    override func createTranslations() -> [Translation] {
-        var translations: [Translation] = []
+    override func runTranslating() -> [TranslationGroup] {
+        var stringTranslations: [GeneralTranslation] = []
         for (index, cString) in self.cStrings.enumerated() {
-            translations.append(Translation(definition: nil,
+            stringTranslations.append(GeneralTranslation(definition: nil,
                                             humanReadable: cString.content ?? "🙅‍♂️ Invalid UTF8 String",
                                             bytesCount: cString.length, translationType: .utf8String,
                                             extraDefinition: cString.demangled != nil ? "Demangled" : nil,
                                             extraHumanReadable: cString.demangled ))
             self.initProgress.updateProgressForTranslationInitialize(finishedItems: index, total: self.cStrings.count)
         }
-        return translations
+        return [stringTranslations]
     }
     
     func findString(atDataOffset offset: Int) -> String? {
