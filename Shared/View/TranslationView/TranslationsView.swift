@@ -23,20 +23,23 @@ struct TranslationsView: View {
                 ProgressView()
             }.frame(minWidth: TranslationsView.minWidth)
         } else {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(0..<machoComponent.numberOfTranslationGroups(), id: \.self) { groupIndex in
-                        LazyVStack(spacing: 0) {
-                            ForEach(0..<machoComponent.numberOfTranslations(in: groupIndex), id: \.self) { itemIndex in
-                                self.translationView(for: IndexPath(item: itemIndex, section: groupIndex))
+            ScrollViewReader { scrollViewProxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(0..<machoComponent.numberOfTranslationGroups(), id: \.self) { groupIndex in
+                            LazyVStack(spacing: 0) {
+                                ForEach(0..<machoComponent.numberOfTranslations(in: groupIndex), id: \.self) { itemIndex in
+                                    self.translationView(for: IndexPath(item: itemIndex, section: groupIndex))
+                                }
                             }
                         }
                     }
                 }
-            }
-            .onChange(of: machoComponent) { newValue in
-                self.selectedIndexPath = nil
-                self.selectedDataRange = nil
+                .onChange(of: machoComponent) { newValue in
+                    self.selectedIndexPath = nil
+                    self.selectedDataRange = nil
+                    scrollViewProxy.scrollTo(0, anchor: .top)
+                }
             }
         }
     }
