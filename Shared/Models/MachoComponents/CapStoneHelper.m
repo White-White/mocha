@@ -21,8 +21,9 @@
 @property (nonatomic, strong) NSMutableData *instructionOffsetInStringBank;
 @property (nonatomic, strong) NSMutableData *instructionOpStrSizes;
 @property (nonatomic, strong) NSMutableData *instructionMnemonicSizes;
-@property (nonatomic, strong) NSMutableData *instructionBinarySizes;
-@property (nonatomic, assign) NSUInteger numberOfInstructions;
+@property (nonatomic, strong) NSMutableData *instructionStartAddresses;
+@property (nonatomic, strong) NSMutableData *instructionSizes;
+@property (nonatomic, assign) NSInteger numberOfInstructions;
 
 @end
 
@@ -34,12 +35,13 @@
     _instructionOffsetInStringBank = [NSMutableData data];
     _instructionOpStrSizes = [NSMutableData data];
     _instructionMnemonicSizes = [NSMutableData data];
-    _instructionBinarySizes = [NSMutableData data];
+    _instructionStartAddresses = [NSMutableData data];
+    _instructionSizes = [NSMutableData data];
     _numberOfInstructions = 0;
     return self;
 }
 
-- (void)appendInstruction:(const cs_insn *)insn codeSize:(size_t)codeSize {
+- (void)appendInstruction:(const cs_insn *)insn codeStartAddr:(uint64_t)codeStartAddr {
     
     NSUInteger offsetInStringBank = _instructionStringBank.length;
     [_instructionOffsetInStringBank appendBytes:&offsetInStringBank length:sizeof(NSUInteger)];
@@ -52,17 +54,18 @@
     [_instructionOpStrSizes appendBytes:&opStrSize length:sizeof(NSUInteger)];
     [_instructionStringBank appendBytes:insn->op_str length:opStrSize];
     
-    NSUInteger codeSizeUInt = codeSize;
-    [_instructionBinarySizes appendBytes:&codeSizeUInt length:sizeof(NSUInteger)];
+    [_instructionStartAddresses appendBytes:&codeStartAddr length:sizeof(uint64_t)];
+    
+    [_instructionSizes appendBytes:&insn->size length:sizeof(uint16_t)];
     
     _numberOfInstructions ++;
 }
 
-- (NSUInteger)numberOfInstructions {
+- (NSInteger)numberOfInstructions {
     return _numberOfInstructions;
 }
 
-- (CapStoneInstruction *)instructionAtIndex:(NSUInteger)index {
+- (CapStoneInstruction *)instructionAtIndex:(NSInteger)index {
     CapStoneInstruction *instruction = [[CapStoneInstruction alloc] init];
     
     NSUInteger offsetInStringBank = [self getOffsetInStringBankForInstructionIndex:index];
@@ -77,28 +80,40 @@
                                                     length:operandSize
                                                   encoding:NSUTF8StringEncoding];
     
-    instruction.codeSize = [self getCodeSizeForInstructionIndex:index];
+    instruction.size = [self getInstructionSizeForInstructionIndex:index];
+    
+    instruction.startAddr = [self getInstructionStartAddressForInstructionIndex:index];
     
     return instruction;
 }
 
-- (NSUInteger)getOffsetInStringBankForInstructionIndex:(NSUInteger)instructionIndex {
+- (NSUInteger)getOffsetInStringBankForInstructionIndex:(NSInteger)instructionIndex {
     return [self getNSUIntegerValueFromData:_instructionOffsetInStringBank forIndex:instructionIndex];
 }
 
-- (NSUInteger)getMnemonicSizeForInstructionIndex:(NSUInteger)instructionIndex {
+- (NSUInteger)getMnemonicSizeForInstructionIndex:(NSInteger)instructionIndex {
     return [self getNSUIntegerValueFromData:_instructionMnemonicSizes forIndex:instructionIndex];
 }
 
-- (NSUInteger)getOperandSizeForInstructionIndex:(NSUInteger)instructionIndex {
+- (NSUInteger)getOperandSizeForInstructionIndex:(NSInteger)instructionIndex {
     return [self getNSUIntegerValueFromData:_instructionOpStrSizes forIndex:instructionIndex];
 }
 
-- (NSUInteger)getCodeSizeForInstructionIndex:(NSUInteger)instructionIndex {
-    return [self getNSUIntegerValueFromData:_instructionBinarySizes forIndex:instructionIndex];
+- (uint16_t)getInstructionSizeForInstructionIndex:(NSInteger)instructionIndex {
+    const void *bytes = _instructionSizes.bytes;
+    const void *startPointer = bytes + sizeof(uint16_t) * instructionIndex;
+    uint16_t value = *((uint16_t *)startPointer);
+    return value;
 }
 
-- (NSUInteger)getNSUIntegerValueFromData:(NSData *)data forIndex:(NSUInteger)index {
+- (uint64_t)getInstructionStartAddressForInstructionIndex:(NSInteger)instructionIndex {
+    const void *bytes = _instructionStartAddresses.bytes;
+    const void *startPointer = bytes + sizeof(uint64_t) * instructionIndex;
+    uint64_t value = *((uint64_t *)startPointer);
+    return value;
+}
+
+- (NSUInteger)getNSUIntegerValueFromData:(NSData *)data forIndex:(NSInteger)index {
     const void *bytes = data.bytes;
     const void *startPointer = bytes + sizeof(NSUInteger) * index;
     NSUInteger value = *((NSUInteger *)startPointer);
@@ -176,7 +191,7 @@
     size_t code_size = (size_t)[data length]; // value will be updated in iteration
     
     while(cs_disasm_iter(cs_handle, (const uint8_t **)&code, &code_size, &codeAddress, insn)) {
-        [instructionBank appendInstruction:insn codeSize:code_size];
+        [instructionBank appendInstruction:insn codeStartAddr:codeAddress - insn->size];
         startOffset += insn->size;
         float newProgress = (float)startOffset / (float)initial_code_size;
         if (newProgress - progress > 0.02) {

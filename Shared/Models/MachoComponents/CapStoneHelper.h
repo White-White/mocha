@@ -21,7 +21,8 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
 
 @property (nonatomic, strong) NSString *mnemonic;
 @property (nonatomic, strong) NSString *operand;
-@property (nonatomic, assign) NSUInteger codeSize;
+@property (nonatomic, assign) uint64_t startAddr;
+@property (nonatomic, assign) uint16_t size;
 
 @end
 
@@ -29,8 +30,8 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
 
 @property (nonatomic, strong) NSError * _Nullable error;
 
-- (NSUInteger)numberOfInstructions;
-- (CapStoneInstruction *)instructionAtIndex:(NSUInteger)index;
+- (NSInteger)numberOfInstructions;
+- (CapStoneInstruction *)instructionAtIndex:(NSInteger)index;
 
 @end
 

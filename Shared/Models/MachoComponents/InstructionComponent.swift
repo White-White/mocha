@@ -53,16 +53,27 @@ class InstructionComponent: MachoComponent {
     }
     
     override func numberOfTranslations(in section: Int) -> Int {
-        return Int(self.instructionBank.numberOfInstructions())
+        let numberOfInstructions = self.instructionBank.numberOfInstructions()
+        if (section + 1) * 1024 <= numberOfInstructions {
+            return 1024
+        } else {
+            return numberOfInstructions % 1024
+        }
     }
     
     override func numberOfTranslationGroups() -> Int {
-        return 1
+        let numberOfInstructions = self.instructionBank.numberOfInstructions()
+        var numberOfGroups = numberOfInstructions / 1024
+        if (numberOfInstructions % 1024) != 0 { numberOfGroups += 1 }
+        return Int(numberOfGroups)
     }
     
     override func translation(at indexPath: IndexPath) -> BaseTranslation {
-        let instruction = self.instructionBank.instruction(at: UInt(indexPath.item))
-        return InstructionTranslation(capstoneInstruction: instruction)
+        let instruction = self.instructionBank.instruction(at: indexPath.section * 1024 + indexPath.item)
+        let instructionTranslation = InstructionTranslation(capstoneInstruction: instruction)
+        let startOffsetInMacho = instruction.startAddr - self.virtualAddress + UInt64(self.offsetInMacho)
+        instructionTranslation.dataRangeInMacho = startOffsetInMacho..<startOffsetInMacho+UInt64(instruction.size)
+        return instructionTranslation
     }
     
 }

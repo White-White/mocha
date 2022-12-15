@@ -9,7 +9,7 @@ import Foundation
 
 class BaseTranslation {
     
-    var dataRangeInMacho: Range<UInt64>!
+    var dataRangeInMacho: Range<UInt64>?
     let bytesCount: UInt64
     
     init(bytesCount: UInt64) {
@@ -109,7 +109,7 @@ class InstructionTranslation: BaseTranslation {
     
     init(capstoneInstruction: CapStoneInstruction) {
         self.capstoneInstruction = capstoneInstruction
-        super.init(bytesCount: UInt64(capstoneInstruction.codeSize))
+        super.init(bytesCount: UInt64(capstoneInstruction.size))
     }
     
 }

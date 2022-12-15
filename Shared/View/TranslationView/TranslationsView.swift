@@ -46,7 +46,7 @@ struct TranslationsView: View {
         return SingleTranslationView(translation: translation, isSelected: selectedIndexPath == indexPath)
             .onTapGesture {
                 self.selectedIndexPath = indexPath
-                self.selectedDataRange = translation.dataRangeInMacho
+                self.selectedDataRange = translation.dataRangeInMacho!
             }
     }
     
