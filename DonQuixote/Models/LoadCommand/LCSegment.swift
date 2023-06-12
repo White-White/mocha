@@ -72,17 +72,17 @@ class LCSegment: LoadCommand {
         super.init(data, type: type, title: type.name + " (\(segmentName))")
     }
     
-    override var commandTranslations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "Segment Name", humanReadable: self.segmentName, bytesCount: 16, translationType: .utf8String))
-        translations.append(GeneralTranslation(definition: "Virtual Memory Start Address", humanReadable: self.vmaddr.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32))
-        translations.append(GeneralTranslation(definition: "Virtual Memory Size", humanReadable: self.vmsize.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32))
-        translations.append(GeneralTranslation(definition: "File Offset", humanReadable: self.segmentFileOff.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32))
-        translations.append(GeneralTranslation(definition: "Size to Map into Memory", humanReadable: self.segmentSize.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32))
-        translations.append(GeneralTranslation(definition: "Maximum VM Protection", humanReadable: VMProtection(raw: self.maxprot).humanReadable, bytesCount: 4, translationType: .flags))
-        translations.append(GeneralTranslation(definition: "Initial VM Protection", humanReadable: VMProtection(raw: self.initprot).humanReadable, bytesCount: 4, translationType: .flags))
-        translations.append(GeneralTranslation(definition: "Number of Sections", humanReadable: "\(self.numberOfSections)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Flags", humanReadable: LCSegment.flags(for: self.flags), bytesCount: 4, translationType: .flags))
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Segment Name", humanReadable: self.segmentName, translationType: .utf8String(16)))
+        translations.append(Translation(definition: "Virtual Memory Start Address", humanReadable: self.vmaddr.hex, translationType: self.is64Bit ? .uint64 : .uint32))
+        translations.append(Translation(definition: "Virtual Memory Size", humanReadable: self.vmsize.hex, translationType: self.is64Bit ? .uint64 : .uint32))
+        translations.append(Translation(definition: "File Offset", humanReadable: self.segmentFileOff.hex, translationType: self.is64Bit ? .uint64 : .uint32))
+        translations.append(Translation(definition: "Size to Map into Memory", humanReadable: self.segmentSize.hex, translationType: self.is64Bit ? .uint64 : .uint32))
+        translations.append(Translation(definition: "Maximum VM Protection", humanReadable: VMProtection(raw: self.maxprot).humanReadable, translationType: .flags(4)))
+        translations.append(Translation(definition: "Initial VM Protection", humanReadable: VMProtection(raw: self.initprot).humanReadable, translationType: .flags(4)))
+        translations.append(Translation(definition: "Number of Sections", humanReadable: "\(self.numberOfSections)", translationType: .uint32))
+        translations.append(Translation(definition: "Flags", humanReadable: LCSegment.flags(for: self.flags), translationType: .flags(4)))
         return translations + self.sectionHeaders.flatMap { $0.getTranslations() }
     }
     

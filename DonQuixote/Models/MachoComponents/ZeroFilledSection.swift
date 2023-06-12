@@ -17,10 +17,9 @@ class ZeroFilledSection: MachoBaseElement {
     }
     
     override func loadTranslations() async {
-        await self.save(translationGroup: [GeneralTranslation(definition: "Zero Filled Section",
+        await self.save(translationGroup: [Translation(definition: "Zero Filled Section",
                                                               humanReadable: "This section has no data in the macho file.\nIts in memory size is \(runtimeSize.hex)",
-                                                              bytesCount: .zero,
-                                                              translationType: .rawData)])
+                                                              translationType: .rawData(0))])
     }
     
 }

@@ -68,15 +68,15 @@ class MachoHeader: MachoBaseElement {
     }
     
     override func loadTranslations() async {
-        var translations: [BaseTranslation] = []
-        translations.append(GeneralTranslation(definition: "Magic", humanReadable: String.init(format: "%0X%0X%0X%0X", magicData[0], magicData[1], magicData[2], magicData[3]), bytesCount: 4, translationType: .rawData))
-        translations.append(GeneralTranslation(definition: "CPU Type", humanReadable: self.cpuType.name, bytesCount: 4, translationType: .numberEnum))
-        translations.append(GeneralTranslation(definition: "CPU Sub Type", humanReadable: self.cpuSubtype.name, bytesCount: 4, translationType: .numberEnum))
-        translations.append(GeneralTranslation(definition: "Macho Type", humanReadable: self.machoType.readable, bytesCount: 4, translationType: .numberEnum))
-        translations.append(GeneralTranslation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), bytesCount: 4, translationType: .flags))
-        if let reserved = self.reserved { translations.append(GeneralTranslation(definition: "Reverved", humanReadable: reserved.hex, bytesCount: 4, translationType: .uint32)) }
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Magic", humanReadable: String.init(format: "%0X%0X%0X%0X", magicData[0], magicData[1], magicData[2], magicData[3]), translationType: .rawData(4)))
+        translations.append(Translation(definition: "CPU Type", humanReadable: self.cpuType.name, translationType: .numberEnum32Bit))
+        translations.append(Translation(definition: "CPU Sub Type", humanReadable: self.cpuSubtype.name, translationType: .numberEnum32Bit))
+        translations.append(Translation(definition: "Macho Type", humanReadable: self.machoType.readable, translationType: .numberEnum32Bit))
+        translations.append(Translation(definition: "Number of load commands", humanReadable: "\(self.numberOfLoadCommands)", translationType: .uint32))
+        translations.append(Translation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), translationType: .flags(4)))
+        if let reserved = self.reserved { translations.append(Translation(definition: "Reverved", humanReadable: reserved.hex, translationType: .uint32)) }
         await self.save(translationGroup: translations)
     }
     

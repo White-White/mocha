@@ -29,13 +29,13 @@ class PointerComponent: MachoBaseElement {
             self.pointerValues.append(self.is64Bit ? pointerData.UInt64 : UInt64(pointerData.UInt32))
         }
         
-        let translations = await withTaskGroup(of: GeneralTranslation.self, body: { taskGroup in
+        let translations = await withTaskGroup(of: Translation.self, body: { taskGroup in
             for (index, pointerValue) in self.pointerValues.enumerated() {
                 taskGroup.addTask {
                     await self.translation(for: pointerValue, index: index)
                 }
             }
-            return await taskGroup.reduce(into: [GeneralTranslation]()) { partialResult, translation in
+            return await taskGroup.reduce(into: [Translation]()) { partialResult, translation in
                 partialResult.append(translation)
             }
         })
@@ -43,7 +43,7 @@ class PointerComponent: MachoBaseElement {
     }
     
     
-    func translation(for pointerValue: UInt64, index: Int) async -> GeneralTranslation {
+    func translation(for pointerValue: UInt64, index: Int) async -> Translation {
         fatalError()
     }
     
@@ -58,7 +58,7 @@ class LiteralPointerComponent: PointerComponent {
         super.init(data, is64Bit: is64Bit, title: title)
     }
     
-    override func translation(for pointerValue: UInt64, index: Int) async -> GeneralTranslation {
+    override func translation(for pointerValue: UInt64, index: Int) async -> Translation {
         var searchedString: String?
         for cStringSection in allCStringSections {
             if let finded = await cStringSection.findString(virtualAddress: pointerValue) {
@@ -67,9 +67,9 @@ class LiteralPointerComponent: PointerComponent {
             }
         }
         
-        let translation = GeneralTranslation(definition: "Pointer Value (Virtual Address)",
+        let translation = Translation(definition: "Pointer Value (Virtual Address)",
                                       humanReadable: pointerValue.hex,
-                                      bytesCount: self.pointerSize, translationType: self.is64Bit ? .uint64 : .uint32,
+                                      translationType: self.is64Bit ? .uint64 : .uint32,
                                       extraDefinition: "Referenced String Symbol",
                                       extraHumanReadable: searchedString)
         return translation
@@ -91,7 +91,7 @@ class SymbolPointerComponent: PointerComponent {
         super.init(data, is64Bit: is64Bit, title: title)
     }
     
-    override func translation(for pointerValue: UInt64, index: Int) async -> GeneralTranslation {
+    override func translation(for pointerValue: UInt64, index: Int) async -> Translation {
         
         let indirectSymbolTableIndex = index + startIndexInIndirectSymbolTable
         
@@ -112,9 +112,9 @@ class SymbolPointerComponent: PointerComponent {
             description += " (To be fixed by dyld)"
         }
         
-        let translation = GeneralTranslation(definition: description,
+        let translation = Translation(definition: description,
                                              humanReadable: pointerValue.hex,
-                                             bytesCount: self.pointerSize, translationType: self.is64Bit ? .uint64 : .uint32,
+                                             translationType: self.is64Bit ? .uint64 : .uint32,
                                              extraDefinition: "Symbol Name of the Corresponding Indirect Symbol Table Entry",
                                              extraHumanReadable: symbolName)
         

@@ -43,11 +43,11 @@ struct DataInCodeEntry {
         self.kind = DataInCodeKind(rawValue: dataShifter.shift(.word).UInt16)! /* crash if unknown kind. unlikely */
     }
     
-    var translations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "File Offset", humanReadable: self.offset.hex, bytesCount: Straddle.doubleWords.raw, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Size", humanReadable: "\(self.length)", bytesCount: Straddle.word.raw, translationType: .uint16))
-        translations.append(GeneralTranslation(definition: "Kind", humanReadable: self.kind.name, bytesCount: Straddle.word.raw, translationType: .numberEnum))
+    var translations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "File Offset", humanReadable: self.offset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Size", humanReadable: "\(self.length)", translationType: .uint16))
+        translations.append(Translation(definition: "Kind", humanReadable: self.kind.name, translationType: .numberEnum16Bit))
         return translations
     }
     

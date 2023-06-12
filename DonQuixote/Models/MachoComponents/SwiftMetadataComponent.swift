@@ -10,7 +10,7 @@ import Foundation
 protocol SwiftMetadata {
     static var dataSize: Int { get }
     init(data: Data)
-    var translations: [GeneralTranslation] { get }
+    var translations: [Translation] { get }
 }
 
 struct ProtocolDescriptor: SwiftMetadata {
@@ -33,14 +33,14 @@ struct ProtocolDescriptor: SwiftMetadata {
         self.associatedTypeNames = dataShifter.shiftInt32()
     }
     
-    var translations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "flags", humanReadable: self.flags.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "parent", humanReadable: self.parent.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "name", humanReadable: self.name.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "numRequirementsInSignature", humanReadable: self.numRequirementsInSignature.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "numRequirements", humanReadable: self.numRequirements.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "associatedTypeNames", humanReadable: self.associatedTypeNames.hex, bytesCount: 4, translationType: .uint32))
+    var translations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "flags", humanReadable: self.flags.hex, translationType: .uint32))
+        translations.append(Translation(definition: "parent", humanReadable: self.parent.hex, translationType: .uint32))
+        translations.append(Translation(definition: "name", humanReadable: self.name.hex, translationType: .uint32))
+        translations.append(Translation(definition: "numRequirementsInSignature", humanReadable: self.numRequirementsInSignature.hex, translationType: .uint32))
+        translations.append(Translation(definition: "numRequirements", humanReadable: self.numRequirements.hex, translationType: .uint32))
+        translations.append(Translation(definition: "associatedTypeNames", humanReadable: self.associatedTypeNames.hex, translationType: .uint32))
         return translations
     }
     
@@ -64,12 +64,12 @@ struct ProtocolConformanceDescriptor: SwiftMetadata {
         self.conformanceFlags = dataShifter.shiftUInt32()
     }
     
-    var translations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "protocolDescriptor", humanReadable: self.protocolDescriptor.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "nominalTypeDescriptor", humanReadable: self.nominalTypeDescriptor.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "protocolWitnessTable", humanReadable: self.protocolWitnessTable.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "conformanceFlags", humanReadable: self.conformanceFlags.hex, bytesCount: 4, translationType: .uint32))
+    var translations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "protocolDescriptor", humanReadable: self.protocolDescriptor.hex, translationType: .uint32))
+        translations.append(Translation(definition: "nominalTypeDescriptor", humanReadable: self.nominalTypeDescriptor.hex, translationType: .uint32))
+        translations.append(Translation(definition: "protocolWitnessTable", humanReadable: self.protocolWitnessTable.hex, translationType: .uint32))
+        translations.append(Translation(definition: "conformanceFlags", humanReadable: self.conformanceFlags.hex, translationType: .uint32))
         return translations
     }
     
@@ -83,11 +83,11 @@ struct SwiftMetadataContainer<MetaData: SwiftMetadata> {
     let targetOffsetInMacho: Int
     let associatedMetadata: MetaData?
     
-    var translations: [GeneralTranslation] {
+    var translations: [Translation] {
         if let associatedMetadata = associatedMetadata {
             return associatedMetadata.translations
         } else {
-            return [GeneralTranslation(definition: "FIXME: unknown", humanReadable: "UNKNOWN", bytesCount: MetaData.dataSize, translationType: .flags)]
+            return [Translation(definition: "FIXME: unknown", humanReadable: "UNKNOWN", translationType: .flags(MetaData.dataSize))]
         }
     }
 }

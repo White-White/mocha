@@ -51,29 +51,24 @@ import SwiftUI
 
 struct TranslationsView: View {
     
-    static let minWidth: CGFloat = 300
-    
-    @Binding var selectedDataRange: Range<UInt64>?
-    @State var selectedIndexPath: IndexPath? = nil
-    
-    let machoBaseElement: MachoBaseElement
-    @ObservedObject var translationContainer: TranslationsContainer
-    @ObservedObject var initProgress: InitProgress
+    @Binding var selectedTranslation: Translation?
+    @ObservedObject var translationContainer: TranslationStore
     
     var body: some View {
-        if !initProgress.isDone {
-            HStack {
-                ProgressView()
-            }.frame(minWidth: TranslationsView.minWidth)
-        } else {
+//        if !initProgress.isDone {
+//            HStack {
+//                ProgressView()
+//            }.frame(minWidth: TranslationsView.minWidth)
+//        } else {
             ScrollViewReader { scrollViewProxy in
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(0..<translationContainer.translationGroups.count, id: \.self) { groupIndex in
-                            LazyVStack(spacing: 0) {
-                                ForEach(0..<translationContainer.translationGroups[groupIndex].count, id: \.self) { itemIndex in
-                                    self.translationView(for: IndexPath(item: itemIndex, section: groupIndex))
-                                }
+                            ForEach(translationContainer.translationGroups[groupIndex]) { translation in
+                                SingleTranslationView(translation: translation, isSelected: selectedTranslation == translation)
+                                    .onTapGesture {
+                                        self.selectedTranslation = translation
+                                    }
                             }
                         }
                     }
@@ -83,24 +78,15 @@ struct TranslationsView: View {
 //                    self.selectedDataRange = nil
 //                    scrollViewProxy.scrollTo(0, anchor: .top)
 //                }
-            }
+//            }
+                .onChange(of: selectedTranslation) { newValue in
+                    if let newValue {
+                        withAnimation {
+                            scrollViewProxy.scrollTo(newValue.id, anchor: UnitPoint.center)
+                        }
+                    }
+                }
         }
-    }
-    
-    func translationView(for indexPath: IndexPath) -> some View {
-        let translation = translationContainer.translationGroups[indexPath.section][indexPath.item]
-        return SingleTranslationView(translation: translation, isSelected: selectedIndexPath == indexPath)
-            .onTapGesture {
-                self.selectedIndexPath = indexPath
-                self.selectedDataRange = translation.dataRangeInMacho!
-            }
-    }
-    
-    init(machoBaseElement: MachoBaseElement, selectedDataRange: Binding<Range<UInt64>?>) {
-        self.machoBaseElement = machoBaseElement
-        self.translationContainer = machoBaseElement.translationContainer
-        self.initProgress = machoBaseElement.initProgress
-        _selectedDataRange = selectedDataRange
     }
     
 }

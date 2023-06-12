@@ -150,21 +150,21 @@ struct SectionHeader {
         self.reserved3 = is64Bit ? dataShifter.shiftUInt32() : nil
     }
     
-    func getTranslations() -> [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "Section Name", humanReadable: self.section, bytesCount: 16, translationType: .utf8String))
-        translations.append(GeneralTranslation(definition: "Segment Name", humanReadable: self.segment, bytesCount: 16, translationType: .utf8String))
-        translations.append(GeneralTranslation(definition: "Virtual Address", humanReadable: self.addr.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32))
-        translations.append(GeneralTranslation(definition: "Section Size", humanReadable: self.size.hex, bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32))
-        translations.append(GeneralTranslation(definition: "File Offset", humanReadable: self.offset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Align", humanReadable: "\(self.align)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Reloc Entry Offset", humanReadable: self.fileOffsetOfRelocationEntries.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Reloc Entry Number", humanReadable: "\(self.numberOfRelocatioEntries)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Section Type", humanReadable: "\(self.sectionType)", bytesCount: 1, translationType: .numberEnum))
-        translations.append(GeneralTranslation(definition: "Section Attributes", humanReadable: self.sectionAttributes.descriptions.joined(separator: "\n"), bytesCount: 3, translationType: .flags))
-        translations.append(GeneralTranslation(definition: self.sectionType.hasIndirectSymbolTableEntries ? "Indirect Symbol Table Index" : "reserved1", humanReadable: self.reserved1.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: self.sectionType == .S_SYMBOL_STUBS ? "Stub Size" : "reserved2", humanReadable: self.reserved2.hex, bytesCount: 4, translationType: .uint32))
-        if let reserved3 = self.reserved3 { translations.append(GeneralTranslation(definition: "reserved3", humanReadable: reserved3.hex, bytesCount: 4, translationType: .uint32)) }
+    func getTranslations() -> [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Section Name", humanReadable: self.section, translationType: .utf8String(16)))
+        translations.append(Translation(definition: "Segment Name", humanReadable: self.segment, translationType: .utf8String(16)))
+        translations.append(Translation(definition: "Virtual Address", humanReadable: self.addr.hex, translationType: self.is64Bit ? .uint64 : .uint32))
+        translations.append(Translation(definition: "Section Size", humanReadable: self.size.hex, translationType: self.is64Bit ? .uint64 : .uint32))
+        translations.append(Translation(definition: "File Offset", humanReadable: self.offset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Align", humanReadable: "\(self.align)", translationType: .uint32))
+        translations.append(Translation(definition: "Reloc Entry Offset", humanReadable: self.fileOffsetOfRelocationEntries.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Reloc Entry Number", humanReadable: "\(self.numberOfRelocatioEntries)", translationType: .uint32))
+        translations.append(Translation(definition: "Section Type", humanReadable: "\(self.sectionType)", translationType: .numberEnum8Bit))
+        translations.append(Translation(definition: "Section Attributes", humanReadable: self.sectionAttributes.descriptions.joined(separator: "\n"), translationType: .flags(3)))
+        translations.append(Translation(definition: self.sectionType.hasIndirectSymbolTableEntries ? "Indirect Symbol Table Index" : "reserved1", humanReadable: self.reserved1.hex, translationType: .uint32))
+        translations.append(Translation(definition: self.sectionType == .S_SYMBOL_STUBS ? "Stub Size" : "reserved2", humanReadable: self.reserved2.hex, translationType: .uint32))
+        if let reserved3 = self.reserved3 { translations.append(Translation(definition: "reserved3", humanReadable: reserved3.hex, translationType: .uint32)) }
         return translations
     }
 

@@ -7,17 +7,32 @@
 
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 private class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
     func panel(_ sender: Any, shouldEnable url: URL) -> Bool {
-        return KnownFileType.knowsFile(with: url)
+        
+        if let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .contentTypeKey]) {
+            if let isDirectory = resourceValues.isDirectory,
+                isDirectory {
+                return true
+            }
+            if let isRegularFile = resourceValues.isRegularFile,
+                !isRegularFile {
+                return false
+            }
+            if let contentType = resourceValues.contentType {
+                return KnownFileType(contentType) != nil
+            }
+        }
+        
+        return false
     }
 }
 
 struct OpenFileView: View {
     
     @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismiss) private var dismiss
     private let openPanelDelegate = OpenPanelDelegate()
     
     var body: some View {
@@ -35,9 +50,12 @@ struct OpenFileView: View {
                 openPanel.canChooseFiles = true
                 openPanel.delegate = self.openPanelDelegate
                 openPanel.begin {
-                    if $0 == .OK, let fileURL = openPanel.url, let fileType = KnownFileType(fileURL) {
+                    if $0 == .OK,
+                        let fileURL = openPanel.url,
+                        let resourceValues = try? fileURL.resourceValues(forKeys: [.contentTypeKey]),
+                        let contentType = resourceValues.contentType,
+                        let fileType = KnownFileType(contentType) {
                         openWindow(id: fileType.rawValue, value: fileURL)
-                        dismiss()
                     }
                 }
             } label: {

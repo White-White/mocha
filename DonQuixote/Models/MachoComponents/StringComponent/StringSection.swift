@@ -19,16 +19,23 @@ class StringSection: MachoBaseElement {
     }
     
     override func loadTranslations() async {
+        let sectionDataStartIndex = self.data.startIndex
+        var translations: [Translation] = []
         for rawString in await self.stringContainer.rawStrings {
             let stringContent = await self.stringContainer.stringContent(for: rawString)
-            let translation = GeneralTranslation(definition: nil,
+            var translation = Translation(definition: nil,
                                                  humanReadable: stringContent.content ?? "Invalid \(self.encoding) string. Debug me",
-                                                 bytesCount: stringContent.byteCount,
-                                                 translationType: .utf8String,
+                                                 translationType: self.encoding == .utf8 ? .utf8String(stringContent.byteCount) : .utf16String(stringContent.byteCount),
                                                  extraDefinition: stringContent.demangled != nil ? "Demangled" : nil,
                                                  extraHumanReadable: stringContent.demangled)
-            await self.save(translationGroup: [translation])
+            translation.rangeInMacho = (sectionDataStartIndex + rawString.offset)..<(sectionDataStartIndex + rawString.offset + rawString.dataSize)
+            translations.append(translation)
         }
+        await self.save(translationGroup: translations)
+    }
+    
+    override func updateRangeForTranslations() {
+        // do nothing
     }
     
     func findString(atDataOffset offset: Int) async -> String? {

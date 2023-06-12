@@ -23,12 +23,12 @@ class LCSymbolTable: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "Symbol table offset", humanReadable: self.symbolTableOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Number of entries", humanReadable: "\(self.numberOfSymbolTableEntries)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "String table offset", humanReadable: self.stringTableOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Size of string table", humanReadable: self.sizeOfStringTable.hex, bytesCount: 4, translationType: .uint32))
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Symbol table offset", humanReadable: self.symbolTableOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Number of entries", humanReadable: "\(self.numberOfSymbolTableEntries)", translationType: .uint32))
+        translations.append(Translation(definition: "String table offset", humanReadable: self.stringTableOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Size of string table", humanReadable: self.sizeOfStringTable.hex, translationType: .uint32))
         return translations
     }
     

@@ -6,6 +6,7 @@
 //
 
 #import "HFController+Mocha.h"
+#import <objc/runtime.h>
 
 @implementation HFController (Mocha)
 
@@ -17,6 +18,14 @@
         long double scrollingDistance = targetLineIndex - visableRangeMid;
         [self scrollByLines:scrollingDistance];
     }
+}
+
+- (HexFiendViewController *)viewController {
+    return objc_getAssociatedObject(self, @selector(viewController));
+}
+
+- (void)setController:(HexFiendViewController *)viewController {
+    objc_setAssociatedObject(self, @selector(viewController), viewController, OBJC_ASSOCIATION_ASSIGN);
 }
 
 @end

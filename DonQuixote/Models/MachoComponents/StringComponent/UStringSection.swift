@@ -10,7 +10,7 @@ import Foundation
 class UStringSection: StringSection {
     
     init(data: Data, title: String, subTitle: String?) {
-        super.init(encoding: .utf16, data: data, title: title, subTitle: subTitle)
+        super.init(encoding: .utf16LittleEndian, data: data, title: title, subTitle: subTitle)
     }
     
 }

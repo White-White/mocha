@@ -9,9 +9,6 @@ import SwiftUI
 
 struct ComponentListCell: View {
     
-    @Binding var selectedMachoElement: MachoBaseElement
-    @Binding var alertPresented: Bool
-    
     let machoElement: MachoBaseElement
     let isSelected: Bool
     var title: String { machoElement.title }
@@ -59,11 +56,6 @@ struct ComponentListCell: View {
             }
             .background(isDone ? (isSelected ? Color(nsColor: .selectedTextBackgroundColor) : .white) : .white.opacity(0.5))
         }
-        .onTapGesture {
-            guard isDone else { alertPresented = true; return }
-            guard !isSelected else { return }
-            self.selectedMachoElement = self.machoElement
-        }
         // TODO FIXME
 //        .onChange(of: initProgress.isDone) { newValue in
 //            self.isDone = newValue
@@ -77,47 +69,12 @@ struct ComponentListCell: View {
 //        }
     }
     
-    init(machoElement: MachoBaseElement, selectedMachoElement: Binding<MachoBaseElement>, alertPresented: Binding<Bool>) {
-        _alertPresented = alertPresented
-        _selectedMachoElement = selectedMachoElement
-        self.machoElement = machoElement
-        self.isSelected = (machoElement == selectedMachoElement.wrappedValue)
-    }
-    
-}
-
-struct ComponentListView: View {
-    
-    let macho: Macho
-    @Binding var selectedMachoElement: MachoBaseElement
-    @State var alertPresented: Bool = false
-    
-    var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(macho.allElements) { machoElement in
-                    ComponentListCell(machoElement: machoElement, selectedMachoElement: $selectedMachoElement, alertPresented: $alertPresented)
-                }
-            }
-        }
-        .border(.separator, width: 1)
-        .frame(width: self.widthNeede(for: macho))
-        .alert("Component is loading", isPresented: $alertPresented) {
-            
-        }
-    }
-    
-    func widthNeede(for macho: Macho) -> CGFloat {
-        return macho.allElements.reduce(0) { partialResult, component in
+    static func widthNeeded(for allMachoElements: [MachoBaseElement]) -> CGFloat {
+        return allMachoElements.reduce(0) { partialResult, component in
             let attriString = NSAttributedString(string: component.title, attributes: [.font: NSFont.systemFont(ofSize: 12, weight: .bold)])
             let recommendedWidth = attriString.boundingRect(with: NSSize(width: 1000, height: 0), options: .usesLineFragmentOrigin).size.width
             return max(partialResult, recommendedWidth)
         } + 16
-    }
-  
-    init(macho: Macho, selectedMachoElement: Binding<MachoBaseElement>) {
-        self.macho = macho
-        _selectedMachoElement = selectedMachoElement
     }
     
 }

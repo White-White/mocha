@@ -42,33 +42,33 @@ struct FatBinary {
 //        uint32_t    align;        /* alignment as a power of 2 */
 //    };
     
-    struct FatBinaryError: Error { }
-    
-    static let magic: [UInt8] = [0xca, 0xfe, 0xba, 0xbe]
-    
-    let machoMetaDatas: [MachoMetaData]
-    
-    init(with fileData: Data, machoFileName: String) throws {
-        
-        // 0xcafebabe is also Java class files' magic number.
-        // ref: https://opensource.apple.com/source/file/file-47/file/magic/Magdir/cafebabe.auto.html
-        guard fileData.starts(with: FatBinary.magic) else { throw FatBinaryError() }
-        
-        // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
-        // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
-        let numberOfArchs = Int(fileData.subSequence(from: 4, count: 4).UInt32.bigEndian)
-        
-        var machoMetaDatas: [MachoMetaData] = []
-        for index in 0..<numberOfArchs {
-            // first 8 bytes are for magic and 'number of archs'
-            // struct fat_arch has 20 bytes
-            let fatArchData = fileData.subSequence(from: 8 + (index * 20), count: 20)
-            let farArch = FatArch(with: fatArchData)
-            
-            let subFileDataRaw = fileData.subSequence(from: Int(farArch.objectFileOffset), count: Int(farArch.objectFileSize))
-            machoMetaDatas.append(contentsOf: try Document(fileName: machoFileName, fileData: Data(subFileDataRaw)).machoMetaDatas)
-        }
-        self.machoMetaDatas = machoMetaDatas
-    }
-    
+//    struct FatBinaryError: Error { }
+//    
+//    static let magic: [UInt8] = [0xca, 0xfe, 0xba, 0xbe]
+//    
+//    let machoMetaDatas: [MachoMetaData]
+//    
+//    init(with fileData: Data, machoFileName: String) throws {
+//        
+//        // 0xcafebabe is also Java class files' magic number.
+//        // ref: https://opensource.apple.com/source/file/file-47/file/magic/Magdir/cafebabe.auto.html
+//        guard fileData.starts(with: FatBinary.magic) else { throw FatBinaryError() }
+//        
+//        // this value is not to be mapped to memory, so it's bytes are stored in human readable style, same with bigEndian
+//        // example: when the bytes are 0x00000002, indicating there are 2 archs in this fat binary, it'll be interpreted as 0x02000000 with Swift's 'load:as:' method
+//        let numberOfArchs = Int(fileData.subSequence(from: 4, count: 4).UInt32.bigEndian)
+//        
+//        var machoMetaDatas: [MachoMetaData] = []
+//        for index in 0..<numberOfArchs {
+//            // first 8 bytes are for magic and 'number of archs'
+//            // struct fat_arch has 20 bytes
+//            let fatArchData = fileData.subSequence(from: 8 + (index * 20), count: 20)
+//            let farArch = FatArch(with: fatArchData)
+//            
+//            let subFileDataRaw = fileData.subSequence(from: Int(farArch.objectFileOffset), count: Int(farArch.objectFileSize))
+//            machoMetaDatas.append(contentsOf: try Document(fileName: machoFileName, fileData: Data(subFileDataRaw)).machoMetaDatas)
+//        }
+//        self.machoMetaDatas = machoMetaDatas
+//    }
+//    
 }

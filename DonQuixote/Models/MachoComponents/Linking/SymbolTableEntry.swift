@@ -237,11 +237,11 @@ struct SymbolTableEntry {
         }
     }
     
-    func generateTranslations() async -> [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
+    func generateTranslations() async -> [Translation] {
+        var translations: [Translation] = []
 
-        translations.append(GeneralTranslation(definition: "String Table Offset", humanReadable: self.indexInStringTable.hex,
-                                               bytesCount: 4, translationType: .uint32,
+        translations.append(Translation(definition: "String Table Offset", humanReadable: self.indexInStringTable.hex,
+                                               translationType: .uint32,
                                                extraDefinition: "Symbol Name from String Table", extraHumanReadable: self.symbolName))
         
         var symbolTypeExplanation: String = self.symbolType.readable
@@ -271,18 +271,18 @@ struct SymbolTableEntry {
             break
         }
         
-        translations.append(GeneralTranslation(definition: "Symbol Type",
+        translations.append(Translation(definition: "Symbol Type",
                                         humanReadable: symbolTypeExplanation + " (Private External:\(self.isPrivateExternalSymbol), External:\(self.isExternalSymbol)",
-                                        bytesCount: 1, translationType: .numberEnum))
+                                        translationType: .numberEnum8Bit))
         
-        translations.append(GeneralTranslation(definition: "Section Ordinal", humanReadable: nSectExplanation,
-                                        bytesCount: 1, translationType: .uint8))
+        translations.append(Translation(definition: "Section Ordinal", humanReadable: nSectExplanation,
+                                        translationType: .uint8))
         
-        translations.append(GeneralTranslation(definition: "Descriptions", humanReadable: SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n"),
-                                        bytesCount: 2, translationType: .flags))
+        translations.append(Translation(definition: "Descriptions", humanReadable: SymbolTableEntry.flagsFrom(nDesc: nDesc, symbolType: symbolType).joined(separator: "\n"),
+                                        translationType: .flags(2)))
         
-        translations.append(GeneralTranslation(definition: nValueDesp, humanReadable: nValueExplanation,
-                                        bytesCount: self.is64Bit ? 8 : 4, translationType: self.is64Bit ? .uint64 : .uint32,
+        translations.append(Translation(definition: nValueDesp, humanReadable: nValueExplanation,
+                                        translationType: self.is64Bit ? .uint64 : .uint32,
                                         extraDefinition: nValueExtraDesp, extraHumanReadable: nValueExtraExplanation))
         
         return translations

@@ -18,7 +18,7 @@
 		1F80767B2A331E6200012724 /* HexFiendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076672A331DF400012724 /* HexFiendViewController.swift */; };
 		1F80767C2A331E7900012724 /* TranslationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076692A331DF400012724 /* TranslationsView.swift */; };
 		1F80767D2A331E7900012724 /* SingleTranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80766A2A331DF400012724 /* SingleTranslationView.swift */; };
-		1F80767E2A331E9900012724 /* Translations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076342A331DF400012724 /* Translations.swift */; };
+		1F80767E2A331E9900012724 /* Translation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076342A331DF400012724 /* Translation.swift */; };
 		1F8076802A331E9900012724 /* CPUType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076332A331DF400012724 /* CPUType.swift */; };
 		1F8076812A331E9900012724 /* Macho.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076352A331DF400012724 /* Macho.swift */; };
 		1F8076822A331EA000012724 /* LCSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80763B2A331DF400012724 /* LCSegment.swift */; };
@@ -63,7 +63,6 @@
 		1F8076AA2A331EEE00012724 /* DataShifter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80762E2A331DF400012724 /* DataShifter.swift */; };
 		1F8076AB2A331EEE00012724 /* FatBinary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80762C2A331DF400012724 /* FatBinary.swift */; };
 		1F8076AC2A331EEE00012724 /* UnixArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80762D2A331DF400012724 /* UnixArchive.swift */; };
-		1F8076AD2A331F1F00012724 /* KnownError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076772A331DF400012724 /* KnownError.swift */; };
 		1F8076AE2A331F1F00012724 /* InterpreterUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076752A331DF400012724 /* InterpreterUtils.swift */; };
 		1F8076AF2A331F1F00012724 /* TickTock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076762A331DF400012724 /* TickTock.swift */; };
 		1F8076B02A331F1F00012724 /* ComponentCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076742A331DF400012724 /* ComponentCache.swift */; };
@@ -72,7 +71,6 @@
 		1F8076B32A331F2100012724 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076712A331DF400012724 /* Extensions.swift */; };
 		1F8076B42A331F2100012724 /* ProgressTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80766F2A331DF400012724 /* ProgressTracker.swift */; };
 		1F8076B72A33362900012724 /* MachoSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076B62A33362900012724 /* MachoSection.swift */; };
-		1F8076B92A33394100012724 /* ThreadSafeLazy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076B82A33394100012724 /* ThreadSafeLazy.swift */; };
 		1F8076BC2A35760C00012724 /* StringSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076BB2A35760C00012724 /* StringSection.swift */; };
 		1F8076C12A358B5600012724 /* CStringSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076C02A358B5600012724 /* CStringSection.swift */; };
 		1F8076C32A358C6400012724 /* UStringSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076C22A358C6400012724 /* UStringSection.swift */; };
@@ -81,6 +79,7 @@
 		1F8076D02A36005700012724 /* HFController+Mocha.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076722A331DF400012724 /* HFController+Mocha.m */; };
 		1F8076D12A36007800012724 /* HexFiend.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8074EC2A331D2900012724 /* HexFiend.framework */; };
 		1F8076D22A36007800012724 /* HexFiend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8074EC2A331D2900012724 /* HexFiend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1F8076EF2A36BDAF00012724 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076EE2A36BDAF00012724 /* Errors.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -290,7 +289,7 @@
 		1F80762D2A331DF400012724 /* UnixArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnixArchive.swift; sourceTree = "<group>"; };
 		1F80762E2A331DF400012724 /* DataShifter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataShifter.swift; sourceTree = "<group>"; };
 		1F8076332A331DF400012724 /* CPUType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUType.swift; sourceTree = "<group>"; };
-		1F8076342A331DF400012724 /* Translations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Translations.swift; sourceTree = "<group>"; };
+		1F8076342A331DF400012724 /* Translation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Translation.swift; sourceTree = "<group>"; };
 		1F8076352A331DF400012724 /* Macho.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Macho.swift; sourceTree = "<group>"; };
 		1F8076372A331DF400012724 /* LCMinOSVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCMinOSVersion.swift; sourceTree = "<group>"; };
 		1F8076382A331DF400012724 /* LCDylib.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LCDylib.swift; sourceTree = "<group>"; };
@@ -348,13 +347,12 @@
 		1F8076742A331DF400012724 /* ComponentCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentCache.swift; sourceTree = "<group>"; };
 		1F8076752A331DF400012724 /* InterpreterUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterUtils.swift; sourceTree = "<group>"; };
 		1F8076762A331DF400012724 /* TickTock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickTock.swift; sourceTree = "<group>"; };
-		1F8076772A331DF400012724 /* KnownError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownError.swift; sourceTree = "<group>"; };
 		1F8076782A331DF400012724 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		1F8076B62A33362900012724 /* MachoSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoSection.swift; sourceTree = "<group>"; };
-		1F8076B82A33394100012724 /* ThreadSafeLazy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafeLazy.swift; sourceTree = "<group>"; };
 		1F8076BB2A35760C00012724 /* StringSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringSection.swift; sourceTree = "<group>"; };
 		1F8076C02A358B5600012724 /* CStringSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CStringSection.swift; sourceTree = "<group>"; };
 		1F8076C22A358C6400012724 /* UStringSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringSection.swift; sourceTree = "<group>"; };
+		1F8076EE2A36BDAF00012724 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -494,7 +492,7 @@
 			isa = PBXGroup;
 			children = (
 				1F8076332A331DF400012724 /* CPUType.swift */,
-				1F8076342A331DF400012724 /* Translations.swift */,
+				1F8076342A331DF400012724 /* Translation.swift */,
 				1F8076352A331DF400012724 /* Macho.swift */,
 				1F8076622A331DF400012724 /* SectionHeader.swift */,
 				1F8076362A331DF400012724 /* LoadCommand */,
@@ -595,8 +593,7 @@
 				1F8076742A331DF400012724 /* ComponentCache.swift */,
 				1F8076752A331DF400012724 /* InterpreterUtils.swift */,
 				1F8076762A331DF400012724 /* TickTock.swift */,
-				1F8076772A331DF400012724 /* KnownError.swift */,
-				1F8076B82A33394100012724 /* ThreadSafeLazy.swift */,
+				1F8076EE2A36BDAF00012724 /* Errors.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -889,8 +886,7 @@
 				1F8076882A331EA000012724 /* LCSymbolTable.swift in Sources */,
 				1F8076A12A331EC200012724 /* IndirectSymbolTable.swift in Sources */,
 				1F8076842A331EA000012724 /* LCDyldInfo.swift in Sources */,
-				1F80767E2A331E9900012724 /* Translations.swift in Sources */,
-				1F8076B92A33394100012724 /* ThreadSafeLazy.swift in Sources */,
+				1F80767E2A331E9900012724 /* Translation.swift in Sources */,
 				1F80748C2A330E8B00012724 /* OpenFileView.swift in Sources */,
 				1F8076CF2A36005700012724 /* HexFiendUtil.m in Sources */,
 				1F8076982A331EB100012724 /* SwiftMetadataComponent.swift in Sources */,
@@ -905,9 +901,9 @@
 				1F8076B72A33362900012724 /* MachoSection.swift in Sources */,
 				1F8076A92A331EC700012724 /* SectionHeader.swift in Sources */,
 				1F8076AC2A331EEE00012724 /* UnixArchive.swift in Sources */,
-				1F8076AD2A331F1F00012724 /* KnownError.swift in Sources */,
 				1F8076AE2A331F1F00012724 /* InterpreterUtils.swift in Sources */,
 				1F8076932A331EAC00012724 /* BindOperationCodeMetadata.swift in Sources */,
+				1F8076EF2A36BDAF00012724 /* Errors.swift in Sources */,
 				1F8076B12A331F2100012724 /* Log.swift in Sources */,
 				1F8076912A331EA800012724 /* InstructionSection.swift in Sources */,
 				1F8076A22A331EC200012724 /* SymbolTableEntry.swift in Sources */,

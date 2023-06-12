@@ -16,8 +16,8 @@ class LCUUID: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
-        return [GeneralTranslation(definition: "UUID", humanReadable: self.uuid.uuidString, bytesCount: 16, translationType: .rawData)]
+    override var commandTranslations: [Translation] {
+        return [Translation(definition: "UUID", humanReadable: self.uuid.uuidString, translationType: .rawData(16))]
     }
     
     static func uuid(from uuidData: [UInt8]) -> UUID {

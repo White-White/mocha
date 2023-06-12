@@ -8,14 +8,17 @@
 import SwiftUI
 import AppKit
 
-class HexFiendViewController: NSViewController {
+public class HexFiendViewController: NSViewController {
+    
+    static let MouseDownNoti: Notification.Name = Notification.Name(rawValue: "DonQuiDidMouseDownOnHex")
+    static let MouseDownNotiCharIndexKey: String = "DonQuiDidMouseDownOnHex_Index"
     
     static let bytesPerLine = 16
     let data: Data
     let hfController: HFController
     let layoutRep: HFLayoutRepresenter
     
-    override func loadView() {
+    public override func loadView() {
         view = NSView(frame: .zero)
         let layoutView = layoutRep.view()
         layoutView.frame = view.bounds
@@ -62,6 +65,7 @@ class HexFiendViewController: NSViewController {
         self.layoutRep.addRepresenter(scrollRep)
         
         super.init(nibName: nil, bundle: nil)
+        self.hfController.setController(self)
     }
     
     var selectedDataRange: Range<UInt64>? {
@@ -113,6 +117,13 @@ class HexFiendViewController: NSViewController {
         colorRange.range = self.hfRangeWrapper(from: range)
         colorRange.color = NSColor.init(calibratedWhite: 212.0/255.0, alpha: 1)
         return colorRange
+    }
+    
+    // exposed to Objective-C
+    @objc
+    func didClickCharacter(at index: UInt64) {
+        let noti = Notification(name: HexFiendViewController.MouseDownNoti, object: self, userInfo: [HexFiendViewController.MouseDownNotiCharIndexKey: index])
+        NotificationCenter.default.post(noti)
     }
 }
 

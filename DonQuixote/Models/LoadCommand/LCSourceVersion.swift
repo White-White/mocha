@@ -16,8 +16,8 @@ class LCSourceVersion: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
-        return [GeneralTranslation(definition: "Source Version", humanReadable: self.version, bytesCount: 8, translationType: .versionString)]
+    override var commandTranslations: [Translation] {
+        return [Translation(definition: "Source Version", humanReadable: self.version, translationType: .versionString64Bit)]
     }
     
     static func versionString(from versionValue: UInt64) -> String {

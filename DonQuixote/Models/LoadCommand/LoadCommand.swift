@@ -194,12 +194,12 @@ class LoadCommand: MachoBaseElement {
     }
     
     override func loadTranslations() async {
-        let typeTranslation = GeneralTranslation(definition: "Load Command Type", humanReadable: type.name, bytesCount: 4, translationType: .numberEnum)
-        let sizeTranslation = GeneralTranslation(definition: "Load Command Size", humanReadable: data.count.hex, bytesCount: 4, translationType: .uint32)
+        let typeTranslation = Translation(definition: "Load Command Type", humanReadable: type.name, translationType: .numberEnum32Bit)
+        let sizeTranslation = Translation(definition: "Load Command Size", humanReadable: data.count.hex, translationType: .uint32)
         await self.save(translationGroup: [typeTranslation, sizeTranslation] + self.commandTranslations)
     }
     
-    var commandTranslations: [GeneralTranslation] { [] }
+    var commandTranslations: [Translation] { [] }
 
     static func loadCommands(from machoData: Data,
                              machoHeader: MachoHeader,
@@ -227,12 +227,15 @@ class LoadCommand: MachoBaseElement {
                 loadCommand = LCLinkerOption(with: loadCommandType, data: loadCommandData)
             case .segment, .segment64:
                 let segment = LCSegment(with: loadCommandType, data: loadCommandData)
+                onLCSegment(segment)
                 loadCommand = segment
             case .symbolTable:
                 let symbolTableCommand = LCSymbolTable(with: loadCommandType, data: loadCommandData)
+                onLCSymbolTable(symbolTableCommand)
                 loadCommand = symbolTableCommand
             case .dynamicSymbolTable:
                 let dynamicSymbolTableCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
+                onLCDynamicSymbolTable(dynamicSymbolTableCommand)
                 loadCommand = dynamicSymbolTableCommand
             case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
                 loadCommand = LCDylib(with: loadCommandType, data: loadCommandData)
@@ -244,11 +247,13 @@ class LoadCommand: MachoBaseElement {
                 loadCommand = LCSourceVersion(with: loadCommandType, data: loadCommandData)
             case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
                 let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
+                onLCLinkedITData(linkedITData)
                 loadCommand = linkedITData
             case .main:
                 loadCommand = LCMain(with: loadCommandType, data: loadCommandData)
             case .dyldInfo, .dyldInfoOnly:
                 let dyldInfo = LCDyldInfo(with: loadCommandType, data: loadCommandData)
+                onLCDyldInfo(dyldInfo)
                 loadCommand = dyldInfo
             case .encryptionInfo64,. encryptionInfo:
                 loadCommand = LCEncryptionInfo(with: loadCommandType, data: loadCommandData)

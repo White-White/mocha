@@ -10,7 +10,7 @@ import Foundation
 class InitProgress: ObservableObject {
     
     @Published private(set) var progress: Float = 0
-    @Published var isDone: Bool = false
+    @Published var isDone: Bool = true
     
     func updateProgressForInitialize(with progress: Float) {
         self.setProgress(progress / 2)

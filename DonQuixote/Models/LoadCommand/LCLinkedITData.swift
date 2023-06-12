@@ -48,10 +48,10 @@ class LCLinkedITData: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
+    override var commandTranslations: [Translation] {
         return [
-            GeneralTranslation(definition: "File Offset", humanReadable: self.containedDataFileOffset.hex, bytesCount: 4, translationType: .uint32),
-            GeneralTranslation(definition: "Size", humanReadable: self.containedDataSize.hex, bytesCount: 4, translationType: .uint32)
+            Translation(definition: "File Offset", humanReadable: self.containedDataFileOffset.hex, translationType: .uint32),
+            Translation(definition: "Size", humanReadable: self.containedDataSize.hex, translationType: .uint32)
         ]
     }
     

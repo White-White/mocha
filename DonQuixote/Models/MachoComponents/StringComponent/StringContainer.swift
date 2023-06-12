@@ -70,51 +70,36 @@ actor StringContainer {
         case .utf8:
             var currentIndex: Int = 0
             while currentIndex < data.count {
-                var byte = data[dataStartIndex + currentIndex]
-                
-                // ignore prefix spaces
-                while (byte == 0 && currentIndex < data.count) {
+                while (data[dataStartIndex + currentIndex] == 0) {
                     currentIndex += 1
+                    guard currentIndex < data.count else { /* meet end of the content */ return rawStrings }
                     continue
                 }
-                
-                // find continuous non-space bytes
                 let stringStartIndex = currentIndex
-                while (byte != 0 && currentIndex < data.count) {
-                    byte = data[dataStartIndex + currentIndex]
+                while (data[dataStartIndex + currentIndex] != 0) {
                     currentIndex += 1
+                    guard currentIndex < data.count else { fatalError() }
                 }
-                
-                let dataLength = currentIndex - stringStartIndex
-                let stringData = data.subSequence(from: stringStartIndex, count: dataLength)
-                
+                let stringData = data[(data.startIndex + stringStartIndex)...(data.startIndex + currentIndex)]
                 let rawString = RawString(offset: stringStartIndex, data: stringData)
                 rawStrings.append(rawString)
             }
-        case .utf16:
+        case .utf16LittleEndian:
             let utf16UnitCount = data.count / 2
             var currentUnitIndex: Int = 0
             while currentUnitIndex < utf16UnitCount {
-                var unitValue = data.subSequence(from: currentUnitIndex * 2, count: 2).UInt16
-                
-                // ignore prefix spaces
-                while (unitValue == 0 && currentUnitIndex < utf16UnitCount) {
+                while ((data.subSequence(from: currentUnitIndex * 2, count: 2).UInt16) == 0) {
                     currentUnitIndex += 1
+                    guard currentUnitIndex < utf16UnitCount else { /* meet end of the content */ return rawStrings }
                     continue
                 }
-                
-                // find continuous utf16 units
                 let uStringUnitStartIndex = currentUnitIndex
-                while (unitValue != 0 && currentUnitIndex < utf16UnitCount) {
-                    unitValue = data.subSequence(from: currentUnitIndex * 2, count: 2).UInt16
+                while ((data.subSequence(from: currentUnitIndex * 2, count: 2).UInt16) != 0) {
                     currentUnitIndex += 1
+                    guard currentUnitIndex < utf16UnitCount else { fatalError() }
                 }
-                 
                 let stringStartIndex = uStringUnitStartIndex * 2
-                let stringEndIndex = currentUnitIndex * 2
-                let dataLength = stringStartIndex - stringEndIndex
-                let stringData = data.subSequence(from: stringStartIndex, count: dataLength)
-                
+                let stringData = data[(data.startIndex + stringStartIndex)...(data.startIndex + currentUnitIndex * 2 + 1)]
                 let rawString = RawString(offset: stringStartIndex, data: stringData)
                 rawStrings.append(rawString)
             }

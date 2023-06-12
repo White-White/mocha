@@ -18,10 +18,10 @@ class LCMinOSVersion: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
+    override var commandTranslations: [Translation] {
         return [
-            GeneralTranslation(definition: "Required min \(LCMinOSVersion.osName(for: type)) version", humanReadable: self.osVersion, bytesCount: 4, translationType: .versionString),
-            GeneralTranslation(definition: "Required min \(LCMinOSVersion.osName(for: type)) SDK version", humanReadable: self.sdkVersion, bytesCount: 4, translationType: .versionString)
+            Translation(definition: "Required min \(LCMinOSVersion.osName(for: type)) version", humanReadable: self.osVersion, translationType: .versionString32Bit),
+            Translation(definition: "Required min \(LCMinOSVersion.osName(for: type)) SDK version", humanReadable: self.sdkVersion, translationType: .versionString32Bit)
         ]
     }
     

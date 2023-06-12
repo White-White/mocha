@@ -21,15 +21,15 @@ struct IndirectSymbolTableEntry {
         self.isSymbolAbsolute = self.symbolTableIndex & 0x40000000 != 0 // INDIRECT_SYMBOL_ABS
     }
     
-    func generateTranslations() async -> [GeneralTranslation] {
+    func generateTranslations() async -> [Translation] {
         if self.isSymbolLocal || self.isSymbolAbsolute {
-            return [GeneralTranslation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex.hex)",
-                                bytesCount: 4, translationType: .uint32,
+            return [Translation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex.hex)",
+                                translationType: .uint32,
                                 extraDefinition: "Local Symbol", extraHumanReadable: "Local. Abosulte: \(self.isSymbolAbsolute)")]
         } else {
-            let symbolName = self.symbolTable?.findSymbol(atIndex: Int(self.symbolTableIndex)).symbolName
-            return [GeneralTranslation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex)",
-                                bytesCount: 4, translationType: .uint32,
+            let symbolName = await self.symbolTable?.findSymbol(atIndex: Int(self.symbolTableIndex)).symbolName
+            return [Translation(definition: "Symbol Table Index", humanReadable: "\(self.symbolTableIndex)",
+                                translationType: .uint32,
                                 extraDefinition: "Referrenced Symbol", extraHumanReadable: symbolName)]
         }
     }

@@ -39,18 +39,18 @@ class LCDyldInfo: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "Rebase Info File Offset", humanReadable: rebaseOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Rebase Info Size", humanReadable: rebaseSize.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Binding Info File Offset", humanReadable: bindOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Binding Info Size", humanReadable: bindSize.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Weak Binding Info File Offset", humanReadable: weakBindOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Weak Binding Info Size", humanReadable: weakBindSize.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Lazy Binding Info File Offset", humanReadable: lazyBindOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Lazy Binding Info Size", humanReadable: lazyBindSize.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Export Info File Offset", humanReadable: exportOffset.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Export Info Size", humanReadable: exportSize.hex, bytesCount: 4, translationType: .uint32))
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Rebase Info File Offset", humanReadable: rebaseOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Rebase Info Size", humanReadable: rebaseSize.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Binding Info File Offset", humanReadable: bindOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Binding Info Size", humanReadable: bindSize.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Weak Binding Info File Offset", humanReadable: weakBindOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Weak Binding Info Size", humanReadable: weakBindSize.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Lazy Binding Info File Offset", humanReadable: lazyBindOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Lazy Binding Info Size", humanReadable: lazyBindSize.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Export Info File Offset", humanReadable: exportOffset.hex, translationType: .uint32))
+        translations.append(Translation(definition: "Export Info Size", humanReadable: exportSize.hex, translationType: .uint32))
         return translations
     }
     

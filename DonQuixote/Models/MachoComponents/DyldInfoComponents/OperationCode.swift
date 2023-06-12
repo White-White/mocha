@@ -35,22 +35,21 @@ struct OperationCode<CodeMetadata: OperationCodeMetadataProtocol> {
     let cstringData: Data?
     let numberOfTranslations: Int
     
-    var translations: [GeneralTranslation] {
+    var translations: [Translation] {
         
-        var translations: [GeneralTranslation] = []
+        var translations: [Translation] = []
         
-        translations.append(GeneralTranslation(definition: "Operation Code (Upper 4 bits)", humanReadable: codeMetadata.operationReadable(),
-                                        bytesCount: 1, translationType: .flags,
+        translations.append(Translation(definition: "Operation Code (Upper 4 bits)", humanReadable: codeMetadata.operationReadable(),
+                                        translationType: .flags(1),
                                         extraDefinition: "Immediate Value Used As (Lower 4 bits)", extraHumanReadable: codeMetadata.immediateReadable()))
         
         translations.append(contentsOf: lebValues.map { ulebValue in
-            GeneralTranslation(definition: "LEB Value", humanReadable: ulebValue.isSigned ? "\(Int(bitPattern: UInt(ulebValue.raw)))" : "\(ulebValue.raw)",
-                        bytesCount: ulebValue.byteCount, translationType: .uleb)
+            Translation(definition: "LEB Value", humanReadable: ulebValue.isSigned ? "\(Int(bitPattern: UInt(ulebValue.raw)))" : "\(ulebValue.raw)", translationType: .uleb(ulebValue.byteCount))
         })
         
         if let cstringData = cstringData {
             let cstring = cstringData.utf8String ?? "🙅‍♂️ Invalid CString"
-            translations.append(GeneralTranslation(definition: "String", humanReadable: cstring, bytesCount: cstringData.count, translationType: .utf8String))
+            translations.append(Translation(definition: "String", humanReadable: cstring, translationType: .utf8String(cstringData.count)))
         }
         
         return translations

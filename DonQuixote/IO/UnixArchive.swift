@@ -56,37 +56,37 @@ struct UnixArchiveFileHeader {
 
 struct UnixArchive {
     
-    struct UnixArchiveError: Error { }
-    
-    static let magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
-    
-    let machoMetaDatas: [MachoMetaData]
-    
-    init(with fileData: Data) throws {
-        
-        // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
-        // "!<arch>\n"
-        guard fileData.starts(with: UnixArchive.magic) else { throw UnixArchiveError() }
-        
-        var machoMetaDatas: [MachoMetaData] = []
-        var dataShifter = DataShifter(fileData); dataShifter.skip(.quadWords) // throw away magic
-        while dataShifter.shiftable {
-            let fileHeader = UnixArchiveFileHeader(with: &dataShifter)
-            
-            // ref: http://mirror.informatimago.com/next/developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/8rt_file_format/chapter_10_section_33.html
-            // The first member in a static archive library is always the symbol table describing the contents of the rest of the member files.
-            // This member is always called either __.SYMDEF or __.SYMDEF SORTED.
-            // So we are dropping the first element
-            if fileHeader.fileID.hasPrefix("__.SYMDEF") {
-                dataShifter.skip(.rawNumber(fileHeader.contentSize - fileHeader.extFileIDLengthInt))
-                continue
-            }
-            
-            let machoDataSize = fileHeader.contentSize - fileHeader.extFileIDLengthInt
-            let machoData = dataShifter.shift(.rawNumber(machoDataSize))
-            machoMetaDatas.append(try MachoMetaData(fileName: fileHeader.fileID, machoData: Data(machoData)))
-        }
-        self.machoMetaDatas = machoMetaDatas
-    }
+//    struct UnixArchiveError: Error { }
+//    
+//    static let magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
+//    
+//    let machoMetaDatas: [MachoMetaData]
+//    
+//    init(with fileData: Data) throws {
+//        
+//        // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
+//        // "!<arch>\n"
+//        guard fileData.starts(with: UnixArchive.magic) else { throw UnixArchiveError() }
+//        
+//        var machoMetaDatas: [MachoMetaData] = []
+//        var dataShifter = DataShifter(fileData); dataShifter.skip(.quadWords) // throw away magic
+//        while dataShifter.shiftable {
+//            let fileHeader = UnixArchiveFileHeader(with: &dataShifter)
+//            
+//            // ref: http://mirror.informatimago.com/next/developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/8rt_file_format/chapter_10_section_33.html
+//            // The first member in a static archive library is always the symbol table describing the contents of the rest of the member files.
+//            // This member is always called either __.SYMDEF or __.SYMDEF SORTED.
+//            // So we are dropping the first element
+//            if fileHeader.fileID.hasPrefix("__.SYMDEF") {
+//                dataShifter.skip(.rawNumber(fileHeader.contentSize - fileHeader.extFileIDLengthInt))
+//                continue
+//            }
+//            
+//            let machoDataSize = fileHeader.contentSize - fileHeader.extFileIDLengthInt
+//            let machoData = dataShifter.shift(.rawNumber(machoDataSize))
+//            machoMetaDatas.append(try MachoMetaData(fileName: fileHeader.fileID, machoData: Data(machoData)))
+//        }
+//        self.machoMetaDatas = machoMetaDatas
+//    }
     
 }

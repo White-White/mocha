@@ -51,11 +51,11 @@ struct RelocationEntry {
         self.sectionName = sectionName
     }
     
-    var translations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "Address", humanReadable: self.address.hex, bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "SymbolNum", humanReadable: self.symbolNum.hex, bytesCount: 3, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "extra", humanReadable: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)", bytesCount: 1, translationType: .flags))
+    var translations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Address", humanReadable: self.address.hex, translationType: .uint32))
+        translations.append(Translation(definition: "SymbolNum", humanReadable: self.symbolNum.hex, translationType: .rawData(3)))
+        translations.append(Translation(definition: "extra", humanReadable: "pcRelocated: \(self.pcRelocated), length: \(self.length), isExternal: \(self.isExternal), type: \(self.type)", translationType: .flags(1)))
         return translations
     }
     

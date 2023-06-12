@@ -7,8 +7,25 @@
 
 import SwiftUI
 
+struct ErrorView: View {
+    
+    @Environment (\.dismiss) private var dismiss
+    let error: Error
+    
+    var body: some View {
+        VStack {
+            Text("\(error.localizedDescription)")
+            Button("Dismiss") {
+                self.dismiss()
+            }
+        }
+    }
+    
+}
+
 @main
 struct DonQuixoteApp: App {
+    
     var body: some Scene {
         
         WindowGroup {
@@ -20,7 +37,12 @@ struct DonQuixoteApp: App {
         }
         
         WindowGroup(id: KnownFileType.unixExecutable.rawValue, for: URL.self) { $url in
-            MachoView(url)
+            switch Document.openMacho(fileURL: url) {
+            case .error(let error):
+                ErrorView(error: error)
+            case .success(let macho):
+                MachoView(macho: macho, hexFiendViewController: HexFiendViewController(data: macho.machoData))
+            }
         }
         
         WindowGroup(id: KnownFileType.ar.rawValue, for: URL.self) { $url in
@@ -28,4 +50,5 @@ struct DonQuixoteApp: App {
         }
         
     }
+    
 }

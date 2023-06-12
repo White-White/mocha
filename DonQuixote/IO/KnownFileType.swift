@@ -32,26 +32,4 @@ enum KnownFileType: String {
         }
     }
     
-    init?(_ fileURL: URL) {
-        if let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .contentTypeKey]) {
-            if let isDirectory = resourceValues.isDirectory,
-                isDirectory {
-                return nil
-            }
-            if let isRegularFile = resourceValues.isRegularFile,
-                !isRegularFile {
-                return nil
-            }
-            if let contentType = resourceValues.contentType {
-                self.init(contentType)
-                return
-            }
-        }
-        return nil
-    }
-    
-    static func knowsFile(with fileURL: URL) -> Bool {
-        return KnownFileType(fileURL) != nil
-    }
-    
 }

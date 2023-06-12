@@ -32,16 +32,13 @@ class SymbolTable: MachoBaseElement {
         
     }
     
-    override func loadTranslations() async {
-        // init models
+    override func asyncInit() async {
         let modelSize = self.is64Bit ? SymbolTableEntry.modelSizeFor64Bit : SymbolTableEntry.modelSizeFor32Bit
         let numberOfModels = self.dataSize/modelSize
         for index in 0..<numberOfModels {
             let data = self.data.subSequence(from: index * modelSize, count: modelSize)
             let entry = await SymbolTableEntry(with: data, is64Bit: self.is64Bit, stringTable: self.stringTable, machoSectionHeaders: self.machoSectionHeaders)
             self.symbolTableEntries.append(entry)
-            let translations = await entry.generateTranslations()
-            await self.save(translationGroup: translations)
         }
         
         // quick index
@@ -60,8 +57,16 @@ class SymbolTable: MachoBaseElement {
         }
     }
     
+    override func loadTranslations() async {
+        for entry in self.symbolTableEntries {
+            let translations = await entry.generateTranslations()
+            await self.save(translationGroup: translations)
+        }
+    }
     
-    func findSymbol(byVirtualAddress virtualAddress: UInt64) -> [SymbolTableEntry]? {
+    
+    func findSymbol(byVirtualAddress virtualAddress: UInt64) async -> [SymbolTableEntry]? {
+        await self.waitUntilInitDone()
         var symbolTableEntrys: [SymbolTableEntry] = []
         if let symbolTableEntryIndexs = symbolTableEntryMap[virtualAddress] {
             symbolTableEntrys = symbolTableEntryIndexs.map { self.symbolTableEntries[$0] }
@@ -69,7 +74,8 @@ class SymbolTable: MachoBaseElement {
         return symbolTableEntrys
     }
     
-    func findSymbol(atIndex index: Int) -> SymbolTableEntry {
+    func findSymbol(atIndex index: Int) async -> SymbolTableEntry {
+        await self.waitUntilInitDone()
         guard index < self.symbolTableEntries.count else { fatalError() }
         return self.symbolTableEntries[index]
     }

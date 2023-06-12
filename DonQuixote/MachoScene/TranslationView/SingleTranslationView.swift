@@ -9,13 +9,13 @@ import SwiftUI
 
 struct SingleTranslationView: View {
     
-    let translation: BaseTranslation
+    let translation: Translation
     var isSelected: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
-                if let commonTranslation = translation as? GeneralTranslation {
+                if let commonTranslation = translation as? Translation {
                     Text(commonTranslation.humanReadable)
                         .font(.system(size: 14))
                         .foregroundColor(Color(nsColor: .textColor))
@@ -34,19 +34,20 @@ struct SingleTranslationView: View {
                             .font(.system(size: 12))
                             .foregroundColor(Color(nsColor: .secondaryLabelColor))
                     }
-                    Text("Length: \(commonTranslation.bytesCount) bytes | Data Type: \(commonTranslation.translationType.description)")
+                    Text("\(commonTranslation.translationType.description) (\(commonTranslation.translationType.bytesCount) bytes)")
                         .font(.system(size: 10))
                         .foregroundColor(Color(nsColor: .secondaryLabelColor))
                 }
-                else if let instructionTranslation = translation as? InstructionTranslation {
-                    HStack(spacing: 0) {
-                        Text(instructionTranslation.capstoneInstruction.mnemonic)
-                            .font(.system(size: 14, weight: .bold).monospaced())
-                            .frame(width: 60, alignment: .leading)
-                        Text(instructionTranslation.capstoneInstruction.operand)
-                            .font(.system(size: 14).monospaced())
-                    }
-                } else {
+//                else if let instructionTranslation = translation as? InstructionTranslation {
+//                    HStack(spacing: 0) {
+//                        Text(instructionTranslation.capstoneInstruction.mnemonic)
+//                            .font(.system(size: 14, weight: .bold).monospaced())
+//                            .frame(width: 60, alignment: .leading)
+//                        Text(instructionTranslation.capstoneInstruction.operand)
+//                            .font(.system(size: 14).monospaced())
+//                    }
+//                }
+                else {
                     fatalError()
                 }
             }

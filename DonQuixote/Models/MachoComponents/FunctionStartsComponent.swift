@@ -53,31 +53,31 @@ class FunctionStartsSection: MachoBaseElement {
     }
     
     override func loadTranslations() async {
-        let translations = await withTaskGroup(of: GeneralTranslation.self, body: { taskGroup in
+        let translations = await withTaskGroup(of: Translation.self, body: { taskGroup in
             for functionStart in functionStarts {
                 taskGroup.addTask {
                     await self.translation(for: functionStart)
                 }
             }
-            return await taskGroup.reduce(into: [GeneralTranslation]()) { partialResult, translation in
+            return await taskGroup.reduce(into: [Translation]()) { partialResult, translation in
                 partialResult.append(translation)
             }
         })
         await self.save(translationGroup: translations)
     }
     
-    private func translation(for functionStart: FunctionStart) async -> GeneralTranslation {
+    private func translation(for functionStart: FunctionStart) async -> Translation {
         var symbolName: String = ""
         let functionVirtualAddress = functionStart.address + textSegmentVirtualAddress
         
-        self.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress)?.forEach({ symbolTableEntry in
+        await self.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress)?.forEach({ symbolTableEntry in
             guard symbolTableEntry.symbolType == .section else { return }
             symbolName += symbolTableEntry.symbolName
         })
         
-        let translation = GeneralTranslation(definition: "Vitual Address",
+        let translation = Translation(definition: "Vitual Address",
                                       humanReadable: (functionStart.address + textSegmentVirtualAddress).hex,
-                                      bytesCount: functionStart.byteLength, translationType: .uleb128,
+                                      translationType: .uleb128(functionStart.byteLength),
                                       extraDefinition: "Referred Symbol Name",
                                       extraHumanReadable: symbolName)
         return translation

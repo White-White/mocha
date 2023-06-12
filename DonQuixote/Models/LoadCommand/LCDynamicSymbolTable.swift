@@ -58,36 +58,35 @@ class LCDynamicSymbolTable: LoadCommand {
         super.init(data, type: type)
     }
     
-    override var commandTranslations: [GeneralTranslation] {
-        var translations: [GeneralTranslation] = []
-        translations.append(GeneralTranslation(definition: "Start Index of Local Symbols ", humanReadable: "\(self.ilocalsym)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Number of Local Symbols ", humanReadable: "\(self.nlocalsym)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Start Index of External Defined Symbols ", humanReadable: "\(self.iextdefsym)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Number of External Defined Symbols ", humanReadable: "\(self.nextdefsym )", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Start Index of Undefined Symbols ", humanReadable: "\(self.iundefsym)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "Number of Undefined Symbols ", humanReadable: "\(self.nundefsym)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "file offset to table of contents ", humanReadable: "\(self.tocoff.hex)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "number of entries in table of contents ", humanReadable: "\(self.ntoc)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "file offset to module table ", humanReadable: "\(self.modtaboff.hex)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "number of module table entries ", humanReadable: "\(self.nmodtab)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "offset to referenced symbol table ", humanReadable: "\(self.extrefsymoff.hex)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "number of referenced symbol table entries ", humanReadable: "\(self.nextrefsyms)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "file offset to the indirect symbol table ", humanReadable: "\(self.indirectsymoff.hex)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "number of indirect symbol table entries ", humanReadable: "\(self.nindirectsyms)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "offset to external relocation entries ", humanReadable: "\(self.extreloff.hex)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "number of external relocation entries ", humanReadable: "\(self.nextrel)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "offset to local relocation entries ", humanReadable: "\(self.locreloff.hex)", bytesCount: 4, translationType: .uint32))
-        translations.append(GeneralTranslation(definition: "number of local relocation entries ", humanReadable: "\(self.nlocrel)", bytesCount: 4, translationType: .uint32))
+    override var commandTranslations: [Translation] {
+        var translations: [Translation] = []
+        translations.append(Translation(definition: "Start Index of Local Symbols ", humanReadable: "\(self.ilocalsym)", translationType: .uint32))
+        translations.append(Translation(definition: "Number of Local Symbols ", humanReadable: "\(self.nlocalsym)", translationType: .uint32))
+        translations.append(Translation(definition: "Start Index of External Defined Symbols ", humanReadable: "\(self.iextdefsym)", translationType: .uint32))
+        translations.append(Translation(definition: "Number of External Defined Symbols ", humanReadable: "\(self.nextdefsym )", translationType: .uint32))
+        translations.append(Translation(definition: "Start Index of Undefined Symbols ", humanReadable: "\(self.iundefsym)", translationType: .uint32))
+        translations.append(Translation(definition: "Number of Undefined Symbols ", humanReadable: "\(self.nundefsym)", translationType: .uint32))
+        translations.append(Translation(definition: "file offset to table of contents ", humanReadable: "\(self.tocoff.hex)", translationType: .uint32))
+        translations.append(Translation(definition: "number of entries in table of contents ", humanReadable: "\(self.ntoc)", translationType: .uint32))
+        translations.append(Translation(definition: "file offset to module table ", humanReadable: "\(self.modtaboff.hex)", translationType: .uint32))
+        translations.append(Translation(definition: "number of module table entries ", humanReadable: "\(self.nmodtab)", translationType: .uint32))
+        translations.append(Translation(definition: "offset to referenced symbol table ", humanReadable: "\(self.extrefsymoff.hex)", translationType: .uint32))
+        translations.append(Translation(definition: "number of referenced symbol table entries ", humanReadable: "\(self.nextrefsyms)", translationType: .uint32))
+        translations.append(Translation(definition: "file offset to the indirect symbol table ", humanReadable: "\(self.indirectsymoff.hex)", translationType: .uint32))
+        translations.append(Translation(definition: "number of indirect symbol table entries ", humanReadable: "\(self.nindirectsyms)", translationType: .uint32))
+        translations.append(Translation(definition: "offset to external relocation entries ", humanReadable: "\(self.extreloff.hex)", translationType: .uint32))
+        translations.append(Translation(definition: "number of external relocation entries ", humanReadable: "\(self.nextrel)", translationType: .uint32))
+        translations.append(Translation(definition: "offset to local relocation entries ", humanReadable: "\(self.locreloff.hex)", translationType: .uint32))
+        translations.append(Translation(definition: "number of local relocation entries ", humanReadable: "\(self.nlocrel)", translationType: .uint32))
         return translations
     }
     
     func indirectSymbolTable(machoData: Data, machoHeader: MachoHeader, symbolTable: SymbolTable?) -> IndirectSymbolTable? {
-        let is64Bit = machoHeader.is64Bit
         let indirectSymbolTableStartOffset = Int(self.indirectsymoff)
         let indirectSymbolTableSize = Int(self.nindirectsyms * 4)
         if indirectSymbolTableSize == .zero { return nil }
         let indirectSymbolTableData = machoData.subSequence(from: indirectSymbolTableStartOffset, count: indirectSymbolTableSize)
-        return IndirectSymbolTable(data, title: "Indirect Symbol Table", is64Bit: machoHeader.is64Bit, symbolTable: symbolTable)
+        return IndirectSymbolTable(indirectSymbolTableData, title: "Indirect Symbol Table", is64Bit: machoHeader.is64Bit, symbolTable: symbolTable)
     }
     
 }
