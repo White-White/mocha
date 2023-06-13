@@ -68,34 +68,23 @@ public class HexFiendViewController: NSViewController {
         self.hfController.setController(self)
     }
     
-    var selectedDataRange: Range<UInt64>? {
-        didSet {
-            if let selectedDataRange {
-                self.hfController.selectedContentsRanges = [HexFiendViewController.hfRangeWrapper(from: selectedDataRange)]
-            } else {
-                self.hfController.selectedContentsRanges = [HFRangeWrapper.withRange(HFRange(location: 0, length: 0))]
+    var selectedDataRange: Range<UInt64>?
+    var selectedComponentDataRange: Range<UInt64>?
+    
+    func updateSelectedDataRange(with range: Range<UInt64>?, autoScroll: Bool) {
+        if let range {
+            self.hfController.selectedContentsRanges = [HexFiendViewController.hfRangeWrapper(from: range)]
+            if autoScroll {
+                self.scrollHexView(basedOn: range)
             }
-            self.scrollIfNeeded()
-        }
-    }
-    var selectedComponentDataRange: Range<UInt64>? {
-        didSet {
-            if let selectedComponentDataRange {
-                self.hfController.colorRanges = [HexFiendViewController.colorRange(from: selectedComponentDataRange)]
-            }
-            self.scrollIfNeeded()
+        } else {
+            self.hfController.selectedContentsRanges = [HFRangeWrapper.withRange(HFRange(location: 0, length: 0))]
         }
     }
     
-    private func scrollIfNeeded() {
-        if let selectedDataRange {
-            self.scrollHexView(basedOn: selectedDataRange)
-            return
-        }
-        
-        if let selectedComponentDataRange {
-            self.scrollHexView(basedOn: selectedComponentDataRange)
-            return
+    func updateColorDataRange(with range: Range<UInt64>?) {
+        if let range {
+            self.hfController.colorRanges = [HexFiendViewController.colorRange(from: range)]
         }
     }
     

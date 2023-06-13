@@ -102,35 +102,39 @@ enum TranslationDataType {
 
 struct Translation: Equatable, Identifiable {
     
-    let id: UUID = UUID()
-    
     static func == (lhs: Translation, rhs: Translation) -> Bool {
         lhs.rangeInMacho == rhs.rangeInMacho
     }
     
-    var bytesCount: Int { translationType.bytesCount }
-    var rangeInMacho: Range<Int>?
+    var rangeInMacho: Range<UInt64>?
+    var id: UInt64 { rangeInMacho!.startIndex }
     
     let definition: String?
     let humanReadable: String
+    let translationType: TranslationDataType
+    var bytesCount: Int { translationType.bytesCount }
+    
     let extraDefinition: String?
     let extraHumanReadable: String?
-    let translationType: TranslationDataType
+    let error: String?
     
     init(definition: String?,
          humanReadable: String,
          translationType: TranslationDataType,
          extraDefinition: String? = nil,
-         extraHumanReadable: String? = nil) {
+         extraHumanReadable: String? = nil,
+         error: String? = nil) {
         
         self.definition = definition
         self.humanReadable = humanReadable
         self.translationType = translationType
         self.extraDefinition = extraDefinition
         self.extraHumanReadable = extraHumanReadable
+        self.error = error
+        
     }
     
-    mutating func updateRange(with rangeInMacho: Range<Int>) {
+    mutating func updateRange(with rangeInMacho: Range<UInt64>) {
         self.rangeInMacho = rangeInMacho
     }
     

@@ -116,25 +116,17 @@ actor StringContainer {
     }
     
     func stringContent(for rawString: RawString) -> StringContent {
-        
         var stringValue: String?
         var demangled: String?
-        
         if let _stringValue = String(data: rawString.data, encoding: self.encoding) {
             stringValue = _stringValue
             if self.shouldDemangle {
                 if let _demangled = swift_demangle(_stringValue) {
                     demangled = _demangled
-                } else {
-                    Log.error("Failed to demangle string for \(_stringValue)")
                 }
             }
-        } else {
-            Log.error("Failed to decode string at \(rawString.data.startIndex), encoding: \(self.encoding)")
         }
-        
         let stringContent = StringContent(byteCount: rawString.dataSize, content: stringValue, demangled: demangled)
-        
         return stringContent
     }
     

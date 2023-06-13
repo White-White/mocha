@@ -87,7 +87,7 @@ class MachoBaseElement: @unchecked Sendable, Equatable, Identifiable {
         for translationGroup in self.translationGroupCache {
             var updatedTranslationGroup: TranslationGroup = []
             for var translation in translationGroup {
-                translation.updateRange(with: rangeBase..<(rangeBase + translation.bytesCount))
+                translation.updateRange(with: UInt64(rangeBase)..<UInt64((rangeBase + translation.bytesCount)))
                 rangeBase += translation.bytesCount
                 updatedTranslationGroup.append(translation)
             }
@@ -103,6 +103,4 @@ class MachoBaseElement: @unchecked Sendable, Equatable, Identifiable {
         }
     }
     
-    var dataRangeInMacho: Range<UInt64> { UInt64(self.offsetInMacho)..<UInt64(self.offsetInMacho + self.dataSize) }
-
 }

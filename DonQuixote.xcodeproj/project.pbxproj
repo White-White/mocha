@@ -16,7 +16,6 @@
 		1F8076792A331E4F00012724 /* MachoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076652A331DF400012724 /* MachoView.swift */; };
 		1F80767A2A331E5F00012724 /* ComponentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076642A331DF400012724 /* ComponentListView.swift */; };
 		1F80767B2A331E6200012724 /* HexFiendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076672A331DF400012724 /* HexFiendViewController.swift */; };
-		1F80767C2A331E7900012724 /* TranslationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076692A331DF400012724 /* TranslationsView.swift */; };
 		1F80767D2A331E7900012724 /* SingleTranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80766A2A331DF400012724 /* SingleTranslationView.swift */; };
 		1F80767E2A331E9900012724 /* Translation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076342A331DF400012724 /* Translation.swift */; };
 		1F8076802A331E9900012724 /* CPUType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076332A331DF400012724 /* CPUType.swift */; };
@@ -334,7 +333,6 @@
 		1F8076642A331DF400012724 /* ComponentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentListView.swift; sourceTree = "<group>"; };
 		1F8076652A331DF400012724 /* MachoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoView.swift; sourceTree = "<group>"; };
 		1F8076672A331DF400012724 /* HexFiendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexFiendViewController.swift; sourceTree = "<group>"; };
-		1F8076692A331DF400012724 /* TranslationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationsView.swift; sourceTree = "<group>"; };
 		1F80766A2A331DF400012724 /* SingleTranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleTranslationView.swift; sourceTree = "<group>"; };
 		1F80766C2A331DF400012724 /* HexFiendUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HexFiendUtil.h; sourceTree = "<group>"; };
 		1F80766D2A331DF400012724 /* HFController+Mocha.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HFController+Mocha.h"; sourceTree = "<group>"; };
@@ -572,7 +570,6 @@
 		1F8076682A331DF400012724 /* TranslationView */ = {
 			isa = PBXGroup;
 			children = (
-				1F8076692A331DF400012724 /* TranslationsView.swift */,
 				1F80766A2A331DF400012724 /* SingleTranslationView.swift */,
 			);
 			path = TranslationView;
@@ -925,7 +922,6 @@
 				1F80769E2A331EB100012724 /* PointerComponent.swift in Sources */,
 				1F80749C2A33105900012724 /* Document.swift in Sources */,
 				1F8076B22A331F2100012724 /* Demangle.swift in Sources */,
-				1F80767C2A331E7900012724 /* TranslationsView.swift in Sources */,
 				1F8076942A331EAC00012724 /* OperationCodeSection.swift in Sources */,
 				1F8076AF2A331F1F00012724 /* TickTock.swift in Sources */,
 				1F8076992A331EB100012724 /* FunctionStartsComponent.swift in Sources */,

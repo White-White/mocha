@@ -28,7 +28,7 @@ class StringSection: MachoBaseElement {
                                                  translationType: self.encoding == .utf8 ? .utf8String(stringContent.byteCount) : .utf16String(stringContent.byteCount),
                                                  extraDefinition: stringContent.demangled != nil ? "Demangled" : nil,
                                                  extraHumanReadable: stringContent.demangled)
-            translation.rangeInMacho = (sectionDataStartIndex + rawString.offset)..<(sectionDataStartIndex + rawString.offset + rawString.dataSize)
+            translation.rangeInMacho = UInt64(sectionDataStartIndex + rawString.offset)..<UInt64(sectionDataStartIndex + rawString.offset + rawString.dataSize)
             translations.append(translation)
         }
         await self.save(translationGroup: translations)

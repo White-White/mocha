@@ -7,17 +7,18 @@
 
 #import "HFController+Mocha.h"
 #import <objc/runtime.h>
+#import <HexFiend/HexFiend.h>
 
 @implementation HFController (Mocha)
 
 - (void)scrollHexViewBasedOn:(NSRange)selectedRange bytesPerLine:(NSUInteger)bytesPerLine {
-    long double targetLineIndex = selectedRange.location / bytesPerLine;
+    long double targetLineIndex = (selectedRange.location + selectedRange.length) / bytesPerLine;
     HFFPRange visableLineRange = [self displayedLineRange];
-    if (targetLineIndex < (visableLineRange.location + 5) || targetLineIndex > (visableLineRange.location + visableLineRange.length - 5)) {
-        long double visableRangeMid = visableLineRange.location + visableLineRange.length / 2;
-        long double scrollingDistance = targetLineIndex - visableRangeMid;
-        [self scrollByLines:scrollingDistance];
+    if (visableLineRange.location <= targetLineIndex && targetLineIndex <= (visableLineRange.location + visableLineRange.length)) {
+        return;
     }
+    long double delta = targetLineIndex - (visableLineRange.location + visableLineRange.length / 2);
+    [self scrollByLines: delta];
 }
 
 - (HexFiendViewController *)viewController {

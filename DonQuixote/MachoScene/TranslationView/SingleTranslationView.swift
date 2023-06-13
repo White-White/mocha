@@ -34,9 +34,18 @@ struct SingleTranslationView: View {
                             .font(.system(size: 12))
                             .foregroundColor(Color(nsColor: .secondaryLabelColor))
                     }
-                    Text("\(commonTranslation.translationType.description) (\(commonTranslation.translationType.bytesCount) bytes)")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color(nsColor: .secondaryLabelColor))
+                    HStack {
+                        Text("\(commonTranslation.translationType.description) (\(commonTranslation.translationType.bytesCount) bytes)")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(nsColor: .secondaryLabelColor))
+                        if let error = translation.error {
+                            Text(error)
+                                .font(.system(size: 10))
+                                .foregroundColor(Color(nsColor: .white))
+                                .background(Color(nsColor: .orange))
+                                .cornerRadius(4)
+                        }
+                    }
                 }
 //                else if let instructionTranslation = translation as? InstructionTranslation {
 //                    HStack(spacing: 0) {
