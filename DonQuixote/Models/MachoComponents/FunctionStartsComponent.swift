@@ -63,14 +63,14 @@ class FunctionStartsSection: MachoBaseElement {
                 partialResult.append(translation)
             }
         })
-        await self.save(translationGroup: translations)
+        await self.save(translations: translations)
     }
     
     private func translation(for functionStart: FunctionStart) async -> Translation {
         var symbolName: String = ""
         let functionVirtualAddress = functionStart.address + textSegmentVirtualAddress
         
-        await self.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress)?.forEach({ symbolTableEntry in
+        await self.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress, callerTag: self.title)?.forEach({ symbolTableEntry in
             guard symbolTableEntry.symbolType == .section else { return }
             symbolName += symbolTableEntry.symbolName
         })

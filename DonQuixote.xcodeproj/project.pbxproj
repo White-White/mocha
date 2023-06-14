@@ -16,7 +16,6 @@
 		1F8076792A331E4F00012724 /* MachoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076652A331DF400012724 /* MachoView.swift */; };
 		1F80767A2A331E5F00012724 /* ComponentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076642A331DF400012724 /* ComponentListView.swift */; };
 		1F80767B2A331E6200012724 /* HexFiendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076672A331DF400012724 /* HexFiendViewController.swift */; };
-		1F80767D2A331E7900012724 /* SingleTranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80766A2A331DF400012724 /* SingleTranslationView.swift */; };
 		1F80767E2A331E9900012724 /* Translation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076342A331DF400012724 /* Translation.swift */; };
 		1F8076802A331E9900012724 /* CPUType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076332A331DF400012724 /* CPUType.swift */; };
 		1F8076812A331E9900012724 /* Macho.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076352A331DF400012724 /* Macho.swift */; };
@@ -64,11 +63,9 @@
 		1F8076AC2A331EEE00012724 /* UnixArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80762D2A331DF400012724 /* UnixArchive.swift */; };
 		1F8076AE2A331F1F00012724 /* InterpreterUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076752A331DF400012724 /* InterpreterUtils.swift */; };
 		1F8076AF2A331F1F00012724 /* TickTock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076762A331DF400012724 /* TickTock.swift */; };
-		1F8076B02A331F1F00012724 /* ComponentCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076742A331DF400012724 /* ComponentCache.swift */; };
 		1F8076B12A331F2100012724 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80766E2A331DF400012724 /* Log.swift */; };
 		1F8076B22A331F2100012724 /* Demangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076702A331DF400012724 /* Demangle.swift */; };
 		1F8076B32A331F2100012724 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076712A331DF400012724 /* Extensions.swift */; };
-		1F8076B42A331F2100012724 /* ProgressTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80766F2A331DF400012724 /* ProgressTracker.swift */; };
 		1F8076B72A33362900012724 /* MachoSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076B62A33362900012724 /* MachoSection.swift */; };
 		1F8076BC2A35760C00012724 /* StringSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076BB2A35760C00012724 /* StringSection.swift */; };
 		1F8076C12A358B5600012724 /* CStringSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076C02A358B5600012724 /* CStringSection.swift */; };
@@ -79,6 +76,7 @@
 		1F8076D12A36007800012724 /* HexFiend.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8074EC2A331D2900012724 /* HexFiend.framework */; };
 		1F8076D22A36007800012724 /* HexFiend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8074EC2A331D2900012724 /* HexFiend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1F8076EF2A36BDAF00012724 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076EE2A36BDAF00012724 /* Errors.swift */; };
+		1F80775E2A386DE100012724 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80775D2A386DE100012724 /* TranslationView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -333,16 +331,13 @@
 		1F8076642A331DF400012724 /* ComponentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentListView.swift; sourceTree = "<group>"; };
 		1F8076652A331DF400012724 /* MachoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoView.swift; sourceTree = "<group>"; };
 		1F8076672A331DF400012724 /* HexFiendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexFiendViewController.swift; sourceTree = "<group>"; };
-		1F80766A2A331DF400012724 /* SingleTranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleTranslationView.swift; sourceTree = "<group>"; };
 		1F80766C2A331DF400012724 /* HexFiendUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HexFiendUtil.h; sourceTree = "<group>"; };
 		1F80766D2A331DF400012724 /* HFController+Mocha.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HFController+Mocha.h"; sourceTree = "<group>"; };
 		1F80766E2A331DF400012724 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
-		1F80766F2A331DF400012724 /* ProgressTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressTracker.swift; sourceTree = "<group>"; };
 		1F8076702A331DF400012724 /* Demangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demangle.swift; sourceTree = "<group>"; };
 		1F8076712A331DF400012724 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		1F8076722A331DF400012724 /* HFController+Mocha.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "HFController+Mocha.m"; sourceTree = "<group>"; };
 		1F8076732A331DF400012724 /* HexFiendUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HexFiendUtil.m; sourceTree = "<group>"; };
-		1F8076742A331DF400012724 /* ComponentCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentCache.swift; sourceTree = "<group>"; };
 		1F8076752A331DF400012724 /* InterpreterUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpreterUtils.swift; sourceTree = "<group>"; };
 		1F8076762A331DF400012724 /* TickTock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickTock.swift; sourceTree = "<group>"; };
 		1F8076782A331DF400012724 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
@@ -351,6 +346,7 @@
 		1F8076C02A358B5600012724 /* CStringSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CStringSection.swift; sourceTree = "<group>"; };
 		1F8076C22A358C6400012724 /* UStringSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringSection.swift; sourceTree = "<group>"; };
 		1F8076EE2A36BDAF00012724 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		1F80775D2A386DE100012724 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -428,7 +424,7 @@
 				1F8076652A331DF400012724 /* MachoView.swift */,
 				1F8076642A331DF400012724 /* ComponentListView.swift */,
 				1F8076672A331DF400012724 /* HexFiendViewController.swift */,
-				1F8076682A331DF400012724 /* TranslationView */,
+				1F80775D2A386DE100012724 /* TranslationView.swift */,
 			);
 			path = MachoScene;
 			sourceTree = "<group>";
@@ -567,14 +563,6 @@
 			path = Linking;
 			sourceTree = "<group>";
 		};
-		1F8076682A331DF400012724 /* TranslationView */ = {
-			isa = PBXGroup;
-			children = (
-				1F80766A2A331DF400012724 /* SingleTranslationView.swift */,
-			);
-			path = TranslationView;
-			sourceTree = "<group>";
-		};
 		1F80766B2A331DF400012724 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -584,10 +572,8 @@
 				1F80766D2A331DF400012724 /* HFController+Mocha.h */,
 				1F8076722A331DF400012724 /* HFController+Mocha.m */,
 				1F80766E2A331DF400012724 /* Log.swift */,
-				1F80766F2A331DF400012724 /* ProgressTracker.swift */,
 				1F8076702A331DF400012724 /* Demangle.swift */,
 				1F8076712A331DF400012724 /* Extensions.swift */,
-				1F8076742A331DF400012724 /* ComponentCache.swift */,
 				1F8076752A331DF400012724 /* InterpreterUtils.swift */,
 				1F8076762A331DF400012724 /* TickTock.swift */,
 				1F8076EE2A36BDAF00012724 /* Errors.swift */,
@@ -876,7 +862,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1F80767D2A331E7900012724 /* SingleTranslationView.swift in Sources */,
 				1F8076812A331E9900012724 /* Macho.swift in Sources */,
 				1F80768A2A331EA000012724 /* LCMinOSVersion.swift in Sources */,
 				1F8076832A331EA000012724 /* LCUUID.swift in Sources */,
@@ -894,7 +879,6 @@
 				1F8076A82A331EC500012724 /* StringContainer.swift in Sources */,
 				1F8074A02A33165900012724 /* KnownFileType.swift in Sources */,
 				1F8076852A331EA000012724 /* LCLinkedITData.swift in Sources */,
-				1F8076B42A331F2100012724 /* ProgressTracker.swift in Sources */,
 				1F8076B72A33362900012724 /* MachoSection.swift in Sources */,
 				1F8076A92A331EC700012724 /* SectionHeader.swift in Sources */,
 				1F8076AC2A331EEE00012724 /* UnixArchive.swift in Sources */,
@@ -926,9 +910,9 @@
 				1F8076AF2A331F1F00012724 /* TickTock.swift in Sources */,
 				1F8076992A331EB100012724 /* FunctionStartsComponent.swift in Sources */,
 				1F8076902A331EA000012724 /* LCEncryptionInfo.swift in Sources */,
+				1F80775E2A386DE100012724 /* TranslationView.swift in Sources */,
 				1F8076A32A331EC200012724 /* IndirectSymbolTableEntry.swift in Sources */,
 				1F80769D2A331EB100012724 /* UnknownSection.swift in Sources */,
-				1F8076B02A331F1F00012724 /* ComponentCache.swift in Sources */,
 				1F8076822A331EA000012724 /* LCSegment.swift in Sources */,
 				1F80769A2A331EB100012724 /* TextConstSection.swift in Sources */,
 				1F80769C2A331EB100012724 /* CapStoneHelper.m in Sources */,

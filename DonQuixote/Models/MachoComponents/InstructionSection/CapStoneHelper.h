@@ -21,17 +21,21 @@ typedef NS_ENUM(NSUInteger, CapStoneArchType) {
 
 @property (nonatomic, strong) NSString *mnemonic;
 @property (nonatomic, strong) NSString *operand;
-@property (nonatomic, assign) uint64_t startAddr;
+@property (nonatomic, assign) uint64_t startAddrVirtual;
+@property (nonatomic, assign) uint64_t startAddrInMacho;
 @property (nonatomic, assign) uint16_t size;
 
 @end
 
 @interface CapStoneInstructionBank : NSObject
 
+@property (nonatomic, assign) uint64_t codeStartAddr;
+@property (nonatomic, assign) uint64_t instructionSectionOffsetInMacho;
 @property (nonatomic, strong) NSError * _Nullable error;
 
 - (NSInteger)numberOfInstructions;
 - (CapStoneInstruction *)instructionAtIndex:(NSInteger)index;
+- (NSInteger)searchIndexForInstructionWith:(uint64_t)targetDataIndex;
 
 @end
 

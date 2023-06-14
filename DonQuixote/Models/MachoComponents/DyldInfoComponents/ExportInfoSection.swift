@@ -151,7 +151,7 @@ class ExportInfoSection: MachoBaseElement {
         let root = ExportInfoSection.generateNode(from: data, for: nil, parentNode: nil)
         self.exportInfoNodes = ExportInfoSection.allNodes(from: root, in: data).sorted { $0.startOffsetInMacho < $1.startOffsetInMacho }
         for exportInfoNode in exportInfoNodes {
-            await self.save(translationGroup: exportInfoNode.translations)
+            await self.save(translations: exportInfoNode.translations)
         }
     }
     

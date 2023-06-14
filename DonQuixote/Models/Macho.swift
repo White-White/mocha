@@ -77,7 +77,7 @@ class MachoHeader: MachoBaseElement {
         translations.append(Translation(definition: "Size of all load commands", humanReadable: self.sizeOfAllLoadCommand.hex, translationType: .uint32))
         translations.append(Translation(definition: "Flags", humanReadable: MachoHeader.flagsDescriptionFrom(self.flags), translationType: .flags(4)))
         if let reserved = self.reserved { translations.append(Translation(definition: "Reverved", humanReadable: reserved.hex, translationType: .uint32)) }
-        await self.save(translationGroup: translations)
+        await self.save(translations: translations)
     }
     
     private static func flagsDescriptionFrom(_ flags: UInt32) -> String {

@@ -28,7 +28,7 @@ class RelocationTable: MachoBaseElement {
             for _ in 0..<relocationInfo.numberOfEntries {
                 let entryData = dataShifter.shift(.rawNumber(RelocationEntry.entrySize))
                 let entry = RelocationEntry(with: entryData, sectionName: relocationInfo.sectionName)
-                await self.save(translationGroup: entry.translations)
+                await self.save(translations: entry.translations)
             }
         }
     }

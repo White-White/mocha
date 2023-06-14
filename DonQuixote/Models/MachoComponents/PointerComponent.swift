@@ -39,7 +39,7 @@ class PointerComponent: MachoBaseElement {
                 partialResult.append(translation)
             }
         })
-        await save(translationGroup: translations)
+        await save(translations: translations)
     }
     
     

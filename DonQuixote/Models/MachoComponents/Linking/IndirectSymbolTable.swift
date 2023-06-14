@@ -27,7 +27,7 @@ class IndirectSymbolTable: MachoBaseElement {
             let entry = IndirectSymbolTableEntry(with: data, is64Bit: self.is64Bit, symbolTable: self.symbolTable)
             self.indirectSymbolTableEntries.append(entry)
             let translations = await entry.generateTranslations()
-            await self.save(translationGroup: translations)
+            await self.save(translations: translations)
         }
     }
     

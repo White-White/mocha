@@ -140,13 +140,18 @@ struct Translation: Equatable, Identifiable {
     
 }
 
-//class InstructionTranslation: BaseTranslation {
-//
-//    let capstoneInstruction: CapStoneInstruction
-//
-//    init(capstoneInstruction: CapStoneInstruction) {
-//        self.capstoneInstruction = capstoneInstruction
-//        super.init(bytesCount: UInt64(capstoneInstruction.size))
-//    }
-//
-//}
+struct TranslationGroup: Identifiable {
+    
+    let translations: [Translation]
+    
+    var dataRangeInMacho: Range<UInt64>? {
+        if let start = translations.first?.rangeInMacho?.startIndex,
+           let end = translations.last?.rangeInMacho?.endIndex {
+            return start..<end
+        }
+        return nil
+    }
+    
+    var id: UInt64 { dataRangeInMacho!.startIndex }
+    
+}

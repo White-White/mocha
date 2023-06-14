@@ -80,3 +80,33 @@ extension UInt64 {
     var isNotZero: Bool { self != .zero }
     func bitAnd(_ v: Self) -> Bool { self & v != 0}
 }
+
+extension Array {
+    
+    enum BinarySearchResult {
+        case searchLeft
+        case matched
+        case searchRight
+    }
+    
+    func binarySearch(matchCheck: (_ element: Element) -> BinarySearchResult) -> Element? {
+        return _binarySearch(lower: self.startIndex, upper: self.endIndex, matchCheck: matchCheck)
+    }
+    
+    private func _binarySearch(lower: Index, upper: Index, matchCheck: (_ element: Element) -> BinarySearchResult) -> Element? {
+        // false, search left
+        // true search right
+        guard lower <= upper else { return nil }
+        let mid = (lower + upper) / 2
+        let element = self[mid]
+        switch matchCheck(self[mid]) {
+        case .searchLeft:
+            return _binarySearch(lower: lower, upper: mid - 1, matchCheck: matchCheck)
+        case .searchRight:
+            return _binarySearch(lower: mid + 1, upper: upper, matchCheck: matchCheck)
+        case .matched:
+            return element
+        }
+    }
+    
+}

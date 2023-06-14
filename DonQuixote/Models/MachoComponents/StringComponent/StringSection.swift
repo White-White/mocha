@@ -31,7 +31,7 @@ class StringSection: MachoBaseElement {
             translation.rangeInMacho = UInt64(sectionDataStartIndex + rawString.offset)..<UInt64(sectionDataStartIndex + rawString.offset + rawString.dataSize)
             translations.append(translation)
         }
-        await self.save(translationGroup: translations)
+        await self.save(translations: translations)
     }
     
     override func updateRangeForTranslations() {

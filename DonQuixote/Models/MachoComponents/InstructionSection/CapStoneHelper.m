@@ -82,7 +82,9 @@
     
     instruction.size = [self getInstructionSizeForInstructionIndex:index];
     
-    instruction.startAddr = [self getInstructionStartAddressForInstructionIndex:index];
+    instruction.startAddrVirtual = [self getInstructionStartAddressForInstructionIndex:index];
+    
+    instruction.startAddrInMacho = instruction.startAddrVirtual - self.codeStartAddr + self.instructionSectionOffsetInMacho;
     
     return instruction;
 }
@@ -118,6 +120,25 @@
     const void *startPointer = bytes + sizeof(NSUInteger) * index;
     NSUInteger value = *((NSUInteger *)startPointer);
     return value;
+}
+
+- (NSInteger)searchIndexForInstructionWith:(uint64_t)targetDataIndex {
+    NSInteger low = 0;
+    NSInteger mid;
+    NSInteger high = self.numberOfInstructions - 1;
+    while (low <= high) {
+        mid = (low + high) / 2;
+        uint64_t startAddrVirtual = [self getInstructionStartAddressForInstructionIndex:mid];
+        uint64_t startAddrInMacho = startAddrVirtual - self.codeStartAddr + self.instructionSectionOffsetInMacho;
+        if (targetDataIndex < startAddrInMacho) {
+            high = mid - 1;
+        } else if (targetDataIndex >= (startAddrInMacho + (uint64_t)[self getInstructionSizeForInstructionIndex: mid])) {
+            low = mid + 1;
+        } else {
+            return mid;
+        }
+    }
+    return -1;
 }
 
 @end
@@ -194,7 +215,7 @@
         [instructionBank appendInstruction:insn codeStartAddr:codeAddress - insn->size];
         startOffset += insn->size;
         float newProgress = (float)startOffset / (float)initial_code_size;
-        if (newProgress - progress > 0.02) {
+        if (newProgress - progress > 0.01) {
             progressBlock(newProgress);
             progress = newProgress;
         }

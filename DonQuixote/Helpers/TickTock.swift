@@ -21,8 +21,8 @@ class TickTock {
         let timeGap = nextTs - ts; ts = nextTs
         guard enabled else { return }
         guard timeGap > threshHold else { return }
-        print("\n \(name)'s time usage:")
-        print("--- \(timeGap) ms. ---")
+        print("\n\(name)'s time usage:")
+        print("--- \(timeGap) ms.")
     }
  
     func disable() -> TickTock {

@@ -66,7 +66,7 @@ class DataInCodeSection: MachoBaseElement {
             let data = self.data.subSequence(from: index * modelSize, count: modelSize)
             let entry = DataInCodeEntry(with: data)
             self.dataInCodeEntries.append(entry)
-            await self.save(translationGroup: entry.translations)
+            await self.save(translations: entry.translations)
         }
     }
     

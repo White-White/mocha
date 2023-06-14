@@ -14,7 +14,7 @@ class OperationCodeSection<Code: OperationCodeMetadataProtocol>: MachoBaseElemen
     override func loadTranslations() async {
         self.operationCodes = OperationCodeSection.operationCodes(from: self.data)
         for operationCode in operationCodes {
-            await self.save(translationGroup: operationCode.translations)
+            await self.save(translations: operationCode.translations)
         }
     }
     

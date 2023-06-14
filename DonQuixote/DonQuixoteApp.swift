@@ -41,7 +41,7 @@ struct DonQuixoteApp: App {
             case .error(let error):
                 ErrorView(error: error)
             case .success(let macho):
-                MachoView(macho: macho, hexFiendViewController: HexFiendViewController(data: macho.machoData))
+                MachoView(machoViewState: MachoViewState(macho))
             }
         }
         

@@ -60,13 +60,12 @@ class SymbolTable: MachoBaseElement {
     override func loadTranslations() async {
         for entry in self.symbolTableEntries {
             let translations = await entry.generateTranslations()
-            await self.save(translationGroup: translations)
+            await self.save(translations: translations)
         }
     }
     
-    
-    func findSymbol(byVirtualAddress virtualAddress: UInt64) async -> [SymbolTableEntry]? {
-        await self.waitUntilInitDone()
+    func findSymbol(byVirtualAddress virtualAddress: UInt64, callerTag: String) async -> [SymbolTableEntry]? {
+        await self.asyncInitProtector.suspendUntilInited()
         var symbolTableEntrys: [SymbolTableEntry] = []
         if let symbolTableEntryIndexs = symbolTableEntryMap[virtualAddress] {
             symbolTableEntrys = symbolTableEntryIndexs.map { self.symbolTableEntries[$0] }
@@ -74,8 +73,8 @@ class SymbolTable: MachoBaseElement {
         return symbolTableEntrys
     }
     
-    func findSymbol(atIndex index: Int) async -> SymbolTableEntry {
-        await self.waitUntilInitDone()
+    func findSymbol(atIndex index: Int, callerTag: String) async -> SymbolTableEntry {
+        await self.asyncInitProtector.suspendUntilInited()
         guard index < self.symbolTableEntries.count else { fatalError() }
         return self.symbolTableEntries[index]
     }

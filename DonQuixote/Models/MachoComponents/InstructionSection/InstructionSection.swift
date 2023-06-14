@@ -11,6 +11,17 @@ import SwiftUI
 // ARMv8 (AArch64) Instruction Encoding
 // http://kitoslab-eng.blogspot.com/2012/10/armv8-aarch64-instruction-encoding.html
 
+extension CapStoneInstructionBank {
+    
+    func translation(at index: Int) -> Translation {
+        let capInstruction = self.instruction(at: index)
+        var translation = Translation(definition: nil, humanReadable: capInstruction.mnemonic + capInstruction.operand, translationType: .code(Int(capInstruction.size)))
+        translation.rangeInMacho = capInstruction.startAddrInMacho..<(capInstruction.startAddrInMacho + UInt64(capInstruction.size))
+        return translation
+    }
+    
+}
+
 class InstructionSection: MachoBaseElement {
 
     let capStoneArchType: CapStoneArchType
@@ -40,12 +51,17 @@ class InstructionSection: MachoBaseElement {
     
     override func loadTranslations() async {
         let instructionBank = CapStoneHelper.instructions(from: self.data, arch: self.capStoneArchType, codeStartAddress: virtualAddress) { progress in
-                //TODO 有必要吗？
-//            self.initProgress.updateProgressForInitialize(with: progress)
+            Task { @MainActor in
+                self.translationStore.update(loadingProgress: progress)
+            }
         }
         if let _ = instructionBank.error {
             //TODO: handle error
         }
+        
+        instructionBank.codeStartAddr = self.virtualAddress
+        instructionBank.instructionSectionOffsetInMacho = UInt64(self.offsetInMacho)
+        
         self.instructionBank = instructionBank
     }
     
@@ -72,5 +88,12 @@ class InstructionSection: MachoBaseElement {
 //        instructionTranslation.dataRangeInMacho = startOffsetInMacho..<startOffsetInMacho+UInt64(instruction.size)
 //        return instructionTranslation
 //    }
+    
+    override func searchForTranslation(with targetDataIndex: UInt64) async -> MachoBaseElement.TranslationSearchResult {
+        await self.translationStore.suspendUntilLoaded(callerTag: "Translation search")
+        let searchedIndex = self.instructionBank.searchIndexForInstruction(with: targetDataIndex)
+        guard searchedIndex >= 0 else { return TranslationSearchResult(translationGroup: nil, translation: nil) }
+        return TranslationSearchResult(translationGroup: nil, translation: self.instructionBank.translation(at: searchedIndex))
+    }
     
 }

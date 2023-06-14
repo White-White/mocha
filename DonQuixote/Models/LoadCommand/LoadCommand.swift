@@ -196,7 +196,7 @@ class LoadCommand: MachoBaseElement {
     override func loadTranslations() async {
         let typeTranslation = Translation(definition: "Load Command Type", humanReadable: type.name, translationType: .numberEnum32Bit)
         let sizeTranslation = Translation(definition: "Load Command Size", humanReadable: data.count.hex, translationType: .uint32)
-        await self.save(translationGroup: [typeTranslation, sizeTranslation] + self.commandTranslations)
+        await self.save(translations: [typeTranslation, sizeTranslation] + self.commandTranslations)
     }
     
     var commandTranslations: [Translation] { [] }

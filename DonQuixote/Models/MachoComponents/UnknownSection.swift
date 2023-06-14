@@ -10,7 +10,7 @@ import Foundation
 class UnknownSection: MachoBaseElement {
     
     override func loadTranslations() async {
-        await self.save(translationGroup: [Translation(definition: "Unknow",
+        await self.save(translations: [Translation(definition: "Unknow",
                                                               humanReadable: "Mocha doesn's know how to parse this section yet.",
                                                               translationType: .rawData(0))])
     }
