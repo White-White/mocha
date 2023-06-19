@@ -152,7 +152,7 @@ class MachoBaseElement: @unchecked Sendable, Equatable, Identifiable {
         let translation: Translation?
     }
     
-    func searchForTranslation(with targetDataIndex: UInt64) async -> TranslationSearchResult {
+    func searchForTranslation(with targetDataIndex: UInt64) async -> TranslationSearchResult? {
         
         await self.translationStore.suspendUntilLoaded(callerTag: "Translation search")
         

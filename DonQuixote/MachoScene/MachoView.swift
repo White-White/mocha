@@ -12,7 +12,6 @@ class MachoViewState: ObservableObject {
     
     @Published var selectedMachoElement: MachoBaseElement
     @Published var selectedTranslation: Translation?
-    @Published var updateElementListViewScrolling = false
     
     let macho: Macho
     let machoFileName: String
@@ -25,54 +24,74 @@ class MachoViewState: ObservableObject {
         self.allMachoBaseElements = macho.allElements
         self.selectedMachoElement = macho.machoHeader
         self.hexFiendViewController = HexFiendViewController(data: macho.machoData)
+        self.selectFirstTranslationWhenPossible()
     }
     
-    func updateSelectedMachoElement(with machoElement: MachoBaseElement, autoScroll: Bool) {
-        self.selectedMachoElement = machoElement
-        self.updateElementListViewScrolling = autoScroll
+    func onClick(machoBaseElement: MachoBaseElement) {
+        self.selectedMachoElement = machoBaseElement
+        self.selectFirstTranslationWhenPossible()
     }
     
-    func updateSelectedTranslationGroup(with translationGroup: TranslationGroup) {
-        self.hexFiendViewController.updateColorDataRange(with: translationGroup.dataRangeInMacho)
+    func selectFirstTranslationWhenPossible() {
+        Task {
+            await self.selectedMachoElement.translationStore.suspendUntilLoaded(callerTag: "Auto select")
+            if let firstGroup = self.selectedMachoElement.translationStore.translationGroups.first {
+                Task { @MainActor in
+                    self.updateHexViewColoredDataRange(with: firstGroup.dataRangeInMacho)
+                    self.updateHexViewSelectedDataRange(with: firstGroup.translations.first?.rangeInMacho)
+                    self.selectedTranslation = firstGroup.translations.first
+                }
+            }
+        }
     }
     
-    func updateSelectedTranslation(with translation: Translation) {
+    func onClick(translation: Translation, in group: TranslationGroup?) {
+        self.updateHexViewColoredDataRange(with: group?.dataRangeInMacho)
+        self.updateHexViewSelectedDataRange(with: translation.rangeInMacho)
         self.selectedTranslation = translation
-        self.hexFiendViewController.updateSelectedDataRange(with: translation.rangeInMacho, autoScroll: true)
     }
     
-    private var isSearching: Bool = false
-    func beginSearch(for targetDataIndex: UInt64) async {
+    private var isSearchingForTranslation: Bool = false
+    func onClickHexView(at dataIndexInMacho: UInt64) async {
         
-        if isSearching { return }
-        isSearching = true
+        if isSearchingForTranslation { return }
+        isSearchingForTranslation = true
         
         let inBaseElement = self.allMachoBaseElements.binarySearch { element in
-            if element.data.startIndex > targetDataIndex {
+            if element.data.startIndex > dataIndexInMacho {
                 return .searchLeft
-            } else if element.data.endIndex <= targetDataIndex {
+            } else if element.data.endIndex <= dataIndexInMacho {
                 return .searchRight
             } else {
                 return .matched
             }
         }
         
-        let searchResult = await inBaseElement?.searchForTranslation(with: targetDataIndex)
+        let searchResult = await inBaseElement?.searchForTranslation(with: dataIndexInMacho)
         
         Task { @MainActor in
             if let inBaseElement {
-                self.updateSelectedMachoElement(with: inBaseElement, autoScroll: true)
+                self.selectedMachoElement = inBaseElement
             }
-            if let findedGroup = searchResult?.translationGroup {
-                self.updateSelectedTranslationGroup(with: findedGroup)
-            }
+            
+            self.updateHexViewColoredDataRange(with: searchResult?.translationGroup?.dataRangeInMacho)
+            
             if let findedTranslation = searchResult?.translation {
-                self.updateSelectedTranslation(with: findedTranslation)
+                self.updateHexViewSelectedDataRange(with: findedTranslation.rangeInMacho)
+                self.selectedTranslation = findedTranslation
             }
         }
         
-        isSearching = false
+        isSearchingForTranslation = false
         
+    }
+    
+    private func updateHexViewSelectedDataRange(with range: Range<UInt64>?) {
+        self.hexFiendViewController.updateSelectedDataRange(with: range, autoScroll: true)
+    }
+    
+    private func updateHexViewColoredDataRange(with range: Range<UInt64>?) {
+        self.hexFiendViewController.updateColorDataRange(with: range)
     }
     
 }
@@ -92,21 +111,18 @@ struct MachoView: View {
                         ForEach(machoViewState.allMachoBaseElements) { machoElement in
                             ComponentListCell(machoElement: machoElement, isSelected: machoElement == machoViewState.selectedMachoElement)
                                 .onTapGesture {
-                                    machoViewState.updateSelectedMachoElement(with: machoElement, autoScroll: false)
+                                    self.machoViewState.onClick(machoBaseElement: machoElement)
                                 }
                         }
                     }
                 }
                 .border(.separator, width: 1)
                 .frame(width: ComponentListCell.widthNeeded(for: machoViewState.allMachoBaseElements))
-//                .onChange(of: machoViewState.selectedMachoElement) { newValue in
-//                    if let newValue,  {
-//                        self.scrollControl.autoScrollBaseElementListView = false
-//                        withAnimation {
-//                            scrollViewProxy.scrollTo(newValue.id)
-//                        }
-//                    }
-//                }
+                .onChange(of: machoViewState.selectedMachoElement) { newValue in
+                    withAnimation {
+                        scrollViewProxy.scrollTo(newValue.id)
+                    }
+                }
             }
             
             TranslationView(machoViewState: self.machoViewState)
@@ -122,7 +138,7 @@ struct MachoView: View {
         .onReceive(NotificationCenter.default.publisher(for: HexFiendViewController.MouseDownNoti, object: machoViewState.hexFiendViewController)) { output in
             if let charIndex = output.userInfo?[HexFiendViewController.MouseDownNotiCharIndexKey] as? UInt64 {
                 Task {
-                    await machoViewState.beginSearch(for: charIndex)
+                    await machoViewState.onClickHexView(at: charIndex)
                 }
             }
         }

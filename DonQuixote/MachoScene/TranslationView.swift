@@ -20,7 +20,14 @@ struct TranslationView: View {
     
     @MainActor
     var body: some View {
-        VStack {
+        VStack(spacing: 4) {
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(self.machoViewState.selectedMachoElement.title + " " + (self.machoViewState.selectedMachoElement.subTitle ?? ""))
+                    .bold()
+                Divider()
+            }
+            
             if translationStore.loaded {
                 ScrollViewReader { scrollViewProxy in
                     ScrollView {
@@ -31,6 +38,14 @@ struct TranslationView: View {
                         }
                     }
                     .onChange(of: machoViewState.selectedTranslation) { newValue in
+                        var shouldScroll = true
+                        if let instructionSection = machoViewState.selectedMachoElement as? InstructionSection {
+                            // when there are too many translations, it takes forever to scroll
+                            if instructionSection.instructionBank.numberOfInstructions() > 1024 * 32 {
+                                shouldScroll = false
+                            }
+                        }
+                        guard shouldScroll else { return }
                         DispatchQueue.main.async {
                             withAnimation {
                                 if let newValue {
@@ -50,6 +65,7 @@ struct TranslationView: View {
                     }
                 }
             }
+            
         }
         .id(machoViewState.selectedMachoElement.id)
         .frame(width: 600)
@@ -62,8 +78,7 @@ struct TranslationView: View {
                 ForEach(translationGroup.translations) { translation in
                     self.singleTranslationView(for: translation)
                         .onTapGesture {
-                            self.machoViewState.updateSelectedTranslationGroup(with: translationGroup)
-                            self.machoViewState.updateSelectedTranslation(with: translation)
+                            self.machoViewState.onClick(translation: translation, in: translationGroup)
                         }
                 }
             }
@@ -114,8 +129,6 @@ struct TranslationView: View {
     
 }
 
-var count: Int = 0
-
 extension TranslationView {
     
     func instructionStackView(with bank: CapStoneInstructionBank) -> some View {
@@ -128,11 +141,9 @@ extension TranslationView {
     
     
     func singleInstructionTranslationView(for index: Int, inBank bank: CapStoneInstructionBank) -> some View {
-        count += 1
-        print(count)
         let translation = bank.translation(at: index)
         return self.singleTranslationView(for: translation).onTapGesture {
-            self.machoViewState.updateSelectedTranslation(with: translation)
+            self.machoViewState.onClick(translation: translation, in: nil)
         }.id(translation.id)
     }
 
