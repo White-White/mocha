@@ -25,8 +25,9 @@ enum KnownFileType: String {
             self = .dylib
         case .unixExecutable:
             self = .unixExecutable
-        case UTType(filenameExtension: "ipa"):
-            self = .ipa
+            // TODO: support ipa
+//        case UTType(filenameExtension: "ipa"):
+//            self = .ipa
         default:
             return nil
         }

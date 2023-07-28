@@ -52,4 +52,16 @@ struct Document {
         }
     }
     
+    static func openIPA(fileURL: URL?) -> DocumentOpenResult<IPA> {
+        do {
+            guard let fileURL else {
+                throw DonError.invalidFileURL
+            }
+            let ipa = try IPA(fileURL: fileURL)
+            return .success(ipa)
+        } catch let error {
+            return .error(error)
+        }
+    }
+    
 }

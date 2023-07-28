@@ -33,7 +33,12 @@ struct DonQuixoteApp: App {
         }
         
         WindowGroup(id: KnownFileType.ipa.rawValue, for: URL.self) { $url in
-            fatalError()
+            switch Document.openIPA(fileURL: url) {
+            case .error(let error):
+                ErrorView(error: error)
+            case .success(let ipa):
+                IPAView(ipa: ipa)
+            }
         }
         
         WindowGroup(id: KnownFileType.unixExecutable.rawValue, for: URL.self) { $url in

@@ -9,4 +9,7 @@ import Foundation
 
 enum DonError: Error {
     case invalidFileURL
+    case invalidIPABundle
+    case invalidIPAPlist
+    case unknownApplePlatform
 }
