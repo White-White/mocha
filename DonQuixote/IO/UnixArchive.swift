@@ -21,20 +21,20 @@ struct UnixArchiveFileHeader {
     let extFileIDLengthInt: Int // non-zero when fileID is prefixed with #1/
     let contentSize: Int // size of the content file
     
-    init(with dataShifter: inout DataShifter) {
-        let fileIDData = dataShifter.shift(.rawNumber(16))
+    init(with fileHandle: DonFileHandle) throws {
+        let fileIDData = (try fileHandle.assertRead(count: 16))
         guard let fileID = fileIDData.utf8String else { fatalError() /* Very unlikely */}
         
-        self.modificationTS = dataShifter.shift(.rawNumber(12)).utf8String
-        self.ownerID = dataShifter.shift(.rawNumber(6)).utf8String
-        self.groupID = dataShifter.shift(.rawNumber(6)).utf8String
-        self.fileMode = dataShifter.shift(.quadWords).utf8String
-        guard let contentSizeString = dataShifter.shift(.rawNumber(10)).utf8String else { fatalError() /* Very unlikely */ }
+        self.modificationTS = (try fileHandle.assertRead(count: 12)).utf8String
+        self.ownerID = (try fileHandle.assertRead(count: 6)).utf8String
+        self.groupID = (try fileHandle.assertRead(count: 6)).utf8String
+        self.fileMode = (try fileHandle.assertRead(count: 8)).utf8String
+        guard let contentSizeString = (try fileHandle.assertRead(count: 10)).utf8String else { fatalError() /* Very unlikely */ }
         guard let contentSize = Int(contentSizeString.spaceRemoved) else { fatalError() /* Very unlikely */ }
         self.contentSize = contentSize
         
         // unix archive header always ends with 0x60 0x0A
-        guard dataShifter.shift(.word).utf8String == "`\n" else { fatalError() /* Very unlikely */ }
+        guard (try fileHandle.assertRead(count: 2)).utf8String == "`\n" else { fatalError() /* Very unlikely */ }
         
         // BSD ar stores filenames right-padded with ASCII spaces.
         // This causes issues with spaces inside filenames.
@@ -44,7 +44,7 @@ struct UnixArchiveFileHeader {
             guard let extFileIDLength = fileIDData.subSequence(from: 3, count: 13).utf8String else { fatalError() /* Very unlikely */ }
             guard let extFileIDLengthInt = Int(extFileIDLength.spaceRemoved) else { fatalError() /* Very unlikely */ }
             // fetch more data from the ar file dataShifter
-            guard let extendedFileID = dataShifter.shift(.rawNumber(extFileIDLengthInt)).utf8String else { fatalError() /* Very unlikely */ }
+            guard let extendedFileID = try fileHandle.assertRead(count: extFileIDLengthInt).utf8String else { fatalError() /* Very unlikely */ }
             self.fileID = extendedFileID.spaceRemoved
             self.extFileIDLengthInt = extFileIDLengthInt
         } else {
@@ -54,39 +54,40 @@ struct UnixArchiveFileHeader {
     }
 }
 
-struct UnixArchive {
+struct UnixArchive: Document {
     
-//    struct UnixArchiveError: Error { }
-//    
-//    static let magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
-//    
-//    let machoMetaDatas: [MachoMetaData]
-//    
-//    init(with fileData: Data) throws {
-//        
-//        // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
-//        // "!<arch>\n"
-//        guard fileData.starts(with: UnixArchive.magic) else { throw UnixArchiveError() }
-//        
-//        var machoMetaDatas: [MachoMetaData] = []
-//        var dataShifter = DataShifter(fileData); dataShifter.skip(.quadWords) // throw away magic
-//        while dataShifter.shiftable {
-//            let fileHeader = UnixArchiveFileHeader(with: &dataShifter)
-//            
-//            // ref: http://mirror.informatimago.com/next/developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/8rt_file_format/chapter_10_section_33.html
-//            // The first member in a static archive library is always the symbol table describing the contents of the rest of the member files.
-//            // This member is always called either __.SYMDEF or __.SYMDEF SORTED.
-//            // So we are dropping the first element
-//            if fileHeader.fileID.hasPrefix("__.SYMDEF") {
-//                dataShifter.skip(.rawNumber(fileHeader.contentSize - fileHeader.extFileIDLengthInt))
-//                continue
-//            }
-//            
-//            let machoDataSize = fileHeader.contentSize - fileHeader.extFileIDLengthInt
-//            let machoData = dataShifter.shift(.rawNumber(machoDataSize))
-//            machoMetaDatas.append(try MachoMetaData(fileName: fileHeader.fileID, machoData: Data(machoData)))
-//        }
-//        self.machoMetaDatas = machoMetaDatas
-//    }
+    static let magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
+    
+    let fileLocation: FileLocation
+    let machoFileLocations: [FileLocation]
+    
+    init(with fileLocation: FileLocation) throws {
+        self.fileLocation = fileLocation
+        
+        let fileHandle = try fileLocation.createHandle()
+        defer { try? fileHandle.close() }
+        
+        // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
+        // "!<arch>\n"
+        let magic = try fileHandle.assertRead(count: UnixArchive.magic.count)
+        guard magic == Data(UnixArchive.magic) else { fatalError() }
+        
+        var machoFileLocations: [FileLocation] = []
+        while try fileHandle.hasAvailableData() {
+            let fileHeader = try UnixArchiveFileHeader(with: fileHandle)
+            let fileSize = fileHeader.contentSize - fileHeader.extFileIDLengthInt
+            if fileHeader.fileID.hasPrefix("__.SYMDEF") {
+                // ref: http://mirror.informatimago.com/next/developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/8rt_file_format/chapter_10_section_33.html
+                // The first member in a static archive library is always the symbol table describing the contents of the rest of the member files.
+                // This member is always called either __.SYMDEF or __.SYMDEF SORTED.
+                // So we are dropping the first element
+            } else {
+                let machoFileLocation = FileLocation(fileLocation.url, fileName: fileHeader.fileID, offset: try fileHandle.offset(), size: fileSize)
+                machoFileLocations.append(machoFileLocation)
+            }
+            try fileHandle.skip(fileSize)
+        }
+        self.machoFileLocations = machoFileLocations
+    }
     
 }

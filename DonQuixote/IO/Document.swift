@@ -6,62 +6,80 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 
-enum DocumentOpenResult<T> {
-    case success(T)
-    case error(Error)
+protocol Document {
+    init(with fileLocation: FileLocation) throws
 }
 
-struct Document {
+enum FileType: String {
     
-    let fileName: String
-    let fileSize: Int
-    let fileData: Data
+    case ar
+    case fat
+    case dylib
+    case unixExecutable
+    case framework
+    case ipa
+    case app
     
-    init(fileURL: URL) throws {
-        let fileData = try Data(contentsOf: fileURL)
-        self.fileName = fileURL.lastPathComponent
-        self.fileSize = fileData.count
-        self.fileData = fileData
+    static func canOpen(_ url: URL) -> Bool {
+        return self.fileType(from: FileLocation(url)) != nil
     }
     
-    func openAsMacho() throws -> Macho {
-        let is64Bit: Bool
-        let magic = Data(self.fileData[0..<4]).UInt32
-        if magic == 0xfeedfacf /* #define MH_MAGIC_64 0xfeedfacf */ {
-            is64Bit = true
-        } else if magic == 0xfeedface /* #define MH_MAGIC 0xfeedface */  {
-            is64Bit = false
-        } else {
-            fatalError() /* what the hell is going on */
-        }
-        let machoHeader = MachoHeader(from: fileData, is64Bit: is64Bit)
-        let macho = Macho(with: fileData, machoFileName: self.fileName, machoHeader: machoHeader)
-        return macho
-    }
-    
-    static func openMacho(fileURL: URL?) -> DocumentOpenResult<Macho> {
-        do {
-            guard let fileURL else {
-                throw DonError.invalidFileURL
+    static func fileType(from fileLocation: FileLocation) -> FileType? {
+        
+        if fileLocation.offset == .zero {
+            if let resourceValues = try? fileLocation.url.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .contentTypeKey]) {
+                if let isDirectory = resourceValues.isDirectory,
+                    isDirectory {
+                    return nil
+                }
+                if let isRegularFile = resourceValues.isRegularFile,
+                    !isRegularFile {
+                    return nil
+                }
+                if let contentType = resourceValues.contentType {
+                    switch contentType {
+                    case UTType(filenameExtension: "a"):
+                        return .ar
+                    case UTType(filenameExtension: "dylib"):
+                        return .dylib
+                    case .unixExecutable:
+                        return .unixExecutable
+                    default:
+                        break
+                    }
+                }
             }
-            let macho = try Document(fileURL: fileURL).openAsMacho()
-            return .success(macho)
-        } catch let error {
-            return .error(error)
         }
-    }
-    
-    static func openIPA(fileURL: URL?) -> DocumentOpenResult<IPA> {
-        do {
-            guard let fileURL else {
-                throw DonError.invalidFileURL
+        
+        let knownMagics: [FileType: [UInt8]] = [
+            .fat: FatBinary.magic,
+            .ar: UnixArchive.magic
+        ]
+        
+        let matchedType: FileType? = knownMagics.reduce(nil) { matchedType, pair in
+            if let matchedType {
+                return matchedType
+            } else {
+                if let handle = try? fileLocation.createHandle() {
+                    defer { try? handle.close() }
+                    if let matchData = try? handle.assertRead(count: pair.1.count) {
+                        if matchData == Data(pair.1) {
+                            return pair.0
+                        } else {
+                            return nil
+                        }
+                    } else {
+                        return nil
+                    }
+                } else {
+                    return nil
+                }
             }
-            let ipa = try IPA(fileURL: fileURL)
-            return .success(ipa)
-        } catch let error {
-            return .error(error)
         }
+        
+        return matchedType
     }
     
 }

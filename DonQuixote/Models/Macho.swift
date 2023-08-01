@@ -112,13 +112,8 @@ class MachoHeader: MachoBaseElement {
     }
 }
 
-class Macho: Equatable {
+struct Macho: Document {
     
-    static func == (lhs: Macho, rhs: Macho) -> Bool {
-        lhs === rhs
-    }
-    
-    let id = UUID()
     let machoData: Data
     var fileSize: Int { machoData.count }
     
@@ -128,8 +123,24 @@ class Macho: Equatable {
     
     let allElements: [MachoBaseElement]
     
+    init(with fileLocation: FileLocation) throws {
+        let machoData: Data = try fileLocation.fetchAllData()
+        let machoFileName: String = fileLocation.fileName
+        self.init(with: machoData, machoFileName: machoFileName)
+    }
     
-    init(with machoData: Data, machoFileName: String, machoHeader: MachoHeader) {
+    init(with machoData: Data, machoFileName: String) {
+        let is64Bit: Bool
+        let magic = Data(machoData[0..<4]).UInt32
+        if magic == 0xfeedfacf /* #define MH_MAGIC_64 0xfeedfacf */ {
+            is64Bit = true
+        } else if magic == 0xfeedface /* #define MH_MAGIC 0xfeedface */  {
+            is64Bit = false
+        } else {
+            fatalError() /* what the hell is going on */
+        }
+        let machoHeader = MachoHeader(from: machoData, is64Bit: is64Bit)
+        
         self.machoData = machoData
         self.machoFileName = machoFileName
         self.machoHeader = machoHeader

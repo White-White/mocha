@@ -98,8 +98,12 @@ class MachoViewState: ObservableObject {
 
 // generall we shouldn't init States in init method.
 // ref: https://swiftcraft.io/blog/how-to-initialize-state-inside-the-views-init-
-
-struct MachoView: View {
+@MainActor
+struct MachoView: DocumentView {
+    
+    init(_ macho: Macho) {
+        self.machoViewState = MachoViewState(macho)
+    }
     
     @ObservedObject var machoViewState: MachoViewState
     
@@ -142,7 +146,6 @@ struct MachoView: View {
                 }
             }
         }
-        .navigationTitle(machoViewState.machoFileName)
     }
     
 }

@@ -8,8 +8,18 @@
 import Foundation
 
 enum DonError: Error {
-    case invalidFileURL
+    
+    case invalidFileLocation
+    
     case invalidIPABundle
     case invalidIPAPlist
     case unknownApplePlatform
+    case unknownFile
+    
+    case failToCreateFileHandle
+    case failToReadFileHandle
+    
+    case failToReadInputStream
+    
+    case invalidFatBinary
 }

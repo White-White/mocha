@@ -8,9 +8,13 @@
 import Foundation
 import SwiftUI
 
-struct IPAView: View {
+struct IPAView: DocumentView {
     
     let ipa: IPA
+    
+    init(_ ipa: IPA) {
+        self.ipa = ipa
+    }
     
     var body: some View {
         Button("Start Faking") {

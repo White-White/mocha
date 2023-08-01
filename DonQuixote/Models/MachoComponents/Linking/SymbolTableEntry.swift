@@ -232,8 +232,7 @@ struct SymbolTableEntry {
                 self.symbolName = "Not found"
             }
         default:
-//            guard let foundName = macho.stringTable?.findString(atDataOffset: Int(self.indexInStringTable)) else { fatalError() }
-            self.symbolName =  ""
+            self.symbolName = await self.stringTable?.findString(atDataOffset: Int(self.indexInStringTable)) ?? "Not Found"
         }
     }
     
