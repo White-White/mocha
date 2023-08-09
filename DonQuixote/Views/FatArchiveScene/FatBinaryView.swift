@@ -5,34 +5,7 @@
 //  Created by white on 2023/8/1.
 //
 
-import Foundation
 import SwiftUI
-
-struct FatArchView: View {
-    
-    let fatArch: FatArch
-    let action: () -> Void
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("arch: \(fatArch.cpu.name)")
-                Text("arch (sub): \(fatArch.cpuSub.name)")
-                Text("offset: \(fatArch.objectFileOffset)")
-                Text("size: \(fatArch.objectFileSize) bytes")
-                Spacer()
-                    .frame(height: 0)
-                    .frame(maxWidth: .infinity)
-            }
-            Button("Open", action: self.action)
-        }
-        .padding(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-        .border(.separator, width: 1)
-        .background(.white)
-        .frame(minWidth: 600)
-    }
-    
-}
 
 struct FatBinaryView: DocumentView {
     
@@ -44,20 +17,33 @@ struct FatBinaryView: DocumentView {
     }
     
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(fatBinary.fatArchs, id: \.objectFileOffset) { fatArch in
-                    FatArchView(fatArch: fatArch) {
-                        let embeddedFileLocation = FileLocation(fatBinary.fileLocation.url,
-                                                                fileName: "\(fatBinary.fileLocation.url.lastPathComponent) (\(fatArch.cpu.name))",
-                                                                offset: UInt64(fatArch.objectFileOffset),
-                                                                size: Int(fatArch.objectFileSize))
-                        openWindow(id: FileType.fileType(from: embeddedFileLocation)!.rawValue, value: embeddedFileLocation)
+        NavigationStack() {
+            VStack(alignment: .leading) {
+                DocumentInfoView(location: fatBinary.location, fileType: .fat)
+                List(fatBinary.fatArchs, id: \.objectFileOffset) { fatArch in
+                    NavigationLink(fatArch.cpu.name, value: self.fileLocation(for: fatArch))
+                }
+                .listStyle(.plain)
+                .navigationDestination(for: FileLocation.self) { location in
+                    switch location.fileType {
+                    case .ar:
+                        UnixArchiveView(try! UnixArchive(with: location))
+                    default:
+                        fatalError()
                     }
                 }
-                Spacer()
             }
         }
+        .toolbar { Spacer() }
     }
+    
+    func fileLocation(for fatArch: FatArch) -> FileLocation {
+        let location = try! fatBinary.location.subLocation(fileName: "\(fatBinary.location.fileName) (\(fatArch.cpu.name))",
+                                                          fileOffset: UInt64(fatArch.objectFileOffset),
+                                                          fileSize: Int(fatArch.objectFileSize))
+        return location
+    }
+    
+    
     
 }

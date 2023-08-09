@@ -10,14 +10,14 @@ import SwiftUI
 
 struct UnixArchiveHeaderView: View {
     
-    let machoFileLocation: FileLocation
+    let machoLocation: FileLocation
     let action: () -> Void
     
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("file name: \(machoFileLocation.fileName)")
-                Text("file size: \(machoFileLocation.size) bytes")
+                Text("file name: \(machoLocation.fileName)")
+                Text("file size: \(machoLocation.fileSize) bytes")
                 Spacer()
                     .frame(height: 0)
                     .frame(maxWidth: .infinity)
@@ -38,14 +38,9 @@ struct UnixArchiveView: DocumentView {
     let unixArchive: UnixArchive
     
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(unixArchive.machoFileLocations, id: \.fileName) { machoFileLocation in
-                    UnixArchiveHeaderView(machoFileLocation: machoFileLocation) {
-                        openWindow(id: FileType.unixExecutable.rawValue, value: machoFileLocation)
-                    }
-                }
-                Spacer()
+        List(unixArchive.machoLocations, id: \.fileName) { machoLocation in
+            UnixArchiveHeaderView(machoLocation: machoLocation) {
+                openWindow(id: machoLocation.fileType.rawValue, value: machoLocation)
             }
         }
     }

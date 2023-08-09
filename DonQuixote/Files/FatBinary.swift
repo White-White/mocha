@@ -25,7 +25,7 @@ struct FatArch {
     
 }
 
-struct FatBinary: Document {
+struct FatBinary: File {
     
     // ref: <mach-o/fat.h>
     
@@ -42,21 +42,21 @@ struct FatBinary: Document {
 //        uint32_t    align;        /* alignment as a power of 2 */
 //    };
     
-    static let magic: [UInt8] = [0xca, 0xfe, 0xba, 0xbe]
+    static let Magic: [UInt8] = [0xca, 0xfe, 0xba, 0xbe]
 
-    let fileHandle: DonFileHandle
-    let fileLocation: FileLocation
+    let location: FileLocation
     let fatArchs: [FatArch]
     
-    init(with fileLocation: FileLocation) throws {
-        self.fileLocation = fileLocation
-        let fileHandle = try fileLocation.createHandle()
-        self.fileHandle = fileHandle
+    init(with location: FileLocation) throws {
+        self.location = location
+        
+        let fileHandle = try FileHandle(location)
+        defer { try? fileHandle.close() }
         
         // 0xcafebabe is also Java class files' magic number.
         // ref: https://opensource.apple.com/source/file/file-47/file/magic/Magdir/cafebabe.auto.html
-        let magic = try fileHandle.assertRead(count: FatBinary.magic.count)
-        guard magic == Data(FatBinary.magic) else {
+        let magic = try fileHandle.assertRead(count: FatBinary.Magic.count)
+        guard magic == Data(FatBinary.Magic) else {
             throw DonError.invalidFatBinary
         }
         
@@ -73,8 +73,4 @@ struct FatBinary: Document {
         self.fatArchs = fatArchs
     }
     
-    func machoData(for fatArch: FatArch) throws -> Data {
-        return try fileHandle.assertRead(offset: UInt64(fatArch.objectFileOffset), count: Int(fatArch.objectFileSize))
-    }
-
 }

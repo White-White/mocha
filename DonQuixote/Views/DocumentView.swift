@@ -10,18 +10,18 @@ import SwiftUI
 
 protocol DocumentView: View {
     associatedtype Content: View
-    associatedtype D: Document
+    associatedtype D: File
     init(_ d: D)
-    static func windowBuilder(_ fileLocation: Binding<FileLocation?>) -> Content
+    static func windowBuilder(_ location: Binding<FileLocation?>) -> Content
 }
 
 extension DocumentView {
-    static func windowBuilder(_ fileLocation: Binding<FileLocation?>) -> some View {
-        DocumentViewWrapper<Self>(fileLocation: fileLocation.wrappedValue)
+    static func windowBuilder(_ location: Binding<FileLocation?>) -> some View {
+        DocumentWindow<Self>(location.wrappedValue)
     }
 }
 
-struct DocumentViewWrapper<V: DocumentView>: View {
+struct DocumentWindow<V: DocumentView>: View {
     
     @Environment (\.dismiss) var dismiss
     let result: Result<V, Error>
@@ -45,18 +45,18 @@ struct DocumentViewWrapper<V: DocumentView>: View {
     
     let navigationTitle: String
     
-    init(fileLocation: FileLocation?) {
-        guard let fileLocation else {
+    init(_ location: FileLocation?) {
+        guard let location else {
             let error = DonError.invalidFileLocation
             self.result = .failure(error)
             self.navigationTitle = error.localizedDescription
             return
         }
         do {
-            let document = try V.D.init(with: fileLocation)
+            let document = try V.D.init(with: location)
             let documentView = V.init(document)
             self.result = .success(documentView)
-            self.navigationTitle = fileLocation.fileName
+            self.navigationTitle = location.fileName
         } catch let error {
             self.result = .failure(error)
             self.navigationTitle = error.localizedDescription

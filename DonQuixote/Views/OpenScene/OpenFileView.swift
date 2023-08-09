@@ -11,10 +11,30 @@ import UniformTypeIdentifiers
 
 private class OpenPanelDelegate: NSObject, NSOpenSavePanelDelegate {
     func panel(_ sender: Any, shouldEnable url: URL) -> Bool {
-        var isDir: ObjCBool = false
-        let _ = FileManager.default.fileExists(atPath: url.path(), isDirectory: &isDir)
-        if isDir.boolValue { return true }
-        return FileType.canOpen(url)
+        guard let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey, .isRegularFileKey, .fileSizeKey]) else {
+            return false
+        }
+        
+        if let isDirectory = resourceValues.isDirectory,
+           isDirectory {
+            return true
+        }
+        
+        if let isRegularFile = resourceValues.isRegularFile,
+           !isRegularFile {
+            return false
+        }
+        
+        guard let fileSize = resourceValues.fileSize else {
+            return false
+        }
+        
+        guard let fileHandle = try? FileHandle(url, fileSize: fileSize, offset: .zero),
+              let _ = try? FileType(from: fileHandle) else {
+            return false
+        }
+        
+        return true
     }
 }
 
@@ -39,11 +59,16 @@ struct OpenFileView: View {
                 openPanel.canChooseFiles = true
                 openPanel.delegate = self.openPanelDelegate
                 openPanel.begin {
-                    if $0 == .OK, let fileURL = openPanel.url, let fileType = FileType.fileType(from: FileLocation(fileURL)) {
-                        openWindow(id: fileType.rawValue, value: FileLocation(fileURL))
-                        dismiss()
-                    } else {
-                        //TODO: 
+                    do {
+                        if $0 == .OK, let fileURL = openPanel.url {
+                            let fileLocation = try FileLocation(fileURL)
+                            openWindow(id: fileLocation.fileType.rawValue, value: fileLocation)
+                            dismiss()
+                        } else {
+                            //TODO:
+                        }
+                    } catch {
+                        //TODO:
                     }
                 }
             } label: {

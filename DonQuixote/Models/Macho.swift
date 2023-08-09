@@ -112,7 +112,10 @@ class MachoHeader: MachoBaseElement {
     }
 }
 
-struct Macho: Document {
+struct Macho: File {
+    
+    static let Magic32: [UInt8] = [0xce, 0xfa, 0xed, 0xfe]
+    static let Magic64: [UInt8] = [0xcf, 0xfa, 0xed, 0xfe]
     
     let machoData: Data
     var fileSize: Int { machoData.count }
@@ -123,18 +126,20 @@ struct Macho: Document {
     
     let allElements: [MachoBaseElement]
     
-    init(with fileLocation: FileLocation) throws {
-        let machoData: Data = try fileLocation.fetchAllData()
-        let machoFileName: String = fileLocation.fileName
+    init(with location: FileLocation) throws {
+        let fileHandle = try FileHandle(location)
+        defer { try? fileHandle.close() }
+        let machoData: Data = try fileHandle.assertReadToEnd()
+        let machoFileName: String = location.fileName
         self.init(with: machoData, machoFileName: machoFileName)
     }
     
     init(with machoData: Data, machoFileName: String) {
         let is64Bit: Bool
-        let magic = Data(machoData[0..<4]).UInt32
-        if magic == 0xfeedfacf /* #define MH_MAGIC_64 0xfeedfacf */ {
+        let magic = machoData[0..<4]
+        if magic == Data(Macho.Magic64) {
             is64Bit = true
-        } else if magic == 0xfeedface /* #define MH_MAGIC 0xfeedface */  {
+        } else if magic == Data(Macho.Magic32) {
             is64Bit = false
         } else {
             fatalError() /* what the hell is going on */

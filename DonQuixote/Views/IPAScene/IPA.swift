@@ -90,16 +90,16 @@ struct InfoPlist {
     
 }
 
-struct IPA: Document {
+struct IPA: File {
     
     let infoPlist: InfoPlist
     let unzipRootURL: URL
     let bundleURL: URL
     
-    init(with fileLocation: FileLocation) throws {
+    init(with location: FileLocation) throws {
         let unzipRootURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(UUID().uuidString, conformingTo: .folder)
         Zip.addCustomFileExtension("ipa")
-        try Zip.unzipFile(fileLocation.url, destination: unzipRootURL, overwrite: true, password: nil, progress: { (progress) -> () in
+        try Zip.unzipFile(location.fileURL, destination: unzipRootURL, overwrite: true, password: nil, progress: { (progress) -> () in
             // TODO: progress
         })
         

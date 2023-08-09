@@ -21,7 +21,7 @@ struct UnixArchiveFileHeader {
     let extFileIDLengthInt: Int // non-zero when fileID is prefixed with #1/
     let contentSize: Int // size of the content file
     
-    init(with fileHandle: DonFileHandle) throws {
+    init(with fileHandle: FileHandle) throws {
         let fileIDData = (try fileHandle.assertRead(count: 16))
         guard let fileID = fileIDData.utf8String else { fatalError() /* Very unlikely */}
         
@@ -54,25 +54,25 @@ struct UnixArchiveFileHeader {
     }
 }
 
-struct UnixArchive: Document {
+struct UnixArchive: File {
     
-    static let magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
+    static let Magic: [UInt8] = [0x21, 0x3C, 0x61, 0x72, 0x63, 0x68, 0x3E, 0x0A]
     
-    let fileLocation: FileLocation
-    let machoFileLocations: [FileLocation]
+    let location: FileLocation
+    let machoLocations: [FileLocation]
     
-    init(with fileLocation: FileLocation) throws {
-        self.fileLocation = fileLocation
+    init(with location: FileLocation) throws {
+        self.location = location
         
-        let fileHandle = try fileLocation.createHandle()
+        let fileHandle = try FileHandle(location)
         defer { try? fileHandle.close() }
         
         // unix archive ref: https://en.wikipedia.org/wiki/Ar_(Unix)
         // "!<arch>\n"
-        let magic = try fileHandle.assertRead(count: UnixArchive.magic.count)
-        guard magic == Data(UnixArchive.magic) else { fatalError() }
+        let magic = try fileHandle.assertRead(count: UnixArchive.Magic.count)
+        guard magic == Data(UnixArchive.Magic) else { fatalError() }
         
-        var machoFileLocations: [FileLocation] = []
+        var machoLocations: [FileLocation] = []
         while try fileHandle.hasAvailableData() {
             let fileHeader = try UnixArchiveFileHeader(with: fileHandle)
             let fileSize = fileHeader.contentSize - fileHeader.extFileIDLengthInt
@@ -82,12 +82,11 @@ struct UnixArchive: Document {
                 // This member is always called either __.SYMDEF or __.SYMDEF SORTED.
                 // So we are dropping the first element
             } else {
-                let machoFileLocation = FileLocation(fileLocation.url, fileName: fileHeader.fileID, offset: try fileHandle.offset(), size: fileSize)
-                machoFileLocations.append(machoFileLocation)
+                machoLocations.append(try location.subLocation(fileName: fileHeader.fileID, fileOffset: try fileHandle.offset(), fileSize: fileSize))
             }
             try fileHandle.skip(fileSize)
         }
-        self.machoFileLocations = machoFileLocations
+        self.machoLocations = machoLocations
     }
     
 }
