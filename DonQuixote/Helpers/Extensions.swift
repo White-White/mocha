@@ -90,7 +90,7 @@ extension Array {
     }
     
     func binarySearch(matchCheck: (_ element: Element) -> BinarySearchResult) -> Element? {
-        return _binarySearch(lower: self.startIndex, upper: self.endIndex, matchCheck: matchCheck)
+        return _binarySearch(lower: self.startIndex, upper: self.endIndex - 1, matchCheck: matchCheck)
     }
     
     private func _binarySearch(lower: Index, upper: Index, matchCheck: (_ element: Element) -> BinarySearchResult) -> Element? {
