@@ -13,9 +13,7 @@ struct UnixArchiveView: DocumentView {
     let unixArchive: UnixArchive
     
     var body: some View {
-        List(unixArchive.machoLocations, id: \.fileName) { machoLocation in
-            MachoItemView(machoLocation: machoLocation)
-        }
+        MachoContainerView(mainFileLocation: unixArchive.location, machoFileLocations: unixArchive.machoLocations)
     }
     
     init(_ unixArchive: UnixArchive) {

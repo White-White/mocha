@@ -9,7 +9,6 @@ import SwiftUI
 
 struct FatBinaryView: DocumentView {
     
-    @Environment (\.openWindow) var openWindow
     let fatBinary: FatBinary
     
     init(_ fatBinary: FatBinary) {
@@ -17,37 +16,7 @@ struct FatBinaryView: DocumentView {
     }
     
     var body: some View {
-        VStack(alignment: .leading) {
-            
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("File path:").bold()
-                    Text(fatBinary.location.fileURL.relativePath)
-                    Button("Show in Finder") {
-                        NSWorkspace.shared.open(
-                            URL(
-                                fileURLWithPath: fatBinary.location.fileURL.deletingLastPathComponent().path(),
-                                isDirectory: true
-                            )
-                        )
-                    }
-                }
-                HStack {
-                    Text("File type:").bold()
-                    Text(FileType.fat.name)
-                        .padding(.bottom, 4)
-                }
-            }
-            
-            VStack(alignment: .leading) {
-                List(self.allMachoFileLocations(), id: \.fileOffset) { machoFileLocation in
-                    MachoItemView(machoLocation: machoFileLocation)
-                }
-                .listStyle(.plain)
-            }
-        }
-        .padding(16)
-        .background(.white)
+        MachoContainerView(mainFileLocation: fatBinary.location, machoFileLocations: self.allMachoFileLocations())
     }
     
     func allMachoFileLocations() -> [FileLocation] {

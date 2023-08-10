@@ -82,6 +82,7 @@
 		1F80775E2A386DE100012724 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80775D2A386DE100012724 /* TranslationView.swift */; };
 		1FAEE8D32A84BE6900472AE0 /* DocumentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAEE8D22A84BE6900472AE0 /* DocumentWindow.swift */; };
 		1FAEE8D52A84BFB500472AE0 /* MachoItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */; };
+		1FAEE8D82A84C1E700472AE0 /* MachoContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAEE8D72A84C1E700472AE0 /* MachoContainerView.swift */; };
 		1FD8A8992A48276B00F2AECB /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD8A8982A48276B00F2AECB /* Zip */; };
 		1FD8A89C2A496A2400F2AECB /* XcodeGenKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD8A89B2A496A2400F2AECB /* XcodeGenKit */; };
 		1FD8A89E2A496AD600F2AECB /* Faking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8A89D2A496AD600F2AECB /* Faking.swift */; };
@@ -365,6 +366,7 @@
 		1F80775D2A386DE100012724 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
 		1FAEE8D22A84BE6900472AE0 /* DocumentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindow.swift; sourceTree = "<group>"; };
 		1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoItemView.swift; sourceTree = "<group>"; };
+		1FAEE8D72A84C1E700472AE0 /* MachoContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoContainerView.swift; sourceTree = "<group>"; };
 		1FD8A89D2A496AD600F2AECB /* Faking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Faking.swift; sourceTree = "<group>"; };
 		1FD8A89F2A49714700F2AECB /* ProjectExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectExtension.swift; sourceTree = "<group>"; };
 		1FD8A9832A78D4DA00F2AECB /* FatBinaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatBinaryView.swift; sourceTree = "<group>"; };
@@ -652,6 +654,8 @@
 			children = (
 				1FD8A9852A78D5F600F2AECB /* DocumentView.swift */,
 				1FAEE8D22A84BE6900472AE0 /* DocumentWindow.swift */,
+				1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */,
+				1FAEE8D72A84C1E700472AE0 /* MachoContainerView.swift */,
 				1FD8A9A32A7938E600F2AECB /* UnixArchiveScene */,
 				1FD8A9822A78D4C900F2AECB /* FatArchiveScene */,
 				1F8074A32A331A9200012724 /* OpenScene */,
@@ -672,7 +676,6 @@
 		1FD8A9A32A7938E600F2AECB /* UnixArchiveScene */ = {
 			isa = PBXGroup;
 			children = (
-				1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */,
 				1FD8A9A42A7938F600F2AECB /* UnixArchiveView.swift */,
 			);
 			path = UnixArchiveScene;
@@ -999,6 +1002,7 @@
 				1F8076A32A331EC200012724 /* IndirectSymbolTableEntry.swift in Sources */,
 				1F80769D2A331EB100012724 /* UnknownSection.swift in Sources */,
 				1F8076822A331EA000012724 /* LCSegment.swift in Sources */,
+				1FAEE8D82A84C1E700472AE0 /* MachoContainerView.swift in Sources */,
 				1F80769A2A331EB100012724 /* TextConstSection.swift in Sources */,
 				1FD8A9A22A790A6400F2AECB /* FileHandle.swift in Sources */,
 				1F80769C2A331EB100012724 /* CapStoneHelper.m in Sources */,
