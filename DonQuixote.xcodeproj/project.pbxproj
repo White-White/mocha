@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1F181CE12A4822BD0014B9D6 /* IPA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F181CE02A4822BD0014B9D6 /* IPA.swift */; };
 		1F181CE32A4823380014B9D6 /* IPAView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F181CE22A4823380014B9D6 /* IPAView.swift */; };
-		1F4674612A8397B900E0AF83 /* DocumentInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4674602A8397B900E0AF83 /* DocumentInfoView.swift */; };
 		1F4674632A8399DA00E0AF83 /* FileLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4674622A8399DA00E0AF83 /* FileLocation.swift */; };
 		1F4674652A83B43200E0AF83 /* FileType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4674642A83B43200E0AF83 /* FileType.swift */; };
 		1F80748A2A330E8B00012724 /* DonQuixoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8074892A330E8B00012724 /* DonQuixoteApp.swift */; };
@@ -81,6 +80,8 @@
 		1F8076D22A36007800012724 /* HexFiend.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1F8074EC2A331D2900012724 /* HexFiend.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1F8076EF2A36BDAF00012724 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8076EE2A36BDAF00012724 /* Errors.swift */; };
 		1F80775E2A386DE100012724 /* TranslationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F80775D2A386DE100012724 /* TranslationView.swift */; };
+		1FAEE8D32A84BE6900472AE0 /* DocumentWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAEE8D22A84BE6900472AE0 /* DocumentWindow.swift */; };
+		1FAEE8D52A84BFB500472AE0 /* MachoItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */; };
 		1FD8A8992A48276B00F2AECB /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD8A8982A48276B00F2AECB /* Zip */; };
 		1FD8A89C2A496A2400F2AECB /* XcodeGenKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FD8A89B2A496A2400F2AECB /* XcodeGenKit */; };
 		1FD8A89E2A496AD600F2AECB /* Faking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8A89D2A496AD600F2AECB /* Faking.swift */; };
@@ -286,7 +287,6 @@
 /* Begin PBXFileReference section */
 		1F181CE02A4822BD0014B9D6 /* IPA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPA.swift; sourceTree = "<group>"; };
 		1F181CE22A4823380014B9D6 /* IPAView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPAView.swift; sourceTree = "<group>"; };
-		1F4674602A8397B900E0AF83 /* DocumentInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentInfoView.swift; sourceTree = "<group>"; };
 		1F4674622A8399DA00E0AF83 /* FileLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocation.swift; sourceTree = "<group>"; };
 		1F4674642A83B43200E0AF83 /* FileType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileType.swift; sourceTree = "<group>"; };
 		1F8074862A330E8B00012724 /* DonQuixote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DonQuixote.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -363,6 +363,8 @@
 		1F8076C22A358C6400012724 /* UStringSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UStringSection.swift; sourceTree = "<group>"; };
 		1F8076EE2A36BDAF00012724 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		1F80775D2A386DE100012724 /* TranslationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationView.swift; sourceTree = "<group>"; };
+		1FAEE8D22A84BE6900472AE0 /* DocumentWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentWindow.swift; sourceTree = "<group>"; };
+		1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachoItemView.swift; sourceTree = "<group>"; };
 		1FD8A89D2A496AD600F2AECB /* Faking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Faking.swift; sourceTree = "<group>"; };
 		1FD8A89F2A49714700F2AECB /* ProjectExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectExtension.swift; sourceTree = "<group>"; };
 		1FD8A9832A78D4DA00F2AECB /* FatBinaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FatBinaryView.swift; sourceTree = "<group>"; };
@@ -649,7 +651,7 @@
 			isa = PBXGroup;
 			children = (
 				1FD8A9852A78D5F600F2AECB /* DocumentView.swift */,
-				1F4674602A8397B900E0AF83 /* DocumentInfoView.swift */,
+				1FAEE8D22A84BE6900472AE0 /* DocumentWindow.swift */,
 				1FD8A9A32A7938E600F2AECB /* UnixArchiveScene */,
 				1FD8A9822A78D4C900F2AECB /* FatArchiveScene */,
 				1F8074A32A331A9200012724 /* OpenScene */,
@@ -670,6 +672,7 @@
 		1FD8A9A32A7938E600F2AECB /* UnixArchiveScene */ = {
 			isa = PBXGroup;
 			children = (
+				1FAEE8D42A84BFB500472AE0 /* MachoItemView.swift */,
 				1FD8A9A42A7938F600F2AECB /* UnixArchiveView.swift */,
 			);
 			path = UnixArchiveScene;
@@ -959,8 +962,8 @@
 				1F8076AE2A331F1F00012724 /* InterpreterUtils.swift in Sources */,
 				1F8076932A331EAC00012724 /* BindOperationCodeMetadata.swift in Sources */,
 				1F8076EF2A36BDAF00012724 /* Errors.swift in Sources */,
-				1F4674612A8397B900E0AF83 /* DocumentInfoView.swift in Sources */,
 				1F8076B12A331F2100012724 /* Log.swift in Sources */,
+				1FAEE8D52A84BFB500472AE0 /* MachoItemView.swift in Sources */,
 				1F8076912A331EA800012724 /* InstructionSection.swift in Sources */,
 				1F8076A22A331EC200012724 /* SymbolTableEntry.swift in Sources */,
 				1F8076C32A358C6400012724 /* UStringSection.swift in Sources */,
@@ -978,6 +981,7 @@
 				1F80769B2A331EB100012724 /* StringTable.swift in Sources */,
 				1F8076D02A36005700012724 /* HFController+Mocha.m in Sources */,
 				1F8076BC2A35760C00012724 /* StringSection.swift in Sources */,
+				1FAEE8D32A84BE6900472AE0 /* DocumentWindow.swift in Sources */,
 				1F80748A2A330E8B00012724 /* DonQuixoteApp.swift in Sources */,
 				1F8076962A331EAC00012724 /* OperationCode.swift in Sources */,
 				1F8076862A331EA000012724 /* LoadCommand.swift in Sources */,

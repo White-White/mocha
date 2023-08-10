@@ -17,33 +17,55 @@ struct FatBinaryView: DocumentView {
     }
     
     var body: some View {
-        NavigationStack() {
+        VStack(alignment: .leading) {
+            
             VStack(alignment: .leading) {
-                DocumentInfoView(location: fatBinary.location, fileType: .fat)
-                List(fatBinary.fatArchs, id: \.objectFileOffset) { fatArch in
-                    NavigationLink(fatArch.cpu.name, value: self.fileLocation(for: fatArch))
-                }
-                .listStyle(.plain)
-                .navigationDestination(for: FileLocation.self) { location in
-                    switch location.fileType {
-                    case .ar:
-                        UnixArchiveView(try! UnixArchive(with: location))
-                    default:
-                        fatalError()
+                HStack {
+                    Text("File path:").bold()
+                    Text(fatBinary.location.fileURL.relativePath)
+                    Button("Show in Finder") {
+                        NSWorkspace.shared.open(
+                            URL(
+                                fileURLWithPath: fatBinary.location.fileURL.deletingLastPathComponent().path(),
+                                isDirectory: true
+                            )
+                        )
                     }
                 }
+                HStack {
+                    Text("File type:").bold()
+                    Text(FileType.fat.name)
+                        .padding(.bottom, 4)
+                }
+            }
+            
+            VStack(alignment: .leading) {
+                List(self.allMachoFileLocations(), id: \.fileOffset) { machoFileLocation in
+                    MachoItemView(machoLocation: machoFileLocation)
+                }
+                .listStyle(.plain)
             }
         }
-        .toolbar { Spacer() }
+        .padding(16)
+        .background(.white)
     }
     
-    func fileLocation(for fatArch: FatArch) -> FileLocation {
-        let location = try! fatBinary.location.subLocation(fileName: "\(fatBinary.location.fileName) (\(fatArch.cpu.name))",
-                                                          fileOffset: UInt64(fatArch.objectFileOffset),
-                                                          fileSize: Int(fatArch.objectFileSize))
-        return location
+    func allMachoFileLocations() -> [FileLocation] {
+        return self.fatBinary.fatArchs.flatMap { self.machoFileLocations(for: $0) }
     }
     
-    
+    func machoFileLocations(for fatArch: FatArch) -> [FileLocation] {
+        let subFileLocation = try! fatBinary.location.subLocation(fileName: "\(fatBinary.location.fileName) (\(fatArch.cpu.name))",
+                                                                  fileOffset: UInt64(fatArch.objectFileOffset),
+                                                                  fileSize: Int(fatArch.objectFileSize))
+        switch subFileLocation.fileType {
+        case .ar:
+            return (try! UnixArchive(with: subFileLocation)).machoLocations
+        case .macho:
+            return [subFileLocation]
+        default:
+            fatalError()
+        }
+    }
     
 }
