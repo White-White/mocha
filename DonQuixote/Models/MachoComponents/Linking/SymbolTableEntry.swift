@@ -149,9 +149,6 @@ struct SymbolTableEntry {
     static var modelSizeFor32Bit: Int { 12 }
     
     let is64Bit: Bool
-    let stringTable: StringTable
-    let machoSectionHeaders: [SectionHeader]
-    
     let indexInStringTable: UInt32
     let symbolType: SymbolType
     let symbolName: String
@@ -184,14 +181,13 @@ struct SymbolTableEntry {
     let nValue: UInt64
     
     let dataStartIndex: Int
+    weak var macho: Macho?
     
-    init(with data: Data, is64Bit: Bool, stringTable: StringTable, machoSectionHeaders: [SectionHeader]) async {
+    init(with data: Data, is64Bit: Bool, macho: Macho?) async {
         self.dataStartIndex = data.startIndex
+        self.macho = macho
         
         self.is64Bit = is64Bit
-        self.stringTable = stringTable
-        self.machoSectionHeaders = machoSectionHeaders
-        
         var dataShifter = DataShifter(data)
         
         self.indexInStringTable = dataShifter.shiftUInt32()
@@ -229,13 +225,13 @@ struct SymbolTableEntry {
         switch self.symbolType {
         case .stab(_):
             //TODO: make sure for stab symbol, it's normal to fail to find symbol name
-            if let foundName = try? await self.stringTable.findString(atDataOffset: Int(self.indexInStringTable)) {
+            if let foundName = try? await macho?.stringTable?.findString(atDataOffset: Int(self.indexInStringTable)) {
                 self.symbolName = foundName
             } else {
                 self.symbolName = "Not found"
             }
         default:
-            self.symbolName = (try? await self.stringTable.findString(atDataOffset: Int(self.indexInStringTable))) ?? "Not Found"
+            self.symbolName = (try? await macho?.stringTable?.findString(atDataOffset: Int(self.indexInStringTable))) ?? "Not Found"
         }
     }
     
@@ -262,14 +258,14 @@ struct SymbolTableEntry {
                 nSectExplanation = "0 (NO_SECT)"
             case .section:
                 let ordinal = Int(self.nSect)
-                let sectionHeader = machoSectionHeaders[ordinal - 1] // ordinal starts from 1
+                let sectionHeader = self.macho!.sectionHeaders[ordinal - 1] // ordinal starts from 1
                 let sectionName = sectionHeader.segment + "," + sectionHeader.section
                 symbolTypeExplanation += (sectionName + " (N_SECT)")
             case .indirect:
                 nValueDesp = "String table offset"
                 nValueExplanation = nValue.hex
                 nValueExtraDesp = "Referred string"
-                nValueExtraExplanation = try? await self.stringTable.findString(atDataOffset: Int(nValue))
+                nValueExtraExplanation = try? await self.macho?.stringTable?.findString(atDataOffset: Int(nValue))
             default:
                 break
             }

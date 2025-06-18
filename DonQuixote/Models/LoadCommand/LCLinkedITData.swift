@@ -53,9 +53,9 @@ class LCLinkedITData: LoadCommand, @unchecked Sendable {
         translationGroup.addTranslation(definition: "Size", humanReadable: self.containedDataSize.hex, translationType: .uint32)
     }
     
-    func linkedITSection(from machoData:Data, machoHeader: MachoHeader, textSegmentLoadCommand: LCSegment?, symbolTable: SymbolTable?) -> MachoPortion {
-        let is64Bit = machoHeader.is64Bit
-        let data = machoData.subSequence(from: Int(self.containedDataFileOffset), count: Int(self.containedDataSize), allowZeroLength: true)
+    func linkedITSection(macho: Macho) -> MachoPortion {
+        let is64Bit = macho.is64Bit
+        let data = macho.machoData.subSequence(from: Int(self.containedDataFileOffset), count: Int(self.containedDataSize), allowZeroLength: true)
         switch self.type {
         case .dataInCode:
             return DataInCodeSection(data, title: self.dataName, subTitle: nil)
@@ -64,8 +64,9 @@ class LCLinkedITData: LoadCommand, @unchecked Sendable {
             // FIXME: better parsing
             return UnknownSection(data, title: self.dataName, subTitle: nil)
         case .functionStarts:
-            guard let textSegment = textSegmentLoadCommand else { fatalError() /* where there is function starts, there must be text segment */ }
-            return FunctionStartsSection(data, title: self.dataName, textSegmentVirtualAddress: textSegment.vmaddr, symbolTable: symbolTable)
+            //FIXME: better way
+            guard let textSegment = macho.loadCommands.first(where: { ($0 as? LCSegment)?.segmentName == "__TEXT" }) else { fatalError() /* where there is function starts, there must be text segment */ }
+            return FunctionStartsSection(data, title: self.dataName, textSegmentVirtualAddress: (textSegment as! LCSegment).vmaddr, macho: macho)
         case .dyldExportsTrie:
             return ExportInfoSection(data, title: self.dataName, is64Bit: is64Bit)
         default:

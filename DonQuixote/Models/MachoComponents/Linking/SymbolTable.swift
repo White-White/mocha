@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SymbolTableEntryContainer {
+struct SymbolTableEntryContainer: @unchecked Sendable{
     let symbolTableEntries: [SymbolTableEntry]
     let symbolTableEntryMap: [UInt64: [Int]]
 }
@@ -15,21 +15,13 @@ struct SymbolTableEntryContainer {
 class SymbolTable: MachoPortion, @unchecked Sendable {
     
     let is64Bit: Bool
-    let stringTable: StringTable
-    let machoSectionHeaders: [SectionHeader]
+    weak var macho: Macho?
     
-    init(symbolTableOffset: Int,
-         numberOfSymbolTableEntries: Int,
-         machoData: Data,
-         machoHeader: MachoHeader,
-         stringTable: StringTable,
-         machoSectionHeaders: [SectionHeader]) {
-        
-        let entrySize = machoHeader.is64Bit ? 16 : 12
-        let symbolTableData = machoData.subSequence(from: symbolTableOffset, count: numberOfSymbolTableEntries * entrySize)
-        self.is64Bit = machoHeader.is64Bit
-        self.stringTable = stringTable
-        self.machoSectionHeaders = machoSectionHeaders
+    init(macho: Macho, symbolTableOffset: Int, numberOfSymbolTableEntries: Int) {
+        self.is64Bit = macho.is64Bit
+        self.macho = macho
+        let entrySize = macho.is64Bit ? 16 : 12
+        let symbolTableData = macho.machoData.subSequence(from: symbolTableOffset, count: numberOfSymbolTableEntries * entrySize)
         super.init(symbolTableData, title: "Symbol Table", subTitle: nil)
     }
     
@@ -42,7 +34,7 @@ class SymbolTable: MachoPortion, @unchecked Sendable {
         let numberOfModels = self.dataSize/modelSize
         for index in 0..<numberOfModels {
             let data = self.data.subSequence(from: index * modelSize, count: modelSize)
-            let entry = await SymbolTableEntry(with: data, is64Bit: self.is64Bit, stringTable: self.stringTable, machoSectionHeaders: self.machoSectionHeaders)
+            let entry = await SymbolTableEntry(with: data, is64Bit: self.is64Bit, macho: self.macho)
             symbolTableEntries.append(entry)
         }
         

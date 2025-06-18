@@ -209,14 +209,7 @@ class LoadCommand: MachoPortion, @unchecked Sendable {
         
     }
 
-    static func loadCommands(from machoData: Data,
-                             machoHeader: MachoHeader,
-                             onLCSegment: (LCSegment) -> Void,
-                             onLCSymbolTable: (LCSymbolTable) -> Void,
-                             onLCDynamicSymbolTable: (LCDynamicSymbolTable) -> Void,
-                             onLCLinkedITData: (LCLinkedITData) -> Void,
-                             onLCDyldInfo: (LCDyldInfo) -> Void) -> [LoadCommand] {
-        let loadCommandsData = machoData.subSequence(from: machoHeader.dataSize, count: Int(machoHeader.sizeOfAllLoadCommand))
+    static func loadCommands(from loadCommandsData: Data) -> [LoadCommand] {
         var loadCommands: [LoadCommand] = []
         var dataShifter = DataShifter(loadCommandsData)
         while dataShifter.shiftable {
@@ -234,17 +227,11 @@ class LoadCommand: MachoPortion, @unchecked Sendable {
             case .linkerOption:
                 loadCommand = LCLinkerOption(with: loadCommandType, data: loadCommandData)
             case .segment, .segment64:
-                let segment = LCSegment(with: loadCommandType, data: loadCommandData)
-                onLCSegment(segment)
-                loadCommand = segment
+                loadCommand = LCSegment(with: loadCommandType, data: loadCommandData)
             case .symbolTable:
-                let symbolTableCommand = LCSymbolTable(with: loadCommandType, data: loadCommandData)
-                onLCSymbolTable(symbolTableCommand)
-                loadCommand = symbolTableCommand
+                loadCommand = LCSymbolTable(with: loadCommandType, data: loadCommandData)
             case .dynamicSymbolTable:
-                let dynamicSymbolTableCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
-                onLCDynamicSymbolTable(dynamicSymbolTableCommand)
-                loadCommand = dynamicSymbolTableCommand
+                loadCommand = LCDynamicSymbolTable(with: loadCommandType, data: loadCommandData)
             case .idDylib, .loadDylib, .loadWeakDylib, .reexportDylib, .lazyLoadDylib, .loadUpwardDylib:
                 loadCommand = LCDylib(with: loadCommandType, data: loadCommandData)
             case .rpath, .idDynamicLinker, .loadDynamicLinker, .dyldEnvironment:
@@ -254,15 +241,11 @@ class LoadCommand: MachoPortion, @unchecked Sendable {
             case .sourceVersion:
                 loadCommand = LCSourceVersion(with: loadCommandType, data: loadCommandData)
             case .dataInCode, .codeSignature, .functionStarts, .segmentSplitInfo, .dylibCodeSigDRs, .linkerOptimizationHint, .dyldExportsTrie, .dyldChainedFixups:
-                let linkedITData = LCLinkedITData(with: loadCommandType, data: loadCommandData)
-                onLCLinkedITData(linkedITData)
-                loadCommand = linkedITData
+                loadCommand = LCLinkedITData(with: loadCommandType, data: loadCommandData)
             case .main:
                 loadCommand = LCMain(with: loadCommandType, data: loadCommandData)
             case .dyldInfo, .dyldInfoOnly:
-                let dyldInfo = LCDyldInfo(with: loadCommandType, data: loadCommandData)
-                onLCDyldInfo(dyldInfo)
-                loadCommand = dyldInfo
+                loadCommand = LCDyldInfo(with: loadCommandType, data: loadCommandData)
             case .encryptionInfo64,. encryptionInfo:
                 loadCommand = LCEncryptionInfo(with: loadCommandType, data: loadCommandData)
             case .buildVersion:
@@ -273,9 +256,6 @@ class LoadCommand: MachoPortion, @unchecked Sendable {
             }
             loadCommands.append(loadCommand)
         }
-        
-        guard loadCommands.count == Int(machoHeader.numberOfLoadCommands) else { fatalError() }
-        
         return loadCommands
     }
 }

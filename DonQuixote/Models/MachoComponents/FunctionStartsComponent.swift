@@ -18,11 +18,11 @@ struct FunctionStart {
 
 class FunctionStartsSection: MachoPortion, @unchecked Sendable {
     
-    let symbolTable: SymbolTable?
+    weak var macho: Macho?
     let textSegmentVirtualAddress: Swift.UInt64
     
-    init(_ data: Data, title: String, textSegmentVirtualAddress: UInt64, symbolTable: SymbolTable?) {
-        self.symbolTable = symbolTable
+    init(_ data: Data, title: String, textSegmentVirtualAddress: UInt64, macho: Macho) {
+        self.macho = macho
         self.textSegmentVirtualAddress = textSegmentVirtualAddress
         super.init(data, title: title, subTitle: nil)
     }
@@ -61,7 +61,7 @@ class FunctionStartsSection: MachoPortion, @unchecked Sendable {
             var symbolName: String = ""
             let functionVirtualAddress = functionStart.address + textSegmentVirtualAddress
             
-            try? await self.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress, callerTag: self.title)?.forEach({ symbolTableEntry in
+            try? await self.macho?.symbolTable?.findSymbol(byVirtualAddress: functionVirtualAddress, callerTag: self.title)?.forEach({ symbolTableEntry in
                 guard symbolTableEntry.symbolType == .section else { return }
                 symbolName += symbolTableEntry.symbolName
             })
