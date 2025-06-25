@@ -66,38 +66,45 @@ class MachoViewState: ObservableObject, @unchecked Sendable {
 // ref: https://swiftcraft.io/blog/how-to-initialize-state-inside-the-views-init-
 struct MachoView: DocumentView {
     
-    let machoViewState: MachoViewState
+    let macho: Macho
+    @State var selectedMachoPortionIndex: Int? = nil
     
     init(_ macho: Macho) {
-        self.machoViewState = MachoViewState(macho: macho)
+        self.macho = macho
     }
     
     var body: some View {
         HStack(spacing: 4) {
             
-            HexFiendViewControllerRepresentable()
+            HexFiendViewControllerRepresentable(machoData: self.macho.machoData)
                 .onClickHexView({ dataIndex in
                     Task {
                         await self.onClickHexView(at: dataIndex)
                     }
                 })
             
-            MachoPortionListView()
+            MachoPortionTableView(machoPortions: self.macho.allMachoPortions)
+                .onSelectMachoPortion { index in
+                    self.selectedMachoPortionIndex = index
+                }
+                .frame(width: MachoPortionTableView.widthNeeded(for: self.macho.allMachoPortions))
             
-            VStack(spacing: 4) {
-                TranslationView(machoPortionStorage: self.machoViewState.selectedMachoPortion.storage)
-                DeepSeekView()
-            }
-            .frame(minWidth: 400)
+//            if let selectedMachoPortionIndex {
+////                VStack(spacing: 4) {
+////                    TranslationView(machoPortionStorage: self.machoViewState.selectedMachoPortion.storage)
+////                    DeepSeekView()
+////                }
+////                .frame(minWidth: 400)
+//            }
+
                 
         }
-        .environmentObject(self.machoViewState)
     }
     
     @MainActor
     func onClickHexView(at dataIndexInMacho: UInt64) async {
         
-        let machoPortion = self.machoViewState.macho.allPortions.binarySearch { element in
+        let machoPortion = self.macho.allMachoPortions.binarySearch { element in
             if element.data.startIndex > dataIndexInMacho {
                 return .left
             } else if element.data.endIndex <= dataIndexInMacho {
@@ -115,11 +122,11 @@ struct MachoView: DocumentView {
         switch machoPortion.storage.loadingStatus {
         case .translated(_, let translationResult):
             Task { @MainActor in
-                if let searchResult = await translationResult.searchForTranslationMetaInfo(at: dataIndexInMacho) {
-                    self.machoViewState.selectedMachoPortion = machoPortion
-                    self.machoViewState.cancelTaskForFetchingFirstTranslation()
-                    self.machoViewState.selectedTranslationMetaInfo = searchResult.translationMetaInfo
-                }
+//                if let searchResult = await translationResult.searchForTranslationMetaInfo(at: dataIndexInMacho) {
+//                    self.machoViewState.selectedMachoPortion = machoPortion
+//                    self.machoViewState.cancelTaskForFetchingFirstTranslation()
+//                    self.machoViewState.selectedTranslationMetaInfo = searchResult.translationMetaInfo
+//                }
             }
         default:
             return

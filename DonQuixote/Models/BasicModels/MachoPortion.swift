@@ -51,8 +51,8 @@ actor MachoPortionStorage: ObservableObject {
         case .created:
             fallthrough
         case .initializing:
-            print("\(calleeTag) is waiting for macho portion to init.")
-            try await Task.sleep(for: Duration.milliseconds(100))
+            print("\(calleeTag) is waiting for \(self.title) to init.")
+            try await Task.sleep(for: Duration.milliseconds(3000))
             return try await self.initializeResult(calleeTag: calleeTag)
         case .translating(let asyncInitializeResult):
             return asyncInitializeResult
@@ -68,8 +68,8 @@ actor MachoPortionStorage: ObservableObject {
         case .initializing:
             fallthrough
         case .translating:
-            print("\(calleeTag) is waiting for macho portion to translate.")
-            try await Task.sleep(for: Duration.milliseconds(100))
+            print("\(calleeTag) is waiting for \(self.title) to translate.")
+            try await Task.sleep(for: Duration.milliseconds(3000))
             return try await self.translateResult(calleeTag: calleeTag)
         case .translated(_, let asyncTranslationResult):
             return asyncTranslationResult
@@ -78,17 +78,8 @@ actor MachoPortionStorage: ObservableObject {
     
 }
 
-class MachoPortion: Identifiable, Hashable, @unchecked Sendable {
-    
-    static func == (lhs: MachoPortion, rhs: MachoPortion) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(self.id)
-    }
-    
-    let id = UUID()
+class MachoPortion: @unchecked Sendable {
+
     let data: Data
     var dataSize: Int { data.count }
     var offsetInMacho: Int { data.startIndex }

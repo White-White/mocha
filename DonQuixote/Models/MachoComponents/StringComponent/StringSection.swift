@@ -45,7 +45,7 @@ class StringSection: MachoPortion, @unchecked Sendable {
     }
     
     func findString(atDataOffset offset: Int) async throws -> String? {
-        let stringContainer = (try await self.storage.initializeResult(calleeTag: "Finding string - ")) as! StringContainer
+        let stringContainer = (try await self.storage.initializeResult(calleeTag: self.title)) as! StringContainer
         if let stringContent = stringContainer.stringContent(withOffset: offset) {
             return stringContent.content ?? "Finded. But fail to decode. Debug me."
         }

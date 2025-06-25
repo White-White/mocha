@@ -61,8 +61,7 @@ class LCLinkedITData: LoadCommand, @unchecked Sendable {
             return DataInCodeSection(data, title: self.dataName, subTitle: nil)
         case .codeSignature:
             // ref: https://opensource.apple.com/source/Security/Security-55471/sec/Security/Tool/codesign.c
-            // FIXME: better parsing
-            return UnknownSection(data, title: self.dataName, subTitle: nil)
+            return CodeSignature(data, title: self.dataName, subTitle: nil)
         case .functionStarts:
             //FIXME: better way
             guard let textSegment = macho.loadCommands.first(where: { ($0 as? LCSegment)?.segmentName == "__TEXT" }) else { fatalError() /* where there is function starts, there must be text segment */ }

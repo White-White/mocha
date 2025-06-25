@@ -37,7 +37,7 @@ struct TranslationView: View {
                 }
             case .translated(_, let t):
                 if let t = t as? TranslationGroups {
-                    GroupTranslationView(translationGroups: t)
+                    TranslationTableView(translationGroups: t)
                 } else if let t = t as? InstructionBank {
                     InstructionTranslationView(instructionBank: t)
                 }

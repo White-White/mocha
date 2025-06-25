@@ -71,7 +71,8 @@ public class HexFiendViewController: NSViewController {
     
     func updateDataRange(selectedDataRange: Range<UInt64>) {
         guard selectedDataRange.count > 0 else {
-            fatalError()
+            Log.error("invalid data rage")
+            return
         }
         let hfRangeWrapper = HFRangeWrapper.withRange(HFRangeMake(selectedDataRange.lowerBound,
                                                                   UInt64(selectedDataRange.count)))
@@ -93,33 +94,32 @@ public class HexFiendViewController: NSViewController {
 struct HexFiendViewControllerRepresentable: NSViewControllerRepresentable {
     
     typealias NSViewControllerType = HexFiendViewController
-    typealias ClickHexViewCallback = ((_ dataIndex: UInt64) -> Void)
-    
-    @EnvironmentObject var machoViewState: MachoViewState
-    var clickHexViewCallback: ClickHexViewCallback?
+    let coordinator = HexViewCoordinator()
+    let machoData: Data
+//    @Binding var selectedDataRange: Range<UInt64>
     
     func makeNSViewController(context: Context) -> HexFiendViewController {
-        let hexFiendViewController = HexFiendViewController(data: machoViewState.macho.machoData)
+        let hexFiendViewController = HexFiendViewController(data: self.machoData)
         hexFiendViewController.delegate = context.coordinator
         return hexFiendViewController
     }
     
     func updateNSViewController(_ hexFiendViewController: HexFiendViewController, context: Context) {
-        hexFiendViewController.updateDataRange(selectedDataRange: machoViewState.selectedDataRange)
+//        hexFiendViewController.updateDataRange(selectedDataRange: machoViewState.selectedDataRange)
     }
     
     class HexViewCoordinator: NSObject, HexFiendViewControllerDelegate {
-        let clickHexViewCallback: ClickHexViewCallback?
-        init(clickHexViewCallback: ClickHexViewCallback?) {
-            self.clickHexViewCallback = clickHexViewCallback
-        }
+        
+        var clickHexViewCallback: ((_ index: UInt64) -> Void)?
+        
         func didClickHexView(at charIndex: UInt64) {
             self.clickHexViewCallback?(charIndex)
         }
+        
     }
     
     func makeCoordinator() -> HexViewCoordinator {
-        return HexViewCoordinator(clickHexViewCallback: self.clickHexViewCallback)
+        return self.coordinator
     }
     
     func sizeThatFits(_ proposal: ProposedViewSize, nsViewController: HexFiendViewController, context: Context) -> CGSize? {
@@ -127,9 +127,8 @@ struct HexFiendViewControllerRepresentable: NSViewControllerRepresentable {
     }
     
     func onClickHexView(_ callback: @escaping (_ dataIndex: UInt64) -> Void) -> HexFiendViewControllerRepresentable {
-        var vSelf = self
-        vSelf.clickHexViewCallback = callback
-        return vSelf
+        self.coordinator.clickHexViewCallback = callback
+        return self
     }
     
 }

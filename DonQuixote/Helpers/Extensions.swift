@@ -113,3 +113,85 @@ extension Array {
     }
     
 }
+
+extension NSView {
+    
+    var width: CGFloat {
+        get {
+            self.bounds.size.width
+        }
+        set {
+            self.size = CGSize(width: newValue, height: self.height)
+        }
+    }
+    
+    var height: CGFloat {
+        get {
+            self.bounds.size.height
+        }
+        set {
+            self.size = CGSize(width: self.width, height: newValue)
+        }
+    }
+    
+    var x: CGFloat {
+        get {
+            self.frame.origin.x
+        }
+        set {
+            self.origin = CGPoint(x: newValue, y: self.y)
+        }
+    }
+    
+    var y: CGFloat {
+        get {
+            self.frame.origin.y
+        }
+        set {
+            self.origin = CGPoint(x: self.x, y: newValue)
+        }
+    }
+    
+    var size: CGSize {
+        get {
+            self.bounds.size
+        }
+        set {
+            self.bounds.size = newValue
+        }
+    }
+    
+    var origin: CGPoint {
+        get {
+            self.frame.origin
+        }
+        set {
+            self.frame.origin = newValue
+        }
+    }
+    
+    var topLeftPoint: CGPoint {
+        get {
+            CGPointMake(self.x, self.y + self.height)
+        }
+        set {
+            self.origin = CGPoint(x: newValue.x, y: newValue.y - self.height)
+        }
+    }
+    
+}
+
+extension NSTextField {
+    
+    static func labelStyledTF(font: NSFont, textColor: NSColor) -> NSTextField {
+        let tf = NSTextField()
+        tf.font = font
+        tf.textColor = textColor
+        tf.isEditable = false
+        tf.isSelectable = false
+        tf.isBezeled = false
+        tf.drawsBackground = false
+        return tf
+    }
+    
+}
